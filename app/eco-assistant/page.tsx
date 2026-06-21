@@ -37,7 +37,7 @@ export default function EcoAssistantPage() {
     // Load chat history from backend
     const loadChatHistory = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://192.168.8.23:8000"}/chat/history/${userId}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chat/history/${userId}`);
         if (response.ok) {
           const data = await response.json();
           const messages = data.messages.map((msg: any) => ({
@@ -107,12 +107,15 @@ export default function EcoAssistantPage() {
     try {
       // Save user message to backend
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://192.168.8.23:8000"}/chat/message/${userId}/user?message_text=${encodeURIComponent(text.trim())}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        await fetch(
+  `${process.env.NEXT_PUBLIC_API_URL}/chat/message/${userId}/user?message_text=${encodeURIComponent(text.trim())}`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }
+);
       } catch (error) {
         console.error("Failed to save user message to backend:", error);
       }
@@ -165,12 +168,15 @@ export default function EcoAssistantPage() {
       
       // Save assistant message to backend
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://192.168.8.23:8000"}/chat/message/${userId}/assistant?message_text=${encodeURIComponent(data.response)}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        await fetch(
+  `${process.env.NEXT_PUBLIC_API_URL}/chat/message/${userId}/assistant?message_text=${encodeURIComponent(data.response)}`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }
+);
       } catch (error) {
         console.error("Failed to save assistant message to backend:", error);
       }
@@ -207,9 +213,9 @@ export default function EcoAssistantPage() {
     // Clear from backend
     if (userId) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://192.168.8.23:8000"}/chat/history/${userId}`, {
-          method: "DELETE",
-        });
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chat/history/${userId}`, {
+  method: "DELETE",
+});
       } catch (error) {
         console.error("Failed to clear chat history from backend:", error);
       }

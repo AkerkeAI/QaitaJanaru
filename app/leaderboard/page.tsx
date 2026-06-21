@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
 
-const API_URL = "http://192.168.8.23:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 interface LeaderboardEntry {
   rank: number;

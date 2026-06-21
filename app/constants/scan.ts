@@ -87,4 +87,6 @@ export const LOADING_MESSAGES = [
 // Backend API configuration
 // For mobile devices on the same LAN, use your computer's local IP address instead of 127.0.0.1
 export const SCAN_API_BASE_URL =
-  process.env.NEXT_PUBLIC_SCAN_API_BASE_URL || "http://192.168.8.23:8000";
+  process.env.NEXT_PUBLIC_SCAN_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "";
