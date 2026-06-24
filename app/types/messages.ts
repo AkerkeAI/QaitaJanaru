@@ -249,6 +249,7 @@ export interface Messages {
     aiAnalysisComplete: string;
     wasteType: string;
     category: string;
+    confidence: string;
     ecoTip: string;
     pointsEarned: string;
     totalPoints: string;

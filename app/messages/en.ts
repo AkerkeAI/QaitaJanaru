@@ -251,6 +251,7 @@ export const messages: Messages = {
     aiAnalysisComplete: "AI Analysis Complete",
     wasteType: "Waste Type",
     category: "Category",
+    confidence: "Confidence",
     ecoTip: "Eco Tip",
     pointsEarned: "Points Earned",
     totalPoints: "Total Points",

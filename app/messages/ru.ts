@@ -251,6 +251,7 @@ export const messages: Messages = {
     aiAnalysisComplete: "Анализ ИИ завершен",
     wasteType: "Тип отходов",
     category: "Категория",
+    confidence: "Точность определения",
     ecoTip: "Экологический совет",
     pointsEarned: "Полученные очки",
     totalPoints: "Общие очки",

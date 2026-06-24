@@ -251,6 +251,7 @@ export const messages: Messages = {
     aiAnalysisComplete: "Жасанды интеллект талдауы аяқталды",
     wasteType: "Қалдық түрі",
     category: "Санат",
+    confidence: "Анықтау дәлдігі",
     ecoTip: "Эко кеңес",
     pointsEarned: "Алынған ұпайлар",
     totalPoints: "Жалпы ұпайлар",

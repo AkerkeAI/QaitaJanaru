@@ -179,15 +179,22 @@ class AIProviderError(RuntimeError):
         self.status_code = status_code
 
 
-def _build_prompt() -> str:
+def _build_prompt(language: str = "en") -> str:
+    language_instructions = {
+        "en": "Respond in English.",
+        "ru": "Respond in Russian.",
+        "kz": "Respond in Kazakh.",
+    }
+    
     return (
-        "You are a waste classification assistant for Kazakhstan recycling education.\n"
+        f"You are a waste classification assistant for Kazakhstan recycling education.\n"
+        f"{language_instructions.get(language, 'Respond in English.')}\n"
         "Classify the image into exactly one of these waste types: "
         + ", ".join(WASTE_CLASSES)
         + ".\n"
         "Return ONLY valid JSON with keys:\n"
         "waste_type, confidence, explanation, preparation_steps, recyclable.\n"
-        "preparation_steps must be an array of 2-4 short actionable strings.\n"
+        "preparation_steps must be an array of 2-4 short actionable strings in the specified language.\n"
         "recyclable must be true or false.\n"
         "If uncertain, use waste_type='Unknown Waste' and confidence below 0.65."
     )
@@ -205,7 +212,7 @@ def _detect_mime_type(image: bytes) -> str:
     return "image/jpeg"
 
 
-def analyze_waste_image(image: bytes) -> Dict[str, Any]:
+def analyze_waste_image(image: bytes, language: str = "en") -> Dict[str, Any]:
     if not GEMINI_API_KEY:
         raise AIProviderError("AI_UNAVAILABLE", "AI service is not configured")
 
@@ -218,7 +225,7 @@ def analyze_waste_image(image: bytes) -> Dict[str, Any]:
         "contents": [
             {
                 "parts": [
-                    {"text": _build_prompt()},
+                    {"text": _build_prompt(language)},
                     {
                         "inline_data": {
                             "mime_type": mime_type,

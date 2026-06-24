@@ -111,7 +111,7 @@ export default function ScanWastePage() {
 
       setLoadingState("analyzing");
 
-      const requestUrl = `${SCAN_API_BASE_URL}/scan/${userId}`;
+      const requestUrl = `${SCAN_API_BASE_URL}/scan/${userId}?language=${language}`;
       console.log("SCAN REQUEST URL:", requestUrl);
       console.log("SCAN REQUEST PAYLOAD (file):", selectedFile.name, selectedFile.size, selectedFile.type);
 
@@ -357,7 +357,7 @@ export default function ScanWastePage() {
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">Confidence</p>
+                        <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.scanWaste.confidence}</p>
                         <p className="text-sm text-emerald-200">{(translatedScanResult.confidence * 100).toFixed(0)}%</p>
                       </div>
                       <div>

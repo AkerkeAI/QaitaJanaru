@@ -36,7 +36,7 @@ def _map_ai_error(exc: AIProviderError) -> HTTPException:
 
 
 @router.post("/{user_id}", response_model=ScanResponse)
-async def scan_waste(user_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def scan_waste(user_id: int, file: UploadFile = File(...), language: str = "en", db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
@@ -58,7 +58,8 @@ async def scan_waste(user_id: int, file: UploadFile = File(...), db: Session = D
         print("user_id:", user_id)
         print("user.total_scans:", user.total_scans or 0)
         print("file_size:", len(image_bytes))
-        result = analyze_waste_image(image_bytes)
+        print("language:", language)
+        result = analyze_waste_image(image_bytes, language)
         print("AI RESULT:", result)
     except AIProviderError as exc:
         print("AI provider error:", exc.code, exc.args[0])
