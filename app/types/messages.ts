@@ -92,6 +92,8 @@ export interface Messages {
     cancel: string;
     deleteAccountConfirm: string;
     deleteAccountSuccess: string;
+    theme: string;
+    chooseTheme: string;
   };
   login: {
     title: string;

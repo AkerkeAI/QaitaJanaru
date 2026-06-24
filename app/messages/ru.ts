@@ -94,6 +94,8 @@ export const messages: Messages = {
     cancel: "Отмена",
     deleteAccountConfirm: "Вы уверены, что хотите навсегда удалить аккаунт?",
     deleteAccountSuccess: "Аккаунт успешно удалён.",
+    theme: "Тема",
+    chooseTheme: "Выбор темы",
   },
   login: {
     title: "Добро пожаловать",

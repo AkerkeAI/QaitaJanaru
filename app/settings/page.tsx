@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "../components/Sidebar";
 import { languageNames, Language } from "../lib/language";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useTheme } from "../contexts/ThemeContext";
+import { themeNames, Theme } from "../lib/theme";
 
 interface Profile {
   id: number;
@@ -21,10 +23,40 @@ export default function SettingsPage() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const { language, messages, setLanguage } = useLanguage();
+  const { theme, colors, setTheme } = useTheme();
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  // Handle swipe to open sidebar
+  useEffect(() => {
+    const handleTouchStart = (e: TouchEvent) => {
+      if (sidebarOpen) return;
+      touchStartX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (sidebarOpen) return;
+      touchEndX.current = e.changedTouches[0].clientX;
+      if (
+        touchStartX.current < 30 &&
+        touchEndX.current - touchStartX.current > 50
+      ) {
+        setSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchend", handleTouchEnd);
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [sidebarOpen]);
 
   useEffect(() => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
@@ -75,7 +107,6 @@ export default function SettingsPage() {
         method: "DELETE",
       });
       if (response.ok) {
-        // Clear all local storage
         localStorage.clear();
         alert(messages.settings.deleteAccountSuccess);
         router.push("/login");
@@ -86,32 +117,46 @@ export default function SettingsPage() {
   };
 
   return (
-    <main className="min-h-screen text-white relative overflow-hidden bg-gradient-to-br from-emerald-950 via-green-900 to-cyan-950">
+    <main
+      className="min-h-screen relative overflow-hidden"
+      style={{ background: colors.bg, color: colors.text }}
+    >
       {/* Animated background orbs */}
-      <div className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-[120px] animate-pulse"></div>
-      <div className="fixed bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-cyan-500/10 blur-[100px] animate-pulse delay-1000"></div>
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-green-500/5 blur-[80px] animate-pulse delay-500"></div>
+      <div
+        className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] animate-pulse"
+        style={{ backgroundColor: `${colors.primary}20` }}
+      ></div>
+      <div
+        className="fixed bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[100px] animate-pulse delay-1000"
+        style={{ backgroundColor: `${colors.accent}20` }}
+      ></div>
+      <div
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full blur-[80px] animate-pulse delay-500"
+        style={{ backgroundColor: `${colors.primary}10` }}
+      ></div>
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main Container */}
       <div className="relative z-10 min-h-screen flex flex-col">
-        
         {/* Header */}
         <header className="flex items-center justify-between p-4 md:p-6 lg:p-8 flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-3 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
+            className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
+            style={{
+              backgroundColor: colors.cardBg,
+              borderColor: colors.border,
+            }}
             aria-label="Open menu"
           >
             <svg
-              className="w-6 h-6 text-emerald-300 group-hover:text-white transition-colors"
+              className="w-6 h-6 transition-colors group-hover:text-white"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="2.5"
               viewBox="0 0 24 24"
-              stroke="currentColor"
+              stroke={colors.textSecondary}
             >
               <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>
@@ -128,41 +173,87 @@ export default function SettingsPage() {
         {/* Content Area */}
         <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
           <div className="max-w-2xl mx-auto">
-            
             {/* Page Title */}
             <div className="mb-8">
               <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">⚙️ {messages.settings.title}</h2>
-              <p className="text-emerald-300 text-sm md:text-base">{messages.settings.subtitle}</p>
+              <p className="text-sm md:text-base" style={{ color: colors.textSecondary }}>
+                {messages.settings.subtitle}
+              </p>
             </div>
 
             {/* Settings List */}
             <div className="space-y-3">
-              
-              {/* Language Row */}
-              <div className="rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden">
+              {/* Theme Row */}
+              <div
+                className="rounded-xl backdrop-blur-xl border overflow-hidden"
+                style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
+              >
                 <button
-                  onClick={() => setShowLanguageModal(true)}
-                  className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/5 transition-colors h-16"
+                  onClick={() => setShowThemeModal(true)}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:opacity-80 transition-colors h-16"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center text-base shadow-lg flex-shrink-0">
-                      🌍
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-base shadow-lg flex-shrink-0"
+                      style={{ background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})` }}
+                    >
+                      🎨
                     </div>
                     <div className="text-left min-w-0">
-                      <div className="font-semibold text-sm truncate">{messages.settings.language}</div>
-                      <div className="text-xs text-emerald-300 truncate">{messages.settings.languageDescription}</div>
+                      <div className="font-semibold text-sm truncate">{messages.settings.theme}</div>
+                      <div className="text-xs truncate" style={{ color: colors.textSecondary }}>
+                        {themeNames[theme]}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0 pl-2">
-                    <span className="text-xs text-emerald-300">{languageNames[language]}</span>
+                  <div className="flex items-center flex-shrink-0 pl-2">
                     <svg
-                      className="w-4 h-4 text-emerald-300"
+                      className="w-4 h-4"
                       fill="none"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2.5"
                       viewBox="0 0 24 24"
-                      stroke="currentColor"
+                      stroke={colors.textSecondary}
+                    >
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                  </div>
+                </button>
+              </div>
+
+              {/* Language Row */}
+              <div
+                className="rounded-xl backdrop-blur-xl border overflow-hidden"
+                style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
+              >
+                <button
+                  onClick={() => setShowLanguageModal(true)}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:opacity-80 transition-colors h-16"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-base shadow-lg flex-shrink-0"
+                      style={{ background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})` }}
+                    >
+                      🌍
+                    </div>
+                    <div className="text-left min-w-0">
+                      <div className="font-semibold text-sm truncate">{messages.settings.language}</div>
+                      <div className="text-xs truncate" style={{ color: colors.textSecondary }}>
+                        {languageNames[language]}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center flex-shrink-0 pl-2">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2.5"
+                      viewBox="0 0 24 24"
+                      stroke={colors.textSecondary}
                     >
                       <path d="M9 18l6-6-6-6" />
                     </svg>
@@ -171,26 +262,37 @@ export default function SettingsPage() {
               </div>
 
               {/* Account Information Row */}
-              <div className="rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden">
-                <button onClick={fetchProfile} className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/5 transition-colors h-16">
+              <div
+                className="rounded-xl backdrop-blur-xl border overflow-hidden"
+                style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
+              >
+                <button
+                  onClick={fetchProfile}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:opacity-80 transition-colors h-16"
+                >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-base shadow-lg flex-shrink-0">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-base shadow-lg flex-shrink-0"
+                      style={{ background: `linear-gradient(to bottom right, ${colors.accent}, ${colors.primary})` }}
+                    >
                       👤
                     </div>
                     <div className="text-left min-w-0">
                       <div className="font-semibold text-sm truncate">{messages.settings.accountInformation}</div>
-                      <div className="text-xs text-emerald-300 truncate">{messages.settings.accountInformationDescription}</div>
+                      <div className="text-xs truncate" style={{ color: colors.textSecondary }}>
+                        {messages.settings.accountInformationDescription}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center flex-shrink-0 pl-2">
                     <svg
-                      className="w-4 h-4 text-emerald-300"
+                      className="w-4 h-4"
                       fill="none"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2.5"
                       viewBox="0 0 24 24"
-                      stroke="currentColor"
+                      stroke={colors.textSecondary}
                     >
                       <path d="M9 18l6-6-6-6" />
                     </svg>
@@ -199,10 +301,19 @@ export default function SettingsPage() {
               </div>
 
               {/* Logout Row */}
-              <div className="rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden">
-                <button onClick={handleLogout} className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/5 transition-colors h-16">
+              <div
+                className="rounded-xl backdrop-blur-xl border overflow-hidden"
+                style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
+              >
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:opacity-80 transition-colors h-16"
+                >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-base shadow-lg flex-shrink-0">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-base shadow-lg flex-shrink-0"
+                      style={{ background: `linear-gradient(to bottom right, ${colors.warning}, ${colors.danger})` }}
+                    >
                       🚪
                     </div>
                     <div className="text-left min-w-0">
@@ -213,63 +324,154 @@ export default function SettingsPage() {
               </div>
 
               {/* Delete Account Row */}
-              <div className="rounded-xl bg-red-500/5 backdrop-blur-xl border border-red-500/30 overflow-hidden">
-                <button onClick={() => setShowDeleteConfirmModal(true)} className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-red-500/10 transition-colors h-16">
+              <div
+                className="rounded-xl backdrop-blur-xl border overflow-hidden"
+                style={{ backgroundColor: colors.dangerLight, borderColor: `${colors.danger}50` }}
+              >
+                <button
+                  onClick={() => setShowDeleteConfirmModal(true)}
+                  className="w-full px-4 py-3.5 flex items-center justify-between hover:opacity-80 transition-colors h-16"
+                >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-base shadow-lg flex-shrink-0">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-base shadow-lg flex-shrink-0"
+                      style={{ background: `linear-gradient(to bottom right, ${colors.danger}, #7f1d1d)` }}
+                    >
                       🗑️
                     </div>
                     <div className="text-left min-w-0">
-                      <div className="font-semibold text-sm text-red-300 truncate">{messages.settings.deleteAccount}</div>
-                      <div className="text-xs text-red-200 truncate">{messages.settings.deleteAccountDescription}</div>
+                      <div
+                        className="font-semibold text-sm truncate"
+                        style={{ color: `${colors.danger}cc` }}
+                      >
+                        {messages.settings.deleteAccount}
+                      </div>
+                      <div
+                        className="text-xs truncate"
+                        style={{ color: `${colors.danger}aa` }}
+                      >
+                        {messages.settings.deleteAccountDescription}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center flex-shrink-0 pl-2">
                     <svg
-                      className="w-4 h-4 text-red-300"
+                      className="w-4 h-4"
                       fill="none"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth="2.5"
                       viewBox="0 0 24 24"
-                      stroke="currentColor"
+                      stroke={`${colors.danger}cc`}
                     >
                       <path d="M9 18l6-6-6-6" />
                     </svg>
                   </div>
                 </button>
               </div>
-
             </div>
           </div>
         </div>
       </div>
 
+      {/* Theme Selection Modal */}
+      {showThemeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 backdrop-blur-sm"
+            style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+            onClick={() => setShowThemeModal(false)}
+          ></div>
+          <div
+            className="relative w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden z-10"
+            style={{
+              background: colors.bg,
+              borderColor: colors.border,
+            }}
+          >
+            <div className="px-6 py-4 border-b flex justify-between items-center" style={{ borderColor: colors.border }}>
+              <h3 className="text-xl font-bold tracking-tight">🎨 {messages.settings.chooseTheme}</h3>
+              <button
+                onClick={() => setShowThemeModal(false)}
+                style={{ color: colors.textSecondary }}
+                className="hover:opacity-80"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4 grid grid-cols-2 gap-3">
+              {(Object.keys(themeNames) as Theme[]).map((t) => {
+                const tc = require("../lib/theme").themeColors[t];
+                return (
+                  <button
+                    key={t}
+                    onClick={() => {
+                      setTheme(t);
+                    }}
+                    className="p-4 rounded-xl transition-all duration-200"
+                    style={{
+                      background: tc.bg,
+                      border: `2px solid ${theme === t ? tc.primary : tc.border}`,
+                      boxShadow: theme === t ? `0 0 0 2px ${tc.primary}40` : "none",
+                    }}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div
+                        className="w-10 h-10 rounded-full shadow-md"
+                        style={{
+                          background: `linear-gradient(to bottom right, ${tc.primary}, ${tc.accent})`,
+                        }}
+                      ></div>
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: tc.text }}
+                      >
+                        {themeNames[t]}
+                      </span>
+                      {theme === t && (
+                        <span className="text-xs" style={{ color: tc.primary }}>✓</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Language Selection Modal */}
       {showLanguageModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowLanguageModal(false)}></div>
-          <div className="relative w-full max-w-md rounded-2xl bg-gradient-to-br from-emerald-950 to-green-900 border border-white/10 shadow-2xl overflow-hidden z-10">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-white/10">
+          <div
+            className="absolute inset-0 backdrop-blur-sm"
+            style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+            onClick={() => setShowLanguageModal(false)}
+          ></div>
+          <div
+            className="relative w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden z-10"
+            style={{
+              background: colors.bg,
+              borderColor: colors.border,
+            }}
+          >
+            <div className="px-6 py-4 border-b" style={{ borderColor: colors.border }}>
               <h3 className="text-xl font-bold tracking-tight">⚙️ {messages.settings.language}</h3>
             </div>
-
-            {/* Modal Content */}
             <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
               {Object.keys(languageNames).map((lang) => (
                 <button
                   key={lang}
                   onClick={() => handleLanguageSelect(lang as Language)}
-                  className={`w-full px-4 py-3 flex items-center justify-between rounded-xl transition-colors text-sm font-medium ${
-                    language === lang
-                      ? "bg-emerald-500/20 border border-emerald-500/40 text-white"
-                      : "hover:bg-white/5 text-emerald-100"
-                  }`}
+                  className="w-full px-4 py-3 flex items-center justify-between rounded-xl transition-colors text-sm font-medium"
+                  style={{
+                    backgroundColor: language === lang ? `${colors.primary}30` : "transparent",
+                    border: language === lang ? `1px solid ${colors.primary}60` : "none",
+                  }}
                 >
                   <span>{languageNames[lang as Language]}</span>
                   {language === lang && (
-                    <span className="text-emerald-400 text-xs">✓</span>
+                    <span style={{ color: colors.primary }}>✓</span>
                   )}
                 </button>
               ))}
@@ -281,45 +483,91 @@ export default function SettingsPage() {
       {/* Account Information Modal */}
       {showAccountModal && profile && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAccountModal(false)}></div>
-          <div className="relative w-full max-w-md rounded-2xl bg-gradient-to-br from-emerald-950 to-green-900 border border-white/10 shadow-2xl overflow-hidden z-10">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-white/10 flex justify-between items-center">
+          <div
+            className="absolute inset-0 backdrop-blur-sm"
+            style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+            onClick={() => setShowAccountModal(false)}
+          ></div>
+          <div
+            className="relative w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden z-10"
+            style={{
+              background: colors.bg,
+              borderColor: colors.border,
+            }}
+          >
+            <div className="px-6 py-4 border-b flex justify-between items-center" style={{ borderColor: colors.border }}>
               <h3 className="text-xl font-bold tracking-tight">👤 {messages.settings.accountInformation}</h3>
-              <button onClick={() => setShowAccountModal(false)} className="text-emerald-300 hover:text-white">
+              <button
+                onClick={() => setShowAccountModal(false)}
+                style={{ color: colors.textSecondary }}
+                className="hover:opacity-80"
+              >
                 ✕
               </button>
             </div>
-
-            {/* Modal Content */}
             <div className="p-6 space-y-4">
               <div>
-                <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.register.fullName}</p>
+                <p
+                  className="text-xs uppercase tracking-wider mb-1"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {messages.register.fullName}
+                </p>
                 <p className="text-lg font-semibold">{profile.full_name}</p>
               </div>
               <div>
-                <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.login.email}</p>
+                <p
+                  className="text-xs uppercase tracking-wider mb-1"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {messages.login.email}
+                </p>
                 <p className="text-lg font-semibold">{profile.email}</p>
               </div>
               <div>
-                <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.register.city}</p>
+                <p
+                  className="text-xs uppercase tracking-wider mb-1"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {messages.register.city}
+                </p>
                 <p className="text-lg font-semibold">{profile.city}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.profile.ecoPoints}</p>
+                  <p
+                    className="text-xs uppercase tracking-wider mb-1"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    {messages.profile.ecoPoints}
+                  </p>
                   <p className="text-lg font-semibold">{profile.eco_points}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.profile.level}</p>
+                  <p
+                    className="text-xs uppercase tracking-wider mb-1"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    {messages.profile.level}
+                  </p>
                   <p className="text-lg font-semibold">{profile.level}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.profile.streak}</p>
+                  <p
+                    className="text-xs uppercase tracking-wider mb-1"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    {messages.profile.streak}
+                  </p>
                   <p className="text-lg font-semibold">{profile.streak}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.profile.totalScans}</p>
+                  <p
+                    className="text-xs uppercase tracking-wider mb-1"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    {messages.profile.totalScans}
+                  </p>
                   <p className="text-lg font-semibold">{profile.total_scans}</p>
                 </div>
               </div>
@@ -331,29 +579,45 @@ export default function SettingsPage() {
       {/* Delete Account Confirmation Modal */}
       {showDeleteConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirmModal(false)}></div>
-          <div className="relative w-full max-w-md rounded-2xl bg-gradient-to-br from-emerald-950 to-green-900 border border-white/10 shadow-2xl overflow-hidden z-10">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-white/10 flex justify-between items-center">
+          <div
+            className="absolute inset-0 backdrop-blur-sm"
+            style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+            onClick={() => setShowDeleteConfirmModal(false)}
+          ></div>
+          <div
+            className="relative w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden z-10"
+            style={{
+              background: colors.bg,
+              borderColor: colors.border,
+            }}
+          >
+            <div className="px-6 py-4 border-b flex justify-between items-center" style={{ borderColor: colors.border }}>
               <h3 className="text-xl font-bold tracking-tight">🗑️ {messages.settings.deleteAccount}</h3>
-              <button onClick={() => setShowDeleteConfirmModal(false)} className="text-emerald-300 hover:text-white">
+              <button
+                onClick={() => setShowDeleteConfirmModal(false)}
+                style={{ color: colors.textSecondary }}
+                className="hover:opacity-80"
+              >
                 ✕
               </button>
             </div>
-
-            {/* Modal Content */}
             <div className="p-6 space-y-6">
               <p className="text-lg">{messages.settings.deleteAccountConfirm}</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteConfirmModal(false)}
-                  className="flex-1 px-4 py-3 rounded-xl border border-white/20 hover:bg-white/5 text-sm font-semibold"
+                  className="flex-1 px-4 py-3 rounded-xl border hover:opacity-80 text-sm font-semibold"
+                  style={{ borderColor: colors.border }}
                 >
                   {messages.settings.cancel}
                 </button>
                 <button
                   onClick={handleDeleteAccount}
-                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-700 text-sm font-semibold hover:brightness-110 transition"
+                  className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold hover:brightness-110 transition"
+                  style={{
+                    background: `linear-gradient(to right, ${colors.danger}, #7f1d1d)`,
+                    color: "#fff",
+                  }}
                 >
                   {messages.settings.confirm}
                 </button>
