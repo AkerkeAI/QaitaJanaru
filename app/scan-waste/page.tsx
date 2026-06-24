@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useTheme } from "../contexts/ThemeContext";
 import { WasteDetectionResult, ScanResponse, LoadingState } from "../types/scan";
 import { SCAN_API_BASE_URL } from "../constants/scan";
 import {
@@ -27,6 +28,26 @@ export default function ScanWastePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { messages, language } = useLanguage();
+  const { theme, colors } = useTheme();
+
+  // Swipe gesture refs
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchEndX.current - touchStartX.current;
+    if (diff > 50 && touchStartX.current < 50) {
+      setSidebarOpen(true);
+    }
+  };
 
   useEffect(() => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
@@ -231,10 +252,25 @@ export default function ScanWastePage() {
   }, [nearestCenters, language]);
 
   return (
-    <main className="min-h-screen text-white relative overflow-hidden bg-gradient-to-br from-emerald-950 via-green-900 to-cyan-950">
-      <div className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-[120px] animate-pulse"></div>
-      <div className="fixed bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-cyan-500/10 blur-[100px] animate-pulse delay-1000"></div>
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-green-500/5 blur-[80px] animate-pulse delay-500"></div>
+    <main 
+      className="min-h-screen text-white relative overflow-hidden" 
+      style={{ background: colors.bg }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div 
+        className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] animate-pulse"
+        style={{ background: `${colors.primary}10` }}
+      ></div>
+      <div 
+        className="fixed bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[100px] animate-pulse delay-1000"
+        style={{ background: `${colors.accent}10` }}
+      ></div>
+      <div 
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full blur-[80px] animate-pulse delay-500"
+        style={{ background: `${colors.primary}05` }}
+      ></div>
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
@@ -242,17 +278,21 @@ export default function ScanWastePage() {
         <header className="flex items-center justify-between p-4 md:p-6 lg:p-8 flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-3 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
+            className="p-3 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
+            style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1 }}
             aria-label="Open menu"
           >
             <svg
-              className="w-6 h-6 text-emerald-300 group-hover:text-white transition-colors"
+              className="w-6 h-6 transition-colors"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="2.5"
               viewBox="0 0 24 24"
-              stroke="currentColor"
+              stroke={colors.textSecondary}
+              style={{ color: colors.textSecondary }}
+              onMouseEnter={(e) => e.currentTarget.style.stroke = colors.text}
+              onMouseLeave={(e) => e.currentTarget.style.stroke = colors.textSecondary}
             >
               <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>
@@ -269,7 +309,7 @@ export default function ScanWastePage() {
         <div className="flex-1 px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8">
           <div className="mb-6">
             <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">📸 {messages.scanWaste.title}</h2>
-            <p className="text-emerald-300 text-sm md:text-base">{messages.scanWaste.subtitle}</p>
+            <p className="text-sm md:text-base" style={{ color: colors.textSecondary }}>{messages.scanWaste.subtitle}</p>
           </div>
 
           {!selectedImage && loadingState === "idle" && !scanResult && (
@@ -277,30 +317,42 @@ export default function ScanWastePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button
                   onClick={handleTakePhoto}
-                  className="relative rounded-3xl overflow-hidden border border-emerald-500/30 backdrop-blur-xl bg-gradient-to-br from-emerald-950/80 via-green-900/70 to-cyan-950/80 p-8 hover:scale-105 transition-all duration-300 shadow-lg group"
+                  className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-8 hover:scale-105 transition-all duration-300 shadow-lg group"
+                  style={{ borderColor: `${colors.primary}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)` }}
                 >
                   <div className="relative z-10 flex flex-col items-center justify-center space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center group-hover:bg-emerald-500/30 transition-colors">
+                    <div 
+                      className="w-16 h-16 rounded-full flex items-center justify-center transition-colors"
+                      style={{ background: `${colors.primary}20` }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = `${colors.primary}30`}
+                      onMouseLeave={(e) => e.currentTarget.style.background = `${colors.primary}20`}
+                    >
                       <span className="text-3xl">📷</span>
                     </div>
                     <div className="text-center">
-                      <h3 className="text-lg font-semibold text-emerald-100 mb-1">{messages.scanWaste.takePhoto}</h3>
-                      <p className="text-sm text-emerald-300">{messages.scanWaste.takePhotoDescription}</p>
+                      <h3 className="text-lg font-semibold mb-1" style={{ color: colors.text }}>{messages.scanWaste.takePhoto}</h3>
+                      <p className="text-sm" style={{ color: colors.textSecondary }}>{messages.scanWaste.takePhotoDescription}</p>
                     </div>
                   </div>
                 </button>
 
                 <button
                   onClick={handleUploadPhoto}
-                  className="relative rounded-3xl overflow-hidden border border-emerald-500/30 backdrop-blur-xl bg-gradient-to-br from-emerald-950/80 via-green-900/70 to-cyan-950/80 p-8 hover:scale-105 transition-all duration-300 shadow-lg group"
+                  className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-8 hover:scale-105 transition-all duration-300 shadow-lg group"
+                  style={{ borderColor: `${colors.primary}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)` }}
                 >
                   <div className="relative z-10 flex flex-col items-center justify-center space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center group-hover:bg-emerald-500/30 transition-colors">
+                    <div 
+                      className="w-16 h-16 rounded-full flex items-center justify-center transition-colors"
+                      style={{ background: `${colors.primary}20` }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = `${colors.primary}30`}
+                      onMouseLeave={(e) => e.currentTarget.style.background = `${colors.primary}20`}
+                    >
                       <span className="text-3xl">📁</span>
                     </div>
                     <div className="text-center">
-                      <h3 className="text-lg font-semibold text-emerald-100 mb-1">{messages.scanWaste.uploadPhoto}</h3>
-                      <p className="text-sm text-emerald-300">{messages.scanWaste.uploadPhotoDescription}</p>
+                      <h3 className="text-lg font-semibold mb-1" style={{ color: colors.text }}>{messages.scanWaste.uploadPhoto}</h3>
+                      <p className="text-sm" style={{ color: colors.textSecondary }}>{messages.scanWaste.uploadPhotoDescription}</p>
                     </div>
                   </div>
                 </button>
@@ -320,20 +372,25 @@ export default function ScanWastePage() {
 
           {selectedImage && loadingState === "idle" && !scanResult && (
             <div className="space-y-4">
-              <div className="relative rounded-3xl overflow-hidden border border-emerald-500/30 backdrop-blur-xl bg-gradient-to-br from-emerald-950/80 via-green-900/70 to-cyan-950/80">
+              <div 
+                className="relative rounded-3xl overflow-hidden backdrop-blur-xl"
+                style={{ borderColor: `${colors.primary}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)` }}
+              >
                 <img src={selectedImage} alt="Selected waste" className="w-full h-64 md:h-96 object-contain" />
               </div>
 
               <div className="flex gap-4">
                 <button
                   onClick={handleScan}
-                  className="flex-1 px-6 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 transition-all duration-300 shadow-lg hover:scale-105 active:scale-95 text-white font-semibold"
+                  className="flex-1 px-6 py-4 rounded-2xl hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg text-white font-semibold"
+                  style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})` }}
                 >
                   {messages.scanWaste.scanButton}
                 </button>
                 <button
                   onClick={handleReset}
-                  className="px-6 py-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 transition-all duration-300 text-emerald-300 font-semibold"
+                  className="px-6 py-4 rounded-2xl backdrop-blur-xl transition-all duration-300 font-semibold"
+                  style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
                 >
                   {messages.scanWaste.cancelButton}
                 </button>
@@ -344,59 +401,77 @@ export default function ScanWastePage() {
           {loadingState !== "idle" && loadingState !== "complete" && loadingState !== "error" && (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="relative w-32 h-32 mb-8">
-                <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20"></div>
-                <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-                <div className="absolute inset-4 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <div 
+                  className="absolute inset-0 rounded-full"
+                  style={{ borderColor: `${colors.primary}20`, borderWidth: 4 }}
+                ></div>
+                <div 
+                  className="absolute inset-0 rounded-full border-t-transparent animate-spin"
+                  style={{ borderColor: colors.primary, borderWidth: 4 }}
+                ></div>
+                <div 
+                  className="absolute inset-4 rounded-full flex items-center justify-center"
+                  style={{ background: `${colors.primary}10` }}
+                >
                   <span className="text-4xl">♻️</span>
                 </div>
               </div>
-              <p className="text-xl font-semibold text-emerald-100 mb-2">{getLoadingMessage()}</p>
+              <p className="text-xl font-semibold mb-2" style={{ color: colors.text }}>{getLoadingMessage()}</p>
             </div>
           )}
 
           {translatedScanResult && loadingState === "complete" && (
             <div className="space-y-4">
-              <div className="relative rounded-3xl overflow-hidden border border-emerald-500/30 backdrop-blur-xl bg-gradient-to-br from-emerald-950/80 via-green-900/70 to-cyan-950/80 p-6">
+              <div 
+                className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-6"
+                style={{ borderColor: `${colors.primary}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)` }}
+              >
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ background: `${colors.primary}20` }}
+                    >
                       <span className="text-2xl">♻️</span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-emerald-100">{messages.scanWaste.wasteDetected}</h3>
-                      <p className="text-sm text-emerald-300">{messages.scanWaste.aiAnalysisComplete}</p>
+                      <h3 className="text-xl font-bold" style={{ color: colors.text }}>{messages.scanWaste.wasteDetected}</h3>
+                      <p className="text-sm" style={{ color: colors.textSecondary }}>{messages.scanWaste.aiAnalysisComplete}</p>
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.scanWaste.wasteType}</p>
-                      <p className="text-lg font-semibold text-emerald-100">{translatedScanResult.waste_type}</p>
+                      <p className="text-xs uppercase tracking-wider mb-1" style={{ color: colors.textSecondary }}>{messages.scanWaste.wasteType}</p>
+                      <p className="text-lg font-semibold" style={{ color: colors.text }}>{translatedScanResult.waste_type}</p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.scanWaste.category}</p>
-                        <div className="inline-block px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-100 text-sm font-medium">
+                        <p className="text-xs uppercase tracking-wider mb-1" style={{ color: colors.textSecondary }}>{messages.scanWaste.category}</p>
+                        <div 
+                          className="inline-block px-3 py-1 rounded-full text-sm font-medium"
+                          style={{ background: `${colors.primary}20`, color: colors.text }}
+                        >
                           {translatedScanResult.recycling_category}
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.scanWaste.confidence}</p>
-                        <p className="text-sm text-emerald-200">{(translatedScanResult.confidence * 100).toFixed(0)}%</p>
+                        <p className="text-xs uppercase tracking-wider mb-1" style={{ color: colors.textSecondary }}>{messages.scanWaste.confidence}</p>
+                        <p className="text-sm" style={{ color: colors.textSecondary }}>{(translatedScanResult.confidence * 100).toFixed(0)}%</p>
                       </div>
                       <div>
-                        <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.scanWaste.recyclable}</p>
-                        <p className="text-sm font-semibold text-emerald-100">{recyclableLabel}</p>
+                        <p className="text-xs uppercase tracking-wider mb-1" style={{ color: colors.textSecondary }}>{messages.scanWaste.recyclable}</p>
+                        <p className="text-sm font-semibold" style={{ color: colors.text }}>{recyclableLabel}</p>
                       </div>
                     </div>
 
                     <div>
-                      <p className="text-xs text-emerald-300 uppercase tracking-wider mb-2">{messages.scanWaste.preparation}</p>
+                      <p className="text-xs uppercase tracking-wider mb-2" style={{ color: colors.textSecondary }}>{messages.scanWaste.preparation}</p>
                       <ul className="space-y-1">
                         {translatedScanResult.preparation_steps.map((step, index) => (
-                          <li key={index} className="text-sm text-emerald-200 flex items-start gap-2">
-                            <span className="text-emerald-400">•</span>
+                          <li key={index} className="text-sm flex items-start gap-2" style={{ color: colors.text }}>
+                            <span style={{ color: colors.primary }}>•</span>
                             <span>{step}</span>
                           </li>
                         ))}
@@ -404,66 +479,76 @@ export default function ScanWastePage() {
                     </div>
 
                     <div>
-                      <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.scanWaste.recyclingInstructions}</p>
-                      <p className="text-sm text-emerald-200">{translatedScanResult.recycling_advice}</p>
+                      <p className="text-xs uppercase tracking-wider mb-1" style={{ color: colors.textSecondary }}>{messages.scanWaste.recyclingInstructions}</p>
+                      <p className="text-sm" style={{ color: colors.text }}>{translatedScanResult.recycling_advice}</p>
                     </div>
 
                     <div>
-                      <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.scanWaste.ecoTip}</p>
-                      <p className="text-sm text-emerald-200">{translatedScanResult.eco_tip}</p>
+                      <p className="text-xs uppercase tracking-wider mb-1" style={{ color: colors.textSecondary }}>{messages.scanWaste.ecoTip}</p>
+                      <p className="text-sm" style={{ color: colors.text }}>{translatedScanResult.eco_tip}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {scanResponse && (
-                <div className="relative rounded-3xl overflow-hidden border border-emerald-500/30 backdrop-blur-xl bg-gradient-to-br from-emerald-950/80 via-green-900/70 to-cyan-950/80 p-6">
+                <div 
+                  className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-6"
+                  style={{ borderColor: `${colors.primary}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)` }}
+                >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-emerald-300 mb-1">{messages.scanWaste.pointsEarned}</p>
-                      <p className="text-2xl font-bold text-emerald-100">+{scanResponse.earned_points}</p>
+                      <p className="text-sm mb-1" style={{ color: colors.textSecondary }}>{messages.scanWaste.pointsEarned}</p>
+                      <p className="text-2xl font-bold" style={{ color: colors.text }}>+{scanResponse.earned_points}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-emerald-300 mb-1">{messages.scanWaste.totalPoints}</p>
-                      <p className="text-2xl font-bold text-emerald-100">{scanResponse.new_total_points}</p>
+                      <p className="text-sm mb-1" style={{ color: colors.textSecondary }}>{messages.scanWaste.totalPoints}</p>
+                      <p className="text-2xl font-bold" style={{ color: colors.text }}>{scanResponse.new_total_points}</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              <div className="relative rounded-3xl overflow-hidden border border-cyan-500/30 backdrop-blur-xl bg-gradient-to-br from-cyan-950/80 via-blue-900/70 to-cyan-950/80 p-6">
+              <div 
+                className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-6"
+                style={{ borderColor: `${colors.accent}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.accent}10, ${colors.primary}10, ${colors.accent}10)` }}
+              >
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ background: `${colors.accent}20` }}
+                    >
                       <span className="text-2xl">📍</span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-emerald-100">{messages.scanWaste.nearestRecyclingCenter}</h3>
-                      <p className="text-sm text-emerald-300">{messages.scanWaste.recyclingCenterSubtitle}</p>
+                      <h3 className="text-xl font-bold" style={{ color: colors.text }}>{messages.scanWaste.nearestRecyclingCenter}</h3>
+                      <p className="text-sm" style={{ color: colors.textSecondary }}>{messages.scanWaste.recyclingCenterSubtitle}</p>
                     </div>
                   </div>
 
                   {translatedNearestCenters.length === 0 ? (
-                    <div className="text-emerald-200">{messages.recyclingMap.noCenterFound}</div>
+                    <div style={{ color: colors.text }}>{messages.recyclingMap.noCenterFound}</div>
                   ) : (
                     <div className="space-y-3">
                       {translatedNearestCenters.map((center) => (
-                        <div key={center.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-black/10 p-4 rounded-lg">
+                        <div key={center.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-black/20 p-3 rounded-lg">
                           <div>
-                            <div className="font-semibold text-emerald-100">{center.name}</div>
-                            <div className="text-sm text-emerald-300">{center.address}, {center.city}</div>
-                            <div className="text-xs text-emerald-300 mt-1">
+                            <div className="font-semibold" style={{ color: colors.text }}>{center.name}</div>
+                            <div className="text-sm" style={{ color: colors.textSecondary }}>{center.address}, {center.city}</div>
+                            <div className="text-xs mt-1" style={{ color: colors.textSecondary }}>
                               {messages.recyclingMap.acceptedMaterials}: {center.waste_type}
                             </div>
                             {Number.isFinite(center.distanceKm) && (
-                              <div className="text-xs text-cyan-200 mt-1">
+                              <div className="text-xs mt-1" style={{ color: colors.accent }}>
                                 {center.distanceKm.toFixed(1)} km {messages.scanWaste.distanceAway}
                               </div>
                             )}
                           </div>
                           <button
                             onClick={() => openExternalNavigation(center.latitude, center.longitude)}
-                            className="inline-flex justify-center px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-sm font-semibold hover:from-emerald-400 hover:to-cyan-400 transition-all"
+                            className="inline-flex justify-center px-4 py-2 rounded-lg text-white text-sm font-semibold hover:scale-105 transition-all"
+                            style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})` }}
                           >
                             {messages.scanWaste.buildRoute}
                           </button>
@@ -477,7 +562,8 @@ export default function ScanWastePage() {
               <div className="flex gap-4">
                 <button
                   onClick={handleReset}
-                  className="flex-1 px-6 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 transition-all duration-300 shadow-lg hover:scale-105 active:scale-95 text-white font-semibold"
+                  className="flex-1 px-6 py-4 rounded-2xl hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg text-white font-semibold"
+                  style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})` }}
                 >
                   {messages.scanWaste.scanAnother}
                 </button>
@@ -486,20 +572,27 @@ export default function ScanWastePage() {
           )}
 
           {error && (
-            <div className="relative rounded-3xl overflow-hidden border border-red-500/30 backdrop-blur-xl bg-gradient-to-br from-red-950/80 via-red-900/70 to-red-950/80 p-6">
+            <div 
+              className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-6"
+              style={{ borderColor: `${colors.danger}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.danger}10, ${colors.danger}15, ${colors.danger}10)` }}
+            >
               <div className="relative z-10 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                <div 
+                  className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${colors.danger}20` }}
+                >
                   <span className="text-2xl">⚠️</span>
                 </div>
                 <div>
-                  <p className="text-lg font-semibold text-red-100 mb-1">{messages.scanWaste.error}</p>
-                  <p className="text-sm text-red-300">{error}</p>
+                  <p className="text-lg font-semibold mb-1" style={{ color: colors.text }}>{messages.scanWaste.error}</p>
+                  <p className="text-sm" style={{ color: colors.textSecondary }}>{error}</p>
                 </div>
               </div>
 
               <button
                 onClick={handleReset}
-                className="mt-4 w-full px-4 py-3 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 transition-all duration-300 text-red-300 font-semibold"
+                className="mt-4 w-full px-4 py-3 rounded-2xl backdrop-blur-xl transition-all duration-300 font-semibold"
+                style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.danger }}
               >
                 {messages.scanWaste.tryAgain}
               </button>

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useTheme } from "../contexts/ThemeContext";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
@@ -57,8 +58,28 @@ export default function RecyclingMapPage() {
   const [loadingLocation, setLoadingLocation] = useState(false);
   const mapRef = useRef<any>(null);
   const { messages, language } = useLanguage();
+  const { theme, colors } = useTheme();
   const searchParams = useSearchParams();
   const categoryFilter = searchParams ? searchParams.get("category") : null;
+
+  // Swipe gesture refs
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchEndX.current - touchStartX.current;
+    if (diff > 50 && touchStartX.current < 50) {
+      setSidebarOpen(true);
+    }
+  };
 
   useEffect(() => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
@@ -122,16 +143,16 @@ export default function RecyclingMapPage() {
   };
 
   // Custom glowing marker icon for user location
-  const userLocationIcon = L.divIcon({
+  const userLocationIcon = useMemo(() => L.divIcon({
     className: "custom-marker",
     html: `
       <div style="
         width: 24px;
         height: 24px;
-        background: linear-gradient(135deg, #10b981, #0d9488);
+        background: linear-gradient(135deg, ${colors.primary}, ${colors.accent});
         border: 3px solid #ffffff;
         border-radius: 50%;
-        box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 0 40px rgba(16, 185, 129, 0.4);
+        box-shadow: 0 0 20px ${colors.primary}cc, 0 0 40px ${colors.primary}66;
         animation: pulse 2s infinite;
       "></div>
       <style>
@@ -149,11 +170,11 @@ export default function RecyclingMapPage() {
     `,
     iconSize: [24, 24],
     iconAnchor: [12, 12],
-  });
+  }), [colors.primary, colors.accent]);
 
   // Create custom marker icon for recycling locations
-  const createRecyclingMarkerIcon = (facilityType: string) => {
-    const color = facilityTypeColors[facilityType as keyof typeof facilityTypeColors] || "#10b981";
+  const createRecyclingMarkerIcon = useMemo(() => (facilityType: string) => {
+    const color = facilityTypeColors[facilityType as keyof typeof facilityTypeColors] || colors.primary;
     return L.divIcon({
       className: "recycling-marker",
       html: `
@@ -173,31 +194,46 @@ export default function RecyclingMapPage() {
       iconSize: [32, 32],
       iconAnchor: [16, 16],
     });
-  };
+  }, [colors.primary]);
 
   const handleBuildRoute = buildRoute;
 
   // Prepare translated points
   const translatedPoints = useMemo(() => {
-  return filteredPoints.map(point => ({
-    ...point,
-    waste_type_translated: translateWasteType(
-      point.waste_type,
-      language
-    ),
-    facility_type_translated: translateFacilityType(
-      point.facility_type,
-      language
-    )
-  }));
-}, [filteredPoints, language]);
+    return filteredPoints.map(point => ({
+      ...point,
+      waste_type_translated: translateWasteType(
+        point.waste_type,
+        language
+      ),
+      facility_type_translated: translateFacilityType(
+        point.facility_type,
+        language
+      )
+    }));
+  }, [filteredPoints, language]);
 
   return (
-    <main className="min-h-screen text-white relative overflow-hidden bg-gradient-to-br from-emerald-950 via-green-900 to-cyan-950">
+    <main 
+      className="min-h-screen text-white relative overflow-hidden" 
+      style={{ background: colors.bg }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Animated background orbs */}
-      <div className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-[120px] animate-pulse"></div>
-      <div className="fixed bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-cyan-500/10 blur-[100px] animate-pulse delay-1000"></div>
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-green-500/5 blur-[80px] animate-pulse delay-500"></div>
+      <div 
+        className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] animate-pulse"
+        style={{ background: `${colors.primary}10` }}
+      ></div>
+      <div 
+        className="fixed bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[100px] animate-pulse delay-1000"
+        style={{ background: `${colors.accent}10` }}
+      ></div>
+      <div 
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full blur-[80px] animate-pulse delay-500"
+        style={{ background: `${colors.primary}05` }}
+      ></div>
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
@@ -206,17 +242,21 @@ export default function RecyclingMapPage() {
         <header className="flex items-center justify-between p-4 md:p-6 lg:p-8 flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-3 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
+            className="p-3 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
+            style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1 }}
             aria-label="Open menu"
           >
             <svg
-              className="w-6 h-6 text-emerald-300 group-hover:text-white transition-colors"
+              className="w-6 h-6 transition-colors"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="2.5"
               viewBox="0 0 24 24"
-              stroke="currentColor"
+              stroke={colors.textSecondary}
+              style={{ color: colors.textSecondary }}
+              onMouseEnter={(e) => e.currentTarget.style.stroke = colors.text}
+              onMouseLeave={(e) => e.currentTarget.style.stroke = colors.textSecondary}
             >
               <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>
@@ -236,13 +276,25 @@ export default function RecyclingMapPage() {
           {/* Page Title */}
           <div className="mb-4">
             <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">🗺️ {messages.recyclingMap.title}</h2>
-            <p className="text-emerald-300 text-sm md:text-base">{messages.recyclingMap.subtitle}</p>
+            <p className="text-sm md:text-base" style={{ color: colors.textSecondary }}>{messages.recyclingMap.subtitle}</p>
           </div>
 
           {/* Map Container - Integrated into page */}
-          <div className="relative rounded-3xl overflow-hidden border border-emerald-500/30 backdrop-blur-xl bg-gradient-to-br from-emerald-950/80 via-green-900/70 to-cyan-950/80" style={{ height: "calc(100vh - 200px)", minHeight: "600px" }}>
-            {/* Emerald glow effect */}
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-emerald-500/10 pointer-events-none"></div>
+          <div 
+            className="relative rounded-3xl overflow-hidden backdrop-blur-xl"
+            style={{ 
+              height: "calc(100vh - 200px)", 
+              minHeight: "600px",
+              borderColor: `${colors.primary}30`, 
+              borderWidth: 1, 
+              background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)`
+            }}
+          >
+            {/* Theme glow effect */}
+            <div 
+              className="absolute inset-0 rounded-3xl pointer-events-none"
+              style={{ background: `linear-gradient(to right, ${colors.primary}10, ${colors.accent}10, ${colors.primary}10)` }}
+            ></div>
             {/* Map */}
             <div className="absolute inset-0 rounded-3xl overflow-hidden">
               {typeof window !== "undefined" && (
@@ -257,192 +309,194 @@ export default function RecyclingMapPage() {
                   style={{ height: "100%", width: "100%" }}
                   className="z-0"
                 >
-                        <TileLayer
-                          attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-                          // Dark themed basemap for eco look
-                          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                        />
-                    {userLocation && (
-                      <Marker position={userLocation} icon={userLocationIcon}>
-                        <Popup className="custom-popup">
-                          <div className="text-emerald-100 font-semibold">
-                            {messages.recyclingMap.yourLocation}
-                          </div>
-                        </Popup>
-                      </Marker>
-                    )}
-
-                    {/* Filtering by category (from query param) */}
-                    {categoryFilter && filteredPoints.length === 0 && (
-                      <div className="absolute inset-0 z-[1001] flex items-center justify-center pointer-events-none">
-                        <div className="bg-black/60 text-emerald-100 px-6 py-4 rounded-xl">
-                          {messages.recyclingMap.noCenterFound}
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+                    // Dark themed basemap for eco look
+                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                  />
+                  {userLocation && (
+                    <Marker position={userLocation} icon={userLocationIcon}>
+                      <Popup className="custom-popup">
+                        <div className="font-semibold" style={{ color: colors.text }}>
+                          {messages.recyclingMap.yourLocation}
                         </div>
-                      </div>
-                    )}
-
-                    {translatedPoints.map((point) => (
-                      <Marker
-                        key={point.id}
-                        position={[point.latitude, point.longitude]}
-                        icon={createRecyclingMarkerIcon(point.facility_type)}
-                      >
-                        <Popup
-                          className="custom-popup"
-                          position={[point.latitude, point.longitude]}
-                        >
-                          <div className="recycling-popup-card">
-                            <div className="text-lg font-bold text-emerald-100 mb-1">
-                              {point.name}
-                            </div>
-                            <div className="text-xs text-emerald-300 mb-1">
-                              {messages.recyclingMap.address}:
-                            </div>
-                            <div className="text-sm text-emerald-200 mb-1">
-                              {point.address}
-                            </div>
-                            <div className="text-xs text-emerald-300 mb-1">
-                              {messages.recyclingMap.city}:
-                            </div>
-                            <div className="text-sm text-emerald-200 mb-1">
-                              {point.city}
-                            </div>
-                            <div className="text-xs text-emerald-300 mb-2">
-                              <div className="font-semibold mb-1">
-                                {messages.recyclingMap.facilityType}:
-                              </div>
-                              <div className="px-2 py-1 rounded-full text-xs font-medium text-white inline-block" style={{
-                                backgroundColor: facilityTypeColors[point.facility_type as keyof typeof facilityTypeColors] || "#10b981",
-                              }}>
-                                {translateFacilityType(point.facility_type, language)}
-                              </div>
-                            </div>
-                            <div className="text-xs text-emerald-300 mb-2">
-                              <div className="font-semibold mb-1">
-                                {messages.recyclingMap.wasteType}:
-                              </div>
-                              <div className="text-xs text-emerald-100">
-                                {point.waste_type_translated}
-                              </div>
-                            </div>
-                            <div className="text-xs text-emerald-300 mb-3">
-                              <div className="font-semibold mb-1">
-                                {messages.recyclingMap.description}:
-                              </div>
-                              <div className="text-xs text-emerald-100">
-                                {point.description}
-                              </div>
-                            </div>
-                            {userLocation ? (
-                              (() => {
-                                // compute distance (km) and estimated time (driving)
-                                const toRad = (v: number) => (v * Math.PI) / 180;
-                                const R = 6371; // km
-                                const dLat = toRad(point.latitude - userLocation[0]);
-                                const dLon = toRad(point.longitude - userLocation[1]);
-                                const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(userLocation[0])) * Math.cos(toRad(point.latitude)) * Math.sin(dLon/2) * Math.sin(dLon/2);
-                                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-                                const distKm = R * c;
-                                const avgSpeedKmh = 50; // driving
-                                const estMinutes = Math.max(1, Math.round((distKm / avgSpeedKmh) * 60));
-
-                                return (
-                                  <div className="text-xs text-emerald-300 mb-3">
-                                    <div className="font-semibold mb-1">{messages.recyclingMap.estimatedDistance}:</div>
-                                    <div className="text-xs text-emerald-100">{distKm.toFixed(1)} km</div>
-                                    <div className="font-semibold mt-2 mb-1">{messages.recyclingMap.estimatedTime}:</div>
-                                    <div className="text-xs text-emerald-100">{estMinutes} min (approx)</div>
-                                  </div>
-                                );
-                              })()
-                            ) : (
-                              <div className="text-xs text-emerald-300 mb-3">{messages.recyclingMap.loadingMap}</div>
-                            )}
-                            <button
-                              className="w-full px-3 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 text-white text-sm font-semibold hover:from-emerald-400 hover:to-cyan-400 transition-all duration-200"
-                              onClick={() => handleBuildRoute(point)}
-                            >
-                              {messages.recyclingMap.buildRoute}
-                            </button>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    ))}
-                  </MapContainer>
-                )}
-              </div>
-
-              {/* Find My Location Button */}
-              <div className="absolute bottom-6 right-6 z-[1000]">
-                <button
-                  onClick={handleFindLocation}
-                  disabled={loadingLocation}
-                  className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 transition-all duration-300 shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label={messages.recyclingMap.findLocation}
-                >
-                  {loadingLocation ? (
-                    <svg
-                      className="w-6 h-6 animate-spin text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-6 h-6 text-white"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2.5"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2a8 8 0 018 8.2c0 7.3-8 11.8-8 11.8z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
+                      </Popup>
+                    </Marker>
                   )}
-                </button>
-              </div>
 
-              {/* Glass overlay for futuristic effect */}
-              <div className="absolute inset-0 pointer-events-none rounded-3xl border border-white/10 shadow-inner"></div>
+                  {/* Filtering by category (from query param) */}
+                  {categoryFilter && filteredPoints.length === 0 && (
+                    <div className="absolute inset-0 z-[1001] flex items-center justify-center pointer-events-none">
+                      <div className="bg-black/60 px-6 py-4 rounded-xl" style={{ color: colors.text }}>
+                        {messages.recyclingMap.noCenterFound}
+                      </div>
+                    </div>
+                  )}
+
+                  {translatedPoints.map((point) => (
+                    <Marker
+                      key={point.id}
+                      position={[point.latitude, point.longitude]}
+                      icon={createRecyclingMarkerIcon(point.facility_type)}
+                    >
+                      <Popup
+                        className="custom-popup"
+                        position={[point.latitude, point.longitude]}
+                      >
+                        <div className="recycling-popup-card">
+                          <div className="text-lg font-bold mb-1" style={{ color: colors.text }}>
+                            {point.name}
+                          </div>
+                          <div className="text-xs mb-1" style={{ color: colors.textSecondary }}>
+                            {messages.recyclingMap.address}:
+                          </div>
+                          <div className="text-sm mb-1" style={{ color: colors.text }}>
+                            {point.address}
+                          </div>
+                          <div className="text-xs mb-1" style={{ color: colors.textSecondary }}>
+                            {messages.recyclingMap.city}:
+                          </div>
+                          <div className="text-sm mb-1" style={{ color: colors.text }}>
+                            {point.city}
+                          </div>
+                          <div className="text-xs mb-2" style={{ color: colors.textSecondary }}>
+                            <div className="font-semibold mb-1">
+                              {messages.recyclingMap.facilityType}:
+                            </div>
+                            <div className="px-2 py-1 rounded-full text-xs font-medium text-white inline-block" style={{
+                              backgroundColor: facilityTypeColors[point.facility_type as keyof typeof facilityTypeColors] || colors.primary,
+                            }}>
+                              {translateFacilityType(point.facility_type, language)}
+                            </div>
+                          </div>
+                          <div className="text-xs mb-2" style={{ color: colors.textSecondary }}>
+                            <div className="font-semibold mb-1">
+                              {messages.recyclingMap.wasteType}:
+                            </div>
+                            <div className="text-xs" style={{ color: colors.text }}>
+                              {point.waste_type_translated}
+                            </div>
+                          </div>
+                          <div className="text-xs mb-3" style={{ color: colors.textSecondary }}>
+                            <div className="font-semibold mb-1">
+                              {messages.recyclingMap.description}:
+                            </div>
+                            <div className="text-xs" style={{ color: colors.text }}>
+                              {point.description}
+                            </div>
+                          </div>
+                          {userLocation ? (
+                            (() => {
+                              // compute distance (km) and estimated time (driving)
+                              const toRad = (v: number) => (v * Math.PI) / 180;
+                              const R = 6371; // km
+                              const dLat = toRad(point.latitude - userLocation[0]);
+                              const dLon = toRad(point.longitude - userLocation[1]);
+                              const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(userLocation[0])) * Math.cos(toRad(point.latitude)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+                              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                              const distKm = R * c;
+                              const avgSpeedKmh = 50; // driving
+                              const estMinutes = Math.max(1, Math.round((distKm / avgSpeedKmh) * 60));
+
+                              return (
+                                <div className="text-xs mb-3" style={{ color: colors.textSecondary }}>
+                                  <div className="font-semibold mb-1">{messages.recyclingMap.estimatedDistance}:</div>
+                                  <div className="text-xs" style={{ color: colors.text }}>{distKm.toFixed(1)} km</div>
+                                  <div className="font-semibold mt-2 mb-1">{messages.recyclingMap.estimatedTime}:</div>
+                                  <div className="text-xs" style={{ color: colors.text }}>{estMinutes} min (approx)</div>
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            <div className="text-xs mb-3" style={{ color: colors.textSecondary }}>{messages.recyclingMap.loadingMap}</div>
+                          )}
+                          <button
+                            className="w-full px-3 py-2 rounded-lg text-white text-sm font-semibold transition-all duration-200"
+                            style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})` }}
+                            onClick={() => handleBuildRoute(point)}
+                          >
+                            {messages.recyclingMap.buildRoute}
+                          </button>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ))}
+                </MapContainer>
+              )}
             </div>
+
+            {/* Find My Location Button */}
+            <div className="absolute bottom-6 right-6 z-[1000]">
+              <button
+                onClick={handleFindLocation}
+                disabled={loadingLocation}
+                className="p-4 rounded-2xl hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})` }}
+                aria-label={messages.recyclingMap.findLocation}
+              >
+                {loadingLocation ? (
+                  <svg
+                    className="w-6 h-6 animate-spin text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.5"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2a8 8 0 018 8.2c0 7.3-8 11.8-8 11.8z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            {/* Glass overlay for futuristic effect */}
+            <div className="absolute inset-0 pointer-events-none rounded-3xl" style={{ borderColor: colors.border, borderWidth: 1 }}></div>
+          </div>
         </div>
       </div>
 
       {/* Custom styles for Leaflet */}
       <style jsx global>{`
         .custom-marker {
-          filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.8));
+          filter: drop-shadow(0 0 10px ${colors.primary}cc);
         }
         .recycling-marker {
-          filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.6));
+          filter: drop-shadow(0 0 8px ${colors.primary}99);
         }
         .custom-popup .leaflet-popup-content-wrapper {
-          background: rgba(5, 46, 35, 0.95);
+          background: ${colors.cardBg};
           backdrop-filter: blur(16px);
-          border: 1px solid rgba(16, 185, 129, 0.4);
+          border: 1px solid ${colors.border};
           border-radius: 16px;
-          color: #ecfdf5;
+          color: ${colors.text};
           padding: 0;
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
         .custom-popup .leaflet-popup-tip {
-          background: rgba(5, 46, 35, 0.95);
-          border: 1px solid rgba(16, 185, 129, 0.4);
+          background: ${colors.cardBg};
+          border: 1px solid ${colors.border};
         }
         .recycling-popup-card {
           padding: 16px;
@@ -452,20 +506,20 @@ export default function RecyclingMapPage() {
           background: transparent;
         }
         .leaflet-control-attribution {
-          background: rgba(5, 46, 35, 0.8) !important;
+          background: ${colors.cardBg}cc !important;
           backdrop-filter: blur(8px);
-          color: #6ee7b7 !important;
+          color: ${colors.textSecondary} !important;
           font-size: 10px;
         }
         .leaflet-control-attribution a {
-          color: #34d399 !important;
+          color: ${colors.primary} !important;
         }
         .leaflet-popup-close-button {
-          color: #6ee7b7 !important;
+          color: ${colors.textSecondary} !important;
           font-size: 20px !important;
         }
         .leaflet-popup-close-button:hover {
-          color: #34d399 !important;
+          color: ${colors.primary} !important;
         }
       `}</style>
     </main>

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useTheme } from "../contexts/ThemeContext";
 import { searchRecyclingPoints, buildRoute } from "../lib/recyclingSearch";
 import { translateWasteType } from "../lib/wasteTranslations";
 import type { RecyclingPoint } from "../data/recyclingPoints";
@@ -30,6 +31,26 @@ export default function EcoAssistantPage() {
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const { messages: translations, language } = useLanguage();
+  const { theme, colors } = useTheme();
+
+  // Swipe gesture refs
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchEndX.current - touchStartX.current;
+    if (diff > 50 && touchStartX.current < 50) {
+      setSidebarOpen(true);
+    }
+  };
 
   useEffect(() => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
@@ -144,14 +165,14 @@ export default function EcoAssistantPage() {
       // Save user message to backend
       try {
         await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL}/chat/message/${userId}/user?message_text=${encodeURIComponent(text.trim())}`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  }
-);
+          `${process.env.NEXT_PUBLIC_API_URL}/chat/message/${userId}/user?message_text=${encodeURIComponent(text.trim())}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
       } catch (error) {
         console.error("Failed to save user message to backend:", error);
       }
@@ -205,14 +226,14 @@ export default function EcoAssistantPage() {
       // Save assistant message to backend
       try {
         await fetch(
-  `${process.env.NEXT_PUBLIC_API_URL}/chat/message/${userId}/assistant?message_text=${encodeURIComponent(data.response)}`,
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  }
-);
+          `${process.env.NEXT_PUBLIC_API_URL}/chat/message/${userId}/assistant?message_text=${encodeURIComponent(data.response)}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
       } catch (error) {
         console.error("Failed to save assistant message to backend:", error);
       }
@@ -250,8 +271,8 @@ export default function EcoAssistantPage() {
     if (userId) {
       try {
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chat/history/${userId}`, {
-  method: "DELETE",
-});
+          method: "DELETE",
+        });
       } catch (error) {
         console.error("Failed to clear chat history from backend:", error);
       }
@@ -409,11 +430,26 @@ export default function EcoAssistantPage() {
   };
 
   return (
-    <main className="h-screen text-white relative overflow-hidden bg-gradient-to-br from-emerald-950 via-green-900 to-cyan-950 flex flex-col">
+    <main 
+      className="h-screen text-white relative overflow-hidden flex flex-col" 
+      style={{ background: colors.bg }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Animated background orbs */}
-      <div className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-[120px] animate-pulse"></div>
-      <div className="fixed bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-cyan-500/10 blur-[100px] animate-pulse delay-1000"></div>
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-green-500/5 blur-[80px] animate-pulse delay-500"></div>
+      <div 
+        className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] animate-pulse"
+        style={{ background: `${colors.primary}10` }}
+      ></div>
+      <div 
+        className="fixed bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[100px] animate-pulse delay-1000"
+        style={{ background: `${colors.accent}10` }}
+      ></div>
+      <div 
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full blur-[80px] animate-pulse delay-500"
+        style={{ background: `${colors.primary}05` }}
+      ></div>
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
@@ -421,17 +457,21 @@ export default function EcoAssistantPage() {
       <header className="flex-shrink-0 flex items-center justify-between p-4 md:p-6 lg:p-8 relative z-10">
         <button
           onClick={() => setSidebarOpen(true)}
-          className="p-3 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
+          className="p-3 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
+          style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1 }}
           aria-label="Open menu"
         >
           <svg
-            className="w-6 h-6 text-emerald-300 group-hover:text-white transition-colors"
+            className="w-6 h-6 transition-colors"
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2.5"
             viewBox="0 0 24 24"
-            stroke="currentColor"
+            stroke={colors.textSecondary}
+            style={{ color: colors.textSecondary }}
+            onMouseEnter={(e) => e.currentTarget.style.stroke = colors.text}
+            onMouseLeave={(e) => e.currentTarget.style.stroke = colors.textSecondary}
           >
             <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
@@ -444,7 +484,8 @@ export default function EcoAssistantPage() {
 
         <button
           onClick={handleClearChat}
-          className="px-4 py-2 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 shadow-lg text-sm text-emerald-200 flex-shrink-0"
+          className="px-4 py-2 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg text-sm flex-shrink-0"
+          style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
         >
           {translations.ecoAssistant.clearChat}
         </button>
@@ -454,23 +495,32 @@ export default function EcoAssistantPage() {
       <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 relative z-10">
         {/* Page Title */}
         <div className="mb-6 text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 mb-4 shadow-lg">
+          <div 
+            className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 shadow-lg"
+            style={{ background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})` }}
+          >
             <span className="text-4xl">🤖</span>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">{translations.ecoAssistant.title}</h2>
-          <p className="text-emerald-300 text-sm md:text-base">{translations.ecoAssistant.subtitle}</p>
+          <p className="text-sm md:text-base" style={{ color: colors.textSecondary }}>{translations.ecoAssistant.subtitle}</p>
         </div>
 
         {/* Welcome Card */}
-        <div className="relative rounded-3xl overflow-hidden border border-emerald-500/30 backdrop-blur-xl bg-gradient-to-br from-emerald-950/80 via-green-900/70 to-cyan-950/80 p-6 mb-6">
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-emerald-500/10 pointer-events-none"></div>
-          <p className="text-emerald-100 text-sm md:text-base relative z-10">{translations.ecoAssistant.welcomeMessage}</p>
+        <div 
+          className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-6 mb-6"
+          style={{ borderColor: `${colors.primary}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)` }}
+        >
+          <div 
+            className="absolute inset-0 rounded-3xl pointer-events-none"
+            style={{ background: `linear-gradient(to right, ${colors.primary}10, ${colors.accent}10, ${colors.primary}10)` }}
+          ></div>
+          <p className="text-sm md:text-base relative z-10" style={{ color: colors.text }}>{translations.ecoAssistant.welcomeMessage}</p>
         </div>
 
         {/* Chat Messages */}
         <div className="space-y-4 pb-4">
           {messages.length === 0 && (
-            <div className="text-center text-emerald-300 py-8">
+            <div className="text-center py-8" style={{ color: colors.textSecondary }}>
               <p className="text-sm">Start a conversation by asking an environmental question</p>
             </div>
           )}
@@ -481,11 +531,15 @@ export default function EcoAssistantPage() {
               className={`flex ${message.isUser ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
             >
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                  message.isUser
-                    ? "bg-gradient-to-r from-emerald-500 to-cyan-500 text-white"
-                    : "bg-white/10 backdrop-blur-xl border border-white/10 text-emerald-100"
-                }`}
+                className={`max-w-[80%] rounded-2xl px-4 py-3`}
+                style={{
+                  background: message.isUser 
+                    ? `linear-gradient(to right, ${colors.primary}, ${colors.accent})` 
+                    : colors.cardBg,
+                  borderColor: message.isUser ? "transparent" : colors.border,
+                  borderWidth: message.isUser ? 0 : 1,
+                  color: message.isUser ? "#ffffff" : colors.text
+                }}
               >
                 <p className="text-sm md:text-base whitespace-pre-wrap">{message.text}</p>
 
@@ -494,14 +548,15 @@ export default function EcoAssistantPage() {
                   <div className="mt-4 space-y-3">
                     {message.recyclingPoints.slice(0, 5).map((point, idx) => (
                       <div key={idx} className="bg-black/20 rounded-xl p-3 space-y-2">
-                        <p className="font-semibold text-emerald-50">{point.name}</p>
-                        <p className="text-xs text-emerald-200">{point.address}, {point.city}</p>
-                        <p className="text-xs text-emerald-300">
+                        <p className="font-semibold" style={{ color: colors.text }}>{point.name}</p>
+                        <p className="text-xs" style={{ color: colors.textSecondary }}>{point.address}, {point.city}</p>
+                        <p className="text-xs" style={{ color: colors.textSecondary }}>
                           {translations.recyclingMap.acceptedMaterials}: {translateWasteType(point.waste_type, language)}
                         </p>
                         <button
                           onClick={() => buildRoute(point)}
-                          className="mt-2 px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg text-white text-xs font-semibold hover:scale-105 transition-transform"
+                          className="mt-2 px-3 py-1.5 rounded-lg text-white text-xs font-semibold hover:scale-105 transition-transform"
+                          style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})` }}
                         >
                           {translations.recyclingMap.buildRoute}
                         </button>
@@ -519,11 +574,23 @@ export default function EcoAssistantPage() {
           
           {isTyping && (
             <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl px-4 py-3">
+              <div 
+                className="rounded-2xl px-4 py-3"
+                style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1 }}
+              >
                 <div className="flex space-x-2">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce delay-100"></div>
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce delay-200"></div>
+                  <div 
+                    className="w-2 h-2 rounded-full animate-bounce"
+                    style={{ background: colors.primary }}
+                  ></div>
+                  <div 
+                    className="w-2 h-2 rounded-full animate-bounce delay-100"
+                    style={{ background: colors.primary }}
+                  ></div>
+                  <div 
+                    className="w-2 h-2 rounded-full animate-bounce delay-200"
+                    style={{ background: colors.primary }}
+                  ></div>
                 </div>
               </div>
             </div>
@@ -537,37 +604,43 @@ export default function EcoAssistantPage() {
           <div className="flex flex-wrap gap-2 justify-center">
             <button
               onClick={() => handleSuggestionClick(translations.ecoAssistant.suggestionPlastic)}
-              className="px-4 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 text-sm text-emerald-200"
+              className="px-4 py-2 rounded-full backdrop-blur-xl hover:scale-105 transition-all duration-300 text-sm"
+              style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
             >
               {translations.ecoAssistant.suggestionPlastic}
             </button>
             <button
               onClick={() => handleSuggestionClick(translations.ecoAssistant.suggestionBatteries)}
-              className="px-4 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 text-sm text-emerald-200"
+              className="px-4 py-2 rounded-full backdrop-blur-xl hover:scale-105 transition-all duration-300 text-sm"
+              style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
             >
               {translations.ecoAssistant.suggestionBatteries}
             </button>
             <button
               onClick={() => handleSuggestionClick(translations.ecoAssistant.suggestionReduceWaste)}
-              className="px-4 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 text-sm text-emerald-200"
+              className="px-4 py-2 rounded-full backdrop-blur-xl hover:scale-105 transition-all duration-300 text-sm"
+              style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
             >
               {translations.ecoAssistant.suggestionReduceWaste}
             </button>
             <button
               onClick={() => handleSuggestionClick(translations.ecoAssistant.suggestionClimateChange)}
-              className="px-4 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 text-sm text-emerald-200"
+              className="px-4 py-2 rounded-full backdrop-blur-xl hover:scale-105 transition-all duration-300 text-sm"
+              style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
             >
               {translations.ecoAssistant.suggestionClimateChange}
             </button>
             <button
               onClick={() => handleSuggestionClick(translations.ecoAssistant.suggestionStudents)}
-              className="px-4 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 text-sm text-emerald-200"
+              className="px-4 py-2 rounded-full backdrop-blur-xl hover:scale-105 transition-all duration-300 text-sm"
+              style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
             >
               {translations.ecoAssistant.suggestionStudents}
             </button>
             <button
               onClick={() => handleSuggestionClick(translations.ecoAssistant.suggestionHazardous)}
-              className="px-4 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 text-sm text-emerald-200"
+              className="px-4 py-2 rounded-full backdrop-blur-xl hover:scale-105 transition-all duration-300 text-sm"
+              style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
             >
               {translations.ecoAssistant.suggestionHazardous}
             </button>
@@ -577,8 +650,14 @@ export default function EcoAssistantPage() {
 
       {/* Fixed Input Area */}
       <div className="flex-shrink-0 px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8 relative z-10">
-        <div className="relative rounded-3xl overflow-hidden border border-emerald-500/30 backdrop-blur-xl bg-gradient-to-br from-emerald-950/80 via-green-900/70 to-cyan-950/80 p-4">
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-emerald-500/10 via-cyan-500/10 to-emerald-500/10 pointer-events-none"></div>
+        <div 
+          className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-4"
+          style={{ borderColor: `${colors.primary}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)` }}
+        >
+          <div 
+            className="absolute inset-0 rounded-3xl pointer-events-none"
+            style={{ background: `linear-gradient(to right, ${colors.primary}10, ${colors.accent}10, ${colors.primary}10)` }}
+          ></div>
           
           <div className="flex gap-3 relative z-10">
             <div className="flex-1 relative">
@@ -587,19 +666,36 @@ export default function EcoAssistantPage() {
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={translations.ecoAssistant.placeholder}
-                className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-4 py-4 pr-24 md:pr-12 text-emerald-100 placeholder-emerald-400/50 resize-none focus:outline-none focus:border-emerald-500/50 transition-colors"
+                className="w-full bg-white/5 backdrop-blur-xl rounded-2xl px-4 py-4 pr-24 md:pr-12 resize-none focus:outline-none transition-colors"
+                style={{ 
+                  borderColor: colors.border, 
+                  borderWidth: 1,
+                  color: colors.text,
+                  minHeight: "56px"
+                }}
                 rows={1}
-                style={{ minHeight: "56px" }}
               />
               <button
                 onClick={handleVoiceButtonClick}
                 disabled={isProcessing}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all duration-300 ${
-                  isRecording 
-                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' 
-                    : 'bg-transparent hover:bg-white/10 text-emerald-300 hover:text-white'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                style={{ 
+                  background: isRecording ? `${colors.danger}20` : "transparent",
+                  color: isRecording ? colors.danger : colors.textSecondary
+                }}
                 title={isRecording ? "Stop recording" : "Voice input"}
+                onMouseEnter={(e) => {
+                  if (!isRecording) {
+                    e.currentTarget.style.background = `${colors.primary}10`;
+                    e.currentTarget.style.color = colors.text;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isRecording) {
+                    e.currentTarget.style.background = "transparent";
+                    e.currentTarget.style.color = colors.textSecondary;
+                  }
+                }}
               >
                 {isRecording ? (
                   <svg
@@ -651,7 +747,7 @@ export default function EcoAssistantPage() {
               
               {/* Recording indicator */}
               {isRecording && (
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-red-500 text-white text-xs px-2 py-1 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-white text-xs px-2 py-1 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2" style={{ background: colors.danger }}>
                   <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
                   <span>{recordingDuration}s</span>
                 </div>
@@ -659,7 +755,7 @@ export default function EcoAssistantPage() {
               
               {/* Processing indicator */}
               {isProcessing && (
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs px-2 py-1 rounded-lg animate-in fade-in slide-in-from-bottom-2">
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-white text-xs px-2 py-1 rounded-lg animate-in fade-in slide-in-from-bottom-2" style={{ background: colors.primary }}>
                   Processing...
                 </div>
               )}
@@ -667,8 +763,12 @@ export default function EcoAssistantPage() {
             <button
               onClick={() => sendMessage(inputText)}
               disabled={!inputText.trim() || isTyping}
-              className="px-6 py-4 md:px-6 md:py-4 rounded-2xl md:rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 transition-all duration-300 shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-white font-semibold whitespace-nowrap w-12 h-12 md:w-auto md:h-auto rounded-full md:rounded-2xl flex items-center justify-center"
-              style={{ minHeight: "56px" }}
+              className="px-6 py-4 md:px-6 md:py-4 rounded-2xl md:rounded-2xl hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-semibold whitespace-nowrap w-12 h-12 md:w-auto md:h-auto rounded-full md:rounded-2xl flex items-center justify-center"
+              style={{ 
+                background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`, 
+                minHeight: "56px",
+                color: "#ffffff"
+              }}
             >
               <svg className="w-5 h-5 md:hidden" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                 <path d="M5 12h14M12 5l7 7-7 7" />
