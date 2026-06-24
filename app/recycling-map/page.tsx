@@ -10,6 +10,7 @@ import { useMemo } from "react";
 import type { MapContainer as MapContainerType, TileLayer as TileLayerType, Marker as MarkerType, Popup as PopupType } from "react-leaflet";
 import { recyclingPoints, type RecyclingPoint } from "../data/recyclingPoints";
 import { translateWasteType, translateFacilityType } from "../lib/wasteTranslations";
+import { buildRoute } from "../lib/recyclingSearch";
 
 // Dynamically import Leaflet components to avoid SSR issues
 const MapContainer = dynamic(
@@ -174,15 +175,7 @@ export default function RecyclingMapPage() {
     });
   };
 
-  const handleBuildRoute = (point: RecyclingPoint) => {
-    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${point.latitude},${point.longitude}`;
-    const twoGisUrl = `https://2gis.kz/search/${point.latitude},${point.longitude}`;
-    const navigationWindow = window.open(googleMapsUrl, "_blank", "noopener,noreferrer");
-
-    if (!navigationWindow) {
-      window.location.href = twoGisUrl;
-    }
-  };
+  const handleBuildRoute = buildRoute;
 
   // Prepare translated points
   const translatedPoints = useMemo(() => {

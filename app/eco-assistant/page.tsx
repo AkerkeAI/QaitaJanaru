@@ -4,12 +4,16 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
+import { searchRecyclingPoints, buildRoute } from "../lib/recyclingSearch";
+import { translateWasteType } from "../lib/wasteTranslations";
+import type { RecyclingPoint } from "../data/recyclingPoints";
 
 interface Message {
   id: number;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  recyclingPoints?: RecyclingPoint[];
 }
 
 export default function EcoAssistantPage() {
@@ -25,7 +29,7 @@ export default function EcoAssistantPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const { messages: translations } = useLanguage();
+  const { messages: translations, language } = useLanguage();
 
   useEffect(() => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
@@ -82,6 +86,16 @@ export default function EcoAssistantPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Check if the query is about recycling locations
+  const isRecyclingQuery = (text: string): boolean => {
+    const recyclingKeywords = [
+      "recycle", "recycling", "where", "куда", "где", "қайда", "тәуелсіз",
+      "пункт", "пункты", "центр", "центры", "ortaq", "point", "points", "center", "centers",
+      "сдать", "throw", "dispose", "утилизировать", "тастау", "тапсыру"
+    ];
+    return recyclingKeywords.some(keyword => text.toLowerCase().includes(keyword));
+  };
+
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
 
@@ -103,6 +117,28 @@ export default function EcoAssistantPage() {
     setMessages(updatedMessages);
     setInputText("");
     setIsTyping(true);
+
+    // Check if this is a recycling location query
+    if (isRecyclingQuery(text)) {
+      const matchingPoints = searchRecyclingPoints(text);
+      const assistantMessage: Message = {
+        id: Date.now() + 1,
+        text: matchingPoints.length > 0 
+          ? (language === "ru" ? "Вот несколько пунктов переработки, которые могут вам подойти:" 
+            : language === "kz" ? "Мұнды сәйкес келетін қайта өңдеу орталықтары:" 
+            : "Here are some recycling locations that might interest you:")
+          : (language === "ru" ? translations.recyclingMap.noLocationsFound 
+            : language === "kz" ? translations.recyclingMap.noLocationsFound 
+            : translations.recyclingMap.noLocationsFound),
+        isUser: false,
+        timestamp: new Date(),
+        recyclingPoints: matchingPoints.length > 0 ? matchingPoints : undefined,
+      };
+
+      setMessages([...updatedMessages, assistantMessage]);
+      setIsTyping(false);
+      return;
+    }
 
     try {
       // Save user message to backend
@@ -452,6 +488,28 @@ export default function EcoAssistantPage() {
                 }`}
               >
                 <p className="text-sm md:text-base whitespace-pre-wrap">{message.text}</p>
+
+                {/* Recycling Points */}
+                {!message.isUser && message.recyclingPoints && message.recyclingPoints.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    {message.recyclingPoints.slice(0, 5).map((point, idx) => (
+                      <div key={idx} className="bg-black/20 rounded-xl p-3 space-y-2">
+                        <p className="font-semibold text-emerald-50">{point.name}</p>
+                        <p className="text-xs text-emerald-200">{point.address}, {point.city}</p>
+                        <p className="text-xs text-emerald-300">
+                          {translations.recyclingMap.acceptedMaterials}: {translateWasteType(point.waste_type, language)}
+                        </p>
+                        <button
+                          onClick={() => buildRoute(point)}
+                          className="mt-2 px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-lg text-white text-xs font-semibold hover:scale-105 transition-transform"
+                        >
+                          {translations.recyclingMap.buildRoute}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <p className="text-xs opacity-70 mt-1">
                   {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </p>
