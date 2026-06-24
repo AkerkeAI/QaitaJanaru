@@ -262,6 +262,13 @@ export interface Messages {
     openInMaps: string;
     scanAnother: string;
     error: string;
+    unknownWaste: string;
+    unknownCategory: string;
+    checkLocalRules: string;
+    keepCleanDry: string;
+    askStaff: string;
+    checkLocalRulesBeforeDisposal: string;
+    uncertainMaterial: string;
     tryAgain: string;
     selectImageFirst: string;
     failedToRecordScan: string;

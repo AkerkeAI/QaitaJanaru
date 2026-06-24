@@ -192,6 +192,9 @@ def _build_prompt(language: str = "en") -> str:
         "Classify the image into exactly one of these waste types: "
         + ", ".join(WASTE_CLASSES)
         + ".\n"
+        "IMPORTANT: The 'waste_type' field MUST be exactly one of the listed waste types (in English).\n"
+        "Translate ONLY the 'preparation_steps' array items into the specified language.\n"
+        "Translate ONLY the explanation text into the specified language.\n"
         "Return ONLY valid JSON with keys:\n"
         "waste_type, confidence, explanation, preparation_steps, recyclable.\n"
         "preparation_steps must be an array of 2-4 short actionable strings in the specified language.\n"

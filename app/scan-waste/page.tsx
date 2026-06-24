@@ -190,13 +190,38 @@ export default function ScanWastePage() {
 
   const translatedScanResult = useMemo(() => {
     if (!scanResult) return null;
+    
+    // Translate waste types
+    const translatedWasteType = translateWasteType(scanResult.waste_type, language);
+    const translatedCategory = translateWasteType(scanResult.category, language);
+    const translatedRecyclingCategory = translateWasteType(scanResult.recycling_category, language);
+    
+    // Translate fallback messages
+    const translatedEcoTip = scanResult.eco_tip === "Uncertain material. Check local recycling rules or dispose safely."
+      ? messages.scanWaste.uncertainMaterial
+      : scanResult.eco_tip;
+      
+    const translatedRecyclingAdvice = scanResult.recycling_advice === "Check local recycling rules before disposal."
+      ? messages.scanWaste.checkLocalRulesBeforeDisposal
+      : scanResult.recycling_advice;
+      
+    const translatedPreparationSteps = scanResult.preparation_steps.map(step => {
+      if (step === "Check local recycling rules") return messages.scanWaste.checkLocalRules;
+      if (step === "Keep the item clean and dry") return messages.scanWaste.keepCleanDry;
+      if (step === "Ask staff at a recycling center") return messages.scanWaste.askStaff;
+      return step;
+    });
+    
     return {
       ...scanResult,
-      waste_type: translateWasteType(scanResult.waste_type, language),
-      category: translateWasteType(scanResult.category, language),
-      recycling_category: translateWasteType(scanResult.recycling_category, language),
+      waste_type: translatedWasteType,
+      category: translatedCategory,
+      recycling_category: translatedRecyclingCategory,
+      eco_tip: translatedEcoTip,
+      recycling_advice: translatedRecyclingAdvice,
+      preparation_steps: translatedPreparationSteps,
     };
-  }, [scanResult, language]);
+  }, [scanResult, language, messages.scanWaste]);
 
   const translatedNearestCenters = useMemo(() => {
     return nearestCenters.map(center => ({

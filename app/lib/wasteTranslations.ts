@@ -35,6 +35,14 @@ export const wasteTypeTranslations: WasteTranslations = {
   "Aluminum Can": { en: "Aluminum Can", ru: "Алюминиевая банка", kz: "Алюминий банка" },
   "Electronics Item": { en: "Electronics", ru: "Электроника", kz: "Электроника" },
   "Organic Waste Item": { en: "Organic Waste", ru: "Органические отходы", kz: "Органикалық қалдықтар" },
+  "Unknown Waste": { en: "Unknown Waste", ru: "Неизвестные отходы", kz: "Белгісіз қалдық" },
+  "Unknown": { en: "Unknown", ru: "Неизвестно", kz: "Белгісіз" },
+  "Plastic Packaging": { en: "Plastic Packaging", ru: "Пластиковая упаковка", kz: "Пластикалық орауыш" },
+  "Metal Can": { en: "Metal Can", ru: "Металлическая банка", kz: "Металл банка" },
+  "Battery": { en: "Battery", ru: "Батарейка", kz: "Батарея" },
+  "Mixed Waste": { en: "Mixed Waste", ru: "Смешанные отходы", kz: "Аралас қалдықтар" },
+  "E-Waste": { en: "E-Waste", ru: "Э-отходы", kz: "Э-қалдықтар" },
+  "Mixed": { en: "Mixed", ru: "Смешанные", kz: "Аралас" },
 };
 
 export const facilityTypeTranslations: WasteTranslations = {
