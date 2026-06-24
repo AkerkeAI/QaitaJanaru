@@ -6,7 +6,7 @@ import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { searchRecyclingPoints, buildRoute } from "../lib/recyclingSearch";
-import { translateWasteType } from "../lib/wasteTranslations";
+import { translateWasteType, preparationSteps } from "../lib/wasteTranslations";
 import type { RecyclingPoint } from "../data/recyclingPoints";
 
 interface Message {
@@ -107,12 +107,14 @@ export default function EcoAssistantPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Check if the query is about recycling locations
+  // Check if the query is about recycling locations or what to do with an item
   const isRecyclingQuery = (text: string): boolean => {
     const recyclingKeywords = [
       "recycle", "recycling", "where", "куда", "где", "қайда", "тәуелсіз",
       "пункт", "пункты", "центр", "центры", "ortaq", "point", "points", "center", "centers",
-      "сдать", "throw", "dispose", "утилизировать", "тастау", "тапсыру"
+      "сдать", "throw", "dispose", "утилизировать", "тастау", "тапсыру",
+      "what should i do with", "how to recycle", "how do i recycle",
+      "как утилизировать", "что делать с", "қайта өңдеу", "менімен не істеймін"
     ];
     return recyclingKeywords.some(keyword => text.toLowerCase().includes(keyword));
   };
@@ -142,15 +144,56 @@ export default function EcoAssistantPage() {
     // Check if this is a recycling location query
     if (isRecyclingQuery(text)) {
       const matchingPoints = searchRecyclingPoints(text);
-      const assistantMessage: Message = {
-        id: Date.now() + 1,
-        text: matchingPoints.length > 0 
+      
+      // Find which materials are mentioned to get preparation steps
+      const normalizedQuery = text.toLowerCase();
+      let detectedMaterial: string | null = null;
+      
+      const materialKeywordsCheck: Record<string, string[]> = {
+        "Plastic": ["plastic", "plastik", "пластик", "пластик", "пластик", "pet", "pet bottle", "water bottle", "plastic bottle"],
+        "Paper": ["paper", "бумага", "қағаз"],
+        "Cardboard": ["cardboard", "carton", "картон"],
+        "Glass": ["glass", "glas", "стекло", "шыны"],
+        "Aluminum": ["aluminum", "aluminium", "алюминий"],
+        "Batteries": ["batteries", "battery", "батарейки", "батареялар"],
+        "E-waste": ["e-waste", "electronic", "electronics", "электроника", "laptop", "phone", "tv", "computer"],
+        "Organic Waste": ["organic", "organik", "органические отходы", "пищевые отходы", "органикалық қалдықтар"],
+      };
+      
+      for (const [material, keywords] of Object.entries(materialKeywordsCheck)) {
+        if (keywords.some(keyword => normalizedQuery.includes(keyword))) {
+          detectedMaterial = material;
+          break;
+        }
+      }
+      
+      let messageText = "";
+      if (detectedMaterial && preparationSteps[detectedMaterial]) {
+        const steps = preparationSteps[detectedMaterial][language];
+        const intro = language === "ru" ? "Вот как правильно подготовить этот материал к переработке:" 
+                      : language === "kz" ? "Осы материалды қайта өңдеуге дұрыс дайындау жолдары:" 
+                      : "Here's how to properly prepare this material for recycling:";
+        messageText = `${intro}\n\n${steps.join("\n")}`;
+        
+        if (matchingPoints.length > 0) {
+          const addendum = language === "ru" ? "\n\nА вот несколько пунктов переработки, которые могут вам подойти:" 
+                         : language === "kz" ? "\n\nМұнды сәйкес келетін қайта өңдеу орталықтары:" 
+                         : "\n\nHere are some recycling locations that might interest you:";
+          messageText += addendum;
+        }
+      } else {
+        messageText = matchingPoints.length > 0 
           ? (language === "ru" ? "Вот несколько пунктов переработки, которые могут вам подойти:" 
             : language === "kz" ? "Мұнды сәйкес келетін қайта өңдеу орталықтары:" 
             : "Here are some recycling locations that might interest you:")
           : (language === "ru" ? translations.recyclingMap.noLocationsFound 
             : language === "kz" ? translations.recyclingMap.noLocationsFound 
-            : translations.recyclingMap.noLocationsFound),
+            : translations.recyclingMap.noLocationsFound);
+      }
+
+      const assistantMessage: Message = {
+        id: Date.now() + 1,
+        text: messageText,
         isUser: false,
         timestamp: new Date(),
         recyclingPoints: matchingPoints.length > 0 ? matchingPoints : undefined,
