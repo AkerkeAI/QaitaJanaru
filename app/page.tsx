@@ -1,10 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "./contexts/LanguageContext";
+import { languageNames, Language } from "./lib/language";
 
 export default function Home() {
-  const { messages } = useLanguage();
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const { language, messages, setLanguage } = useLanguage();
+
+  const handleLanguageSelect = (selectedLanguage: Language) => {
+    setLanguage(selectedLanguage);
+    setShowLanguageMenu(false);
+  };
 
   return (
     <main className="min-h-screen overflow-hidden bg-gradient-to-br from-emerald-900 via-green-800 to-cyan-900 text-white">
@@ -19,12 +27,42 @@ export default function Home() {
             ♻️ {messages.common.appName}
           </h1>
 
-          <Link
-            href="/login"
-            className="rounded-xl bg-white/10 px-4 py-2 md:px-5 md:py-2 backdrop-blur-md border border-white/20 hover:bg-white/20 transition text-sm md:text-base"
-          >
-            {messages.home.signIn}
-          </Link>
+          <div className="flex items-center gap-3">
+            {/* Compact language selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+                className="rounded-xl bg-white/10 px-3 py-2 md:px-4 md:py-2 backdrop-blur-md border border-white/20 hover:bg-white/20 transition text-sm md:text-base"
+              >
+                🌍 {languageNames[language]}
+              </button>
+
+              {showLanguageMenu && (
+                <div className="absolute top-full right-0 mt-2 rounded-xl border overflow-hidden z-50 shadow-xl bg-emerald-950/95 backdrop-blur-xl border-emerald-500/20">
+                  {(["en", "ru", "kz"] as Language[]).map((lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => handleLanguageSelect(lang)}
+                      className={`block px-4 py-2 text-left text-sm transition-colors ${
+                        language === lang
+                          ? "bg-emerald-500/20"
+                          : "hover:bg-white/5"
+                      } text-white`}
+                    >
+                      {languageNames[lang]}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Link
+              href="/login"
+              className="rounded-xl bg-white/10 px-4 py-2 md:px-5 md:py-2 backdrop-blur-md border border-white/20 hover:bg-white/20 transition text-sm md:text-base"
+            >
+              {messages.home.signIn}
+            </Link>
+          </div>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center">
