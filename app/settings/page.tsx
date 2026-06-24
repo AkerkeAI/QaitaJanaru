@@ -6,10 +6,24 @@ import { Sidebar } from "../components/Sidebar";
 import { languageNames, Language } from "../lib/language";
 import { useLanguage } from "../contexts/LanguageContext";
 
+interface Profile {
+  id: number;
+  full_name: string;
+  email: string;
+  city: string;
+  eco_points: number;
+  level: number;
+  streak: number;
+  total_scans: number;
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const { language, messages, setLanguage } = useLanguage();
 
   useEffect(() => {
@@ -23,6 +37,52 @@ export default function SettingsPage() {
   const handleLanguageSelect = (selectedLanguage: Language) => {
     setLanguage(selectedLanguage);
     setShowLanguageModal(false);
+  };
+
+  const fetchProfile = async () => {
+    const userId = localStorage.getItem("qaitaJanaru_user_id");
+    if (!userId) return;
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setProfile(data);
+        setShowAccountModal(true);
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("qaitaJanaru_user_id");
+    localStorage.removeItem("qaitaJanaru_email");
+    localStorage.removeItem("qaitaJanaru_eco_points");
+    localStorage.removeItem("qaitaJanaru_achievements_count");
+    localStorage.removeItem("qaitaJanaru_level");
+    localStorage.removeItem("qaitaJanaru_total_scans");
+    localStorage.removeItem("qaitaJanaru_name");
+    localStorage.removeItem("qaitaJanaru_city");
+    router.push("/login");
+  };
+
+  const handleDeleteAccount = async () => {
+    const userId = localStorage.getItem("qaitaJanaru_user_id");
+    if (!userId) return;
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile/${userId}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        // Clear all local storage
+        localStorage.clear();
+        alert(messages.settings.deleteAccountSuccess);
+        router.push("/login");
+      }
+    } catch (error) {
+      console.error("Failed to delete account:", error);
+    }
   };
 
   return (
@@ -112,7 +172,7 @@ export default function SettingsPage() {
 
               {/* Account Information Row */}
               <div className="rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden">
-                <button className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/5 transition-colors h-16">
+                <button onClick={fetchProfile} className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/5 transition-colors h-16">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-base shadow-lg flex-shrink-0">
                       👤
@@ -138,9 +198,23 @@ export default function SettingsPage() {
                 </button>
               </div>
 
+              {/* Logout Row */}
+              <div className="rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 overflow-hidden">
+                <button onClick={handleLogout} className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-white/5 transition-colors h-16">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-base shadow-lg flex-shrink-0">
+                      🚪
+                    </div>
+                    <div className="text-left min-w-0">
+                      <div className="font-semibold text-sm truncate">{messages.settings.logout}</div>
+                    </div>
+                  </div>
+                </button>
+              </div>
+
               {/* Delete Account Row */}
               <div className="rounded-xl bg-red-500/5 backdrop-blur-xl border border-red-500/30 overflow-hidden">
-                <button className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-red-500/10 transition-colors h-16">
+                <button onClick={() => setShowDeleteConfirmModal(true)} className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-red-500/10 transition-colors h-16">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-base shadow-lg flex-shrink-0">
                       🗑️
@@ -180,7 +254,7 @@ export default function SettingsPage() {
             <div className="px-6 py-4 border-b border-white/10">
               <h3 className="text-xl font-bold tracking-tight">⚙️ {messages.settings.language}</h3>
             </div>
-            
+
             {/* Modal Content */}
             <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
               {Object.keys(languageNames).map((lang) => (
@@ -188,8 +262,8 @@ export default function SettingsPage() {
                   key={lang}
                   onClick={() => handleLanguageSelect(lang as Language)}
                   className={`w-full px-4 py-3 flex items-center justify-between rounded-xl transition-colors text-sm font-medium ${
-                    language === lang 
-                      ? "bg-emerald-500/20 border border-emerald-500/40 text-white" 
+                    language === lang
+                      ? "bg-emerald-500/20 border border-emerald-500/40 text-white"
                       : "hover:bg-white/5 text-emerald-100"
                   }`}
                 >
@@ -199,6 +273,91 @@ export default function SettingsPage() {
                   )}
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Account Information Modal */}
+      {showAccountModal && profile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAccountModal(false)}></div>
+          <div className="relative w-full max-w-md rounded-2xl bg-gradient-to-br from-emerald-950 to-green-900 border border-white/10 shadow-2xl overflow-hidden z-10">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-white/10 flex justify-between items-center">
+              <h3 className="text-xl font-bold tracking-tight">👤 {messages.settings.accountInformation}</h3>
+              <button onClick={() => setShowAccountModal(false)} className="text-emerald-300 hover:text-white">
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
+              <div>
+                <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.register.fullName}</p>
+                <p className="text-lg font-semibold">{profile.full_name}</p>
+              </div>
+              <div>
+                <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.login.email}</p>
+                <p className="text-lg font-semibold">{profile.email}</p>
+              </div>
+              <div>
+                <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.register.city}</p>
+                <p className="text-lg font-semibold">{profile.city}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.profile.ecoPoints}</p>
+                  <p className="text-lg font-semibold">{profile.eco_points}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.profile.level}</p>
+                  <p className="text-lg font-semibold">{profile.level}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.profile.streak}</p>
+                  <p className="text-lg font-semibold">{profile.streak}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">{messages.profile.totalScans}</p>
+                  <p className="text-lg font-semibold">{profile.total_scans}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirmModal(false)}></div>
+          <div className="relative w-full max-w-md rounded-2xl bg-gradient-to-br from-emerald-950 to-green-900 border border-white/10 shadow-2xl overflow-hidden z-10">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-white/10 flex justify-between items-center">
+              <h3 className="text-xl font-bold tracking-tight">🗑️ {messages.settings.deleteAccount}</h3>
+              <button onClick={() => setShowDeleteConfirmModal(false)} className="text-emerald-300 hover:text-white">
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              <p className="text-lg">{messages.settings.deleteAccountConfirm}</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirmModal(false)}
+                  className="flex-1 px-4 py-3 rounded-xl border border-white/20 hover:bg-white/5 text-sm font-semibold"
+                >
+                  {messages.settings.cancel}
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-700 text-sm font-semibold hover:brightness-110 transition"
+                >
+                  {messages.settings.confirm}
+                </button>
+              </div>
             </div>
           </div>
         </div>

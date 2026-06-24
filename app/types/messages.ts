@@ -87,6 +87,11 @@ export interface Messages {
     deleteAccount: string;
     deleteAccountDescription: string;
     selectLanguage: string;
+    logout: string;
+    confirm: string;
+    cancel: string;
+    deleteAccountConfirm: string;
+    deleteAccountSuccess: string;
   };
   login: {
     title: string;

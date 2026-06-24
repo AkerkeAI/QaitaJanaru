@@ -89,6 +89,11 @@ export const messages: Messages = {
     deleteAccount: "Delete Account",
     deleteAccountDescription: "Permanently delete your account",
     selectLanguage: "Select Language",
+    logout: "Logout",
+    confirm: "Confirm",
+    cancel: "Cancel",
+    deleteAccountConfirm: "Are you sure you want to permanently delete your account?",
+    deleteAccountSuccess: "Account deleted successfully.",
   },
   login: {
     title: "Welcome Back",

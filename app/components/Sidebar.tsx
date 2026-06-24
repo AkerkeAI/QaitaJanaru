@@ -14,14 +14,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const router = useRouter();
   const { messages } = useLanguage();
 
-  const handleLogout = () => {
-    localStorage.removeItem("qaitaJanaru_user_id");
-    localStorage.removeItem("qaitaJanaru_email");
-    localStorage.removeItem("qaitaJanaru_eco_points");
-    router.push("/login");
-    onClose();
-  };
-
   const menuItems = [
     { icon: "👤", label: messages.sidebar.profile, href: "/profile" },
     { icon: "📸", label: messages.sidebar.scan, href: "/scan-waste" },
@@ -92,17 +84,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </Link>
           ))}
         </nav>
-
-        {/* Logout */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-emerald-800/30">
-          <button
-            onClick={handleLogout}
-            className="group w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl text-red-300 hover:bg-red-900/30 hover:text-red-200 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <span className="text-2xl group-hover:scale-110 transition-transform duration-200">🚪</span>
-            <span className="font-medium">{messages.sidebar.logout}</span>
-          </button>
-        </div>
       </div>
     </>
   );

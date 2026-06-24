@@ -89,6 +89,11 @@ export const messages: Messages = {
     deleteAccount: "Аккаунтты жою",
     deleteAccountDescription: "Аккаунтты мәңгілікке жою",
     selectLanguage: "Тілді таңдаңыз",
+    logout: "Шығу",
+    confirm: "Растау",
+    cancel: "Болдырмау",
+    deleteAccountConfirm: "Аккаунтты біржола жойғыңыз келетініне сенімдісіз бе?",
+    deleteAccountSuccess: "Аккаунт сәтті жойылды.",
   },
   login: {
     title: "Қош келдіңіз",
