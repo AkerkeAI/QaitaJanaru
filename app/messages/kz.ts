@@ -110,6 +110,8 @@ export const messages: Messages = {
     pleaseEnter: "Кірістіріңіз",
     validEmail: "Жарамды email кірістіріңіз",
     invalidCredentials: "Қате email немесе құпия сөз",
+    incorrectPassword: "Қате құпия сөз",
+    userNotFound: "Пайдаланушы табылмады",
     tagline: "Экология. Әрекет. Болашақ.",
   },
   register: {
@@ -155,6 +157,7 @@ export const messages: Messages = {
     selectCityRequired: "Қаланы таңдаңыз",
     selectInstitutionRequired: "Таңдаңыз",
     registrationError: "Тіркелу қатесі. Қайтадан көріңіз.",
+    emailAlreadyExists: "Бұл email бұрын тіркелген",
     school: "Мектеп",
     university: "Университет",
     kindergarten: "Балабақша",

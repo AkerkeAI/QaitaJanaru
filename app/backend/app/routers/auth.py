@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import date, timedelta
 
@@ -23,7 +23,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == user.email).first()
 
     if existing_user:
-        return {"error": "User already exists"}
+        raise HTTPException(status_code=400, detail="EMAIL_ALREADY_EXISTS")
 
     new_user = User(
     full_name=user.full_name,
@@ -48,10 +48,10 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
 
     if not db_user:
-        return {"error": "Invalid credentials"}
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
     if db_user.password != user.password:
-        return {"error": "Invalid credentials"}
+        raise HTTPException(status_code=401, detail="INCORRECT_PASSWORD")
 
     # Update streak logic
     today = date.today()
@@ -88,7 +88,7 @@ def get_profile(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
-        return {"error": "User not found"}
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
     return {
         "id": user.id,

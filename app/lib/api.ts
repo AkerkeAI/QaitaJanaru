@@ -44,6 +44,14 @@ export interface ApiError {
   detail: string;
 }
 
+// ─── Error Code Mapping ─────────────────────────────────────────────────────────
+
+const ERROR_CODE_MAP: Record<string, string> = {
+  EMAIL_ALREADY_EXISTS: "EMAIL_ALREADY_EXISTS",
+  USER_NOT_FOUND: "USER_NOT_FOUND",
+  INCORRECT_PASSWORD: "INCORRECT_PASSWORD",
+};
+
 // ─── Register ──────────────────────────────────────────────────────────────────
 
 export async function registerUser(
@@ -59,7 +67,8 @@ export async function registerUser(
 
   if (!response.ok) {
     const error: ApiError = await response.json();
-    throw new Error(error.detail || "Registration failed");
+    const errorCode = error.detail;
+    throw new Error(ERROR_CODE_MAP[errorCode] || errorCode || "Registration failed");
   }
 
   return response.json();
@@ -80,7 +89,8 @@ export async function loginUser(
 
   if (!response.ok) {
     const error: ApiError = await response.json();
-    throw new Error(error.detail || "Login failed");
+    const errorCode = error.detail;
+    throw new Error(ERROR_CODE_MAP[errorCode] || errorCode || "Login failed");
   }
 
   return response.json();
@@ -100,7 +110,8 @@ const response = await fetch(`${API_URL}/auth/profile/${userId}`, {
 
   if (!response.ok) {
     const error: ApiError = await response.json();
-    throw new Error(error.detail || "Failed to fetch profile");
+    const errorCode = error.detail;
+    throw new Error(ERROR_CODE_MAP[errorCode] || errorCode || "Failed to fetch profile");
   }
 
   return response.json();

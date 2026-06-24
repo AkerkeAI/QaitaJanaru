@@ -110,6 +110,8 @@ export const messages: Messages = {
     pleaseEnter: "Пожалуйста, введите",
     validEmail: "Пожалуйста, введите действительный email",
     invalidCredentials: "Неверный email или пароль",
+    incorrectPassword: "Неверный пароль",
+    userNotFound: "Пользователь не найден",
     tagline: "Экология. Действие. Будущее.",
   },
   register: {
@@ -155,6 +157,7 @@ export const messages: Messages = {
     selectCityRequired: "Пожалуйста, выберите город",
     selectInstitutionRequired: "Пожалуйста, выберите",
     registrationError: "Ошибка регистрации. Пожалуйста, попробуйте снова.",
+    emailAlreadyExists: "Этот email уже зарегистрирован",
     school: "Школа",
     university: "Университет",
     kindergarten: "Детский сад",

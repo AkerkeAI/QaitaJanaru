@@ -108,6 +108,8 @@ export interface Messages {
     pleaseEnter: string;
     validEmail: string;
     invalidCredentials: string;
+    incorrectPassword: string;
+    userNotFound: string;
     tagline: string;
   };
   register: {
@@ -153,6 +155,7 @@ export interface Messages {
     selectCityRequired: string;
     selectInstitutionRequired: string;
     registrationError: string;
+    emailAlreadyExists: string;
     school: string;
     university: string;
     kindergarten: string;

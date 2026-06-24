@@ -301,7 +301,20 @@ export default function RegisterPage() {
       router.push("/profile");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : messages.register.registrationError;
-      setError(errorMessage);
+      
+      // Map error codes to translated messages
+      let translatedError = errorMessage;
+      if (errorMessage === "EMAIL_ALREADY_EXISTS") {
+        translatedError = messages.register.emailAlreadyExists;
+      } else if (errorMessage === "USER_NOT_FOUND") {
+        translatedError = messages.login.userNotFound;
+      } else if (errorMessage === "INCORRECT_PASSWORD") {
+        translatedError = messages.login.incorrectPassword;
+      } else {
+        translatedError = messages.register.registrationError;
+      }
+      
+      setError(translatedError);
     } finally {
       setIsLoading(false);
     }
