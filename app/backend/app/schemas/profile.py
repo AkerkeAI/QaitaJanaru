@@ -5,7 +5,6 @@ class ProfileResponse(BaseModel):
     id: int
     full_name: str
     email: str
-    age: int
     city: str
     user_type: str
     institution: str

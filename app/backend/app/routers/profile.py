@@ -34,7 +34,6 @@ def get_profile(user_id: int, db: Session = Depends(get_db)):
         "id": user.id,
         "full_name": user.full_name,
         "email": user.email,
-        "age": user.age,
         "city": user.city,
 
         "eco_points": user.eco_points,

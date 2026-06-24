@@ -26,12 +26,11 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         return {"error": "User already exists"}
 
     new_user = User(
-        full_name=user.full_name,
-        email=user.email,
-        password=user.password,
-        age=user.age,
-        city=user.city,
-    )
+    full_name=user.full_name,
+    email=user.email,
+    password=user.password,
+    city=user.city,
+)
 
     db.add(new_user)
     db.commit()

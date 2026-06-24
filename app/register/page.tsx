@@ -175,7 +175,6 @@ export default function RegisterPage() {
 
   // ── Form state ──
   const [name,         setName]         = useState("");
-  const [age,          setAge]          = useState("");
   const [email,        setEmail]        = useState("");
   const [password,     setPassword]     = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -233,15 +232,7 @@ export default function RegisterPage() {
       setError(`${messages.register.pleaseEnter} ${messages.register.fullName.toLowerCase()}`);
       return false;
     }
-    if (!age.trim()) {
-      setError(`${messages.register.pleaseEnter} ${messages.register.age.toLowerCase()}`);
-      return false;
-    }
-    const ageNum = parseInt(age);
-    if (isNaN(ageNum) || ageNum < 5 || ageNum > 99) {
-      setError(messages.register.ageRange);
-      return false;
-    }
+     
     if (!email.trim()) {
       setError(`${messages.register.pleaseEnter} ${messages.register.email.toLowerCase()}`);
       return false;
@@ -279,14 +270,12 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const ageNum = parseInt(age.trim(), 10);
       const response = await registerUser({
-        full_name: name.trim(),
-        email: email.trim(),
-        password: password,
-        age: ageNum,
-        city: city,
-      });
+      full_name: name.trim(),
+       email: email.trim(),
+      password: password,
+      city: city,
+    });
 
       // Save user data to localStorage
       localStorage.setItem("qaitaJanaru_user_id", response.user_id.toString());
@@ -569,24 +558,9 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                {/* Age + Email — stack on very small screens, side-by-side on sm+ */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] font-bold mb-1.5 uppercase tracking-widest" style={{ color: "#6ee7b7" }}>
-                      {messages.register.age}
-                    </label>
-                    <input
-                      type="number"
-                      value={age}
-                      onChange={(e) => setAge(e.target.value)}
-                      placeholder={messages.register.agePlaceholder}
-                      min={5}
-                      max={99}
-                      inputMode="numeric"
-                      className={INPUT_CLASS}
-                      style={INPUT_STYLE}
-                    />
-                  </div>
+                {/* Email —*/}
+                <div>
+                  
                   <div>
                     <label className="block text-[10px] font-bold mb-1.5 uppercase tracking-widest" style={{ color: "#6ee7b7" }}>
                       {messages.register.email}

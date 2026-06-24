@@ -6,7 +6,6 @@ export interface RegisterRequest {
   full_name: string;
   email: string;
   password: string;
-  age: number;
   city: string;
 }
 
@@ -31,7 +30,6 @@ export interface ProfileResponse {
   user_id: number;
   full_name: string;
   email: string;
-  age: number;
   city: string;
   user_type: string;
   institution: string;
