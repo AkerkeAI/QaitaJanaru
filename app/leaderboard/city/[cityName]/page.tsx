@@ -1,28 +1,28 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { Sidebar } from "../components/Sidebar";
-import { useLanguage } from "../contexts/LanguageContext";
-import { useTheme } from "../contexts/ThemeContext";
+import { useRouter, useParams } from "next/navigation";
+import { Sidebar } from "../../../components/Sidebar";
+import { useLanguage } from "../../../contexts/LanguageContext";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 interface LeaderboardEntry {
   rank: number;
+  user_id: number;
+  full_name: string;
+  city: string;
   eco_points: number;
-  full_name?: string;
-  city?: string;
-  title?: string;
-  user_id?: number;
+  level: number;
+  streak: number;
+  total_scans: number;
 }
 
-type TabType = "global" | "cities";
-
-export default function LeaderboardPage() {
+export default function CityLeaderboardPage() {
   const router = useRouter();
+  const params = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabType>("global");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,38 +58,25 @@ export default function LeaderboardPage() {
   }, [sidebarOpen]);
 
   useEffect(() => {
-    const userId = localStorage.getItem("qaitaJanaru_user_id");
-    if (!userId) {
-      router.push("/login");
-      return;
-    }
-  }, [router]);
-
-  useEffect(() => {
-    fetchLeaderboard(activeTab);
-  }, [activeTab]);
-
-  const fetchLeaderboard = async (tab: TabType) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`${API_URL}/leaderboard/${tab}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch leaderboard data");
+    const loadLeaderboard = async () => {
+      if (!params.cityName) return;
+      
+      try {
+        const response = await fetch(`${API_URL}/leaderboard/city/${params.cityName}`);
+        if (!response.ok) {
+          throw new Error("Failed to load leaderboard");
+        }
+        const data = await response.json();
+        setLeaderboard(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load leaderboard");
+      } finally {
+        setLoading(false);
       }
-      const data = await response.json();
-      setLeaderboard(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load leaderboard");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const tabs: { id: TabType; label: string; icon: string }[] = [
-    { id: "global", label: messages.leaderboard.global, icon: "🌍" },
-    { id: "cities", label: messages.leaderboard.cities, icon: "🏙️" },
-  ];
+    loadLeaderboard();
+  }, [params.cityName]);
 
   const getMedal = (rank: number) => {
     if (rank === 1) return "🥇";
@@ -103,17 +90,6 @@ export default function LeaderboardPage() {
     if (rank === 2) return "text-gray-300";
     if (rank === 3) return "text-amber-600";
     return "";
-  };
-
-  const getName = (entry: LeaderboardEntry, tab: TabType) => {
-    switch (tab) {
-      case "global":
-        return entry.full_name || messages.common.unknown;
-      case "cities":
-        return entry.city || messages.common.unknown;
-      default:
-        return messages.common.unknown;
-    }
   };
 
   return (
@@ -170,34 +146,34 @@ export default function LeaderboardPage() {
             
             {/* Page Title */}
             <div className="text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">{messages.leaderboard.title}</h2>
-              <p className="text-sm md:text-base" style={{ color: colors.textSecondary }}>{messages.leaderboard.subtitle}</p>
-            </div>
-
-            {/* Tabs */}
-            <div className="relative rounded-2xl backdrop-blur-xl border shadow-xl p-2" style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}>
-              <div className="flex flex-wrap gap-2">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 min-w-[100px] px-4 py-3 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2`}
-                    style={{
-                      background: activeTab === tab.id ? `linear-gradient(to right, ${colors.primary}, ${colors.accent})` : 'transparent',
-                      color: activeTab === tab.id ? colors.buttonText : colors.textSecondary,
-                      transform: activeTab === tab.id ? 'scale(1.02)' : 'scale(1)'
-                    }}
-                  >
-                    <span className="text-lg">{tab.icon}</span>
-                    <span className="hidden sm:inline">{tab.label}</span>
-                  </button>
-                ))}
-              </div>
+              <button
+                onClick={() => router.push("/leaderboard")}
+                className="flex items-center gap-2 mb-2 mx-auto px-4 py-2 rounded-xl border backdrop-blur-sm hover:opacity-80 transition"
+                style={{ borderColor: colors.border, backgroundColor: colors.cardBg, color: colors.textSecondary }}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+                Back to Leaderboard
+              </button>
+              <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
+                📍 {decodeURIComponent(params.cityName as string)}
+              </h2>
+              <p className="text-sm md:text-base" style={{ color: colors.textSecondary }}>
+                City Leaderboard
+              </p>
             </div>
 
             {/* Leaderboard Card */}
             <div className="relative rounded-[32px] backdrop-blur-2xl border shadow-2xl overflow-hidden" style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}>
-              {/* Card gradient overlay */}
               <div className="absolute inset-0 opacity-10" style={{ background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})` }}></div>
               
               <div className="relative p-6 md:p-8">
@@ -213,7 +189,7 @@ export default function LeaderboardPage() {
                     </div>
                     <p className="text-lg mb-4" style={{ color: colors.danger }}>{error}</p>
                     <button
-                      onClick={() => fetchLeaderboard(activeTab)}
+                      onClick={() => window.location.reload()}
                       className="px-6 py-3 rounded-xl font-bold hover:brightness-110 transition"
                       style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`, color: colors.buttonText }}
                     >
@@ -225,7 +201,7 @@ export default function LeaderboardPage() {
                     <div className="w-20 h-20 mb-6 rounded-full flex items-center justify-center text-4xl" style={{ backgroundColor: `${colors.primary}20` }}>
                       🏆
                     </div>
-                    <p className="text-lg" style={{ color: colors.textSecondary }}>{messages.leaderboard.noDataAvailable}</p>
+                    <p className="text-lg" style={{ color: colors.textSecondary }}>No users found in this city.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -237,48 +213,39 @@ export default function LeaderboardPage() {
                     </div>
 
                     {/* Leaderboard Entries */}
-                    {leaderboard.map((entry, index) => {
-                      const isGlobal = activeTab === "global";
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            if (isGlobal && entry.user_id) {
-                              router.push(`/profile/${entry.user_id}`);
-                            } else if (!isGlobal && entry.city) {
-                              router.push(`/leaderboard/city/${encodeURIComponent(entry.city)}`);
-                            }
-                          }}
-                          className="group w-full text-left grid grid-cols-12 gap-4 px-4 py-4 rounded-2xl transition-all duration-300 hover:opacity-90 hover:scale-[1.01]"
-                          style={{
-                            backgroundColor: entry.rank <= 3 ? `${colors.primary}10` : 'transparent',
-                            borderColor: entry.rank <= 3 ? `${colors.primary}30` : 'transparent',
-                            borderWidth: entry.rank <= 3 ? 1 : 0
-                          }}
-                        >
-                          {/* Rank */}
-                          <div className="col-span-2 md:col-span-1 flex items-center">
-                            <div className={`text-2xl font-black ${getRankStyle(entry.rank)}`} style={{ color: entry.rank <= 3 ? undefined : colors.textSecondary }}>
-                              {getMedal(entry.rank) || entry.rank}
-                            </div>
+                    {leaderboard.map((entry) => (
+                      <button
+                        key={entry.user_id}
+                        onClick={() => router.push(`/profile/${entry.user_id}`)}
+                        className="group w-full text-left grid grid-cols-12 gap-4 px-4 py-4 rounded-2xl transition-all duration-300 hover:opacity-90 hover:scale-[1.01]"
+                        style={{
+                          backgroundColor: entry.rank <= 3 ? `${colors.primary}10` : 'transparent',
+                          borderColor: entry.rank <= 3 ? `${colors.primary}30` : 'transparent',
+                          borderWidth: entry.rank <= 3 ? 1 : 0
+                        }}
+                      >
+                        {/* Rank */}
+                        <div className="col-span-2 md:col-span-1 flex items-center">
+                          <div className={`text-2xl font-black ${getRankStyle(entry.rank)}`} style={{ color: entry.rank <= 3 ? undefined : colors.textSecondary }}>
+                            {getMedal(entry.rank) || entry.rank}
                           </div>
+                        </div>
 
-                          {/* Name */}
-                          <div className="col-span-7 md:col-span-8 flex items-center">
-                            <div className="font-semibold text-lg truncate">
-                              {getName(entry, activeTab)}
-                            </div>
+                        {/* Name */}
+                        <div className="col-span-7 md:col-span-8 flex items-center">
+                          <div className="font-semibold text-lg truncate">
+                            {entry.full_name}
                           </div>
+                        </div>
 
-                          {/* Eco Points */}
-                          <div className="col-span-3 md:col-span-3 flex items-center justify-end">
-                            <div className="text-xl font-black" style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                              {entry.eco_points}
-                            </div>
+                        {/* Eco Points */}
+                        <div className="col-span-3 md:col-span-3 flex items-center justify-end">
+                          <div className="text-xl font-black" style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                            {entry.eco_points}
                           </div>
-                        </button>
-                      );
-                    })}
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>

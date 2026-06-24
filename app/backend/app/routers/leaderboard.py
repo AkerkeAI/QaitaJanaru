@@ -64,3 +64,30 @@ def city_leaderboard(db: Session = Depends(get_db)):
         })
 
     return result
+
+
+@router.get("/city/{city_name}")
+def city_users_leaderboard(city_name: str, db: Session = Depends(get_db)):
+
+    users = (
+        db.query(User)
+        .filter(User.city.ilike(city_name))
+        .order_by(User.eco_points.desc())
+        .all()
+    )
+
+    result = []
+
+    for position, user in enumerate(users, start=1):
+        result.append({
+            "rank": position,
+            "user_id": user.id,
+            "full_name": user.full_name,
+            "city": user.city,
+            "eco_points": user.eco_points,
+            "level": user.level,
+            "streak": user.streak,
+            "total_scans": user.total_scans
+        })
+
+    return result

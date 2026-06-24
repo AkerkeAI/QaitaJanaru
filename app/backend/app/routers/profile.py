@@ -59,3 +59,25 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "User deleted successfully"}
+
+
+@router.get("/public/{user_id}")
+def get_public_profile(user_id: int, db: Session = Depends(get_db)):
+
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Ensure stored level matches total eco points; auto-fix old accounts
+    user = sync_user_level(db, user)
+
+    return {
+        "id": user.id,
+        "full_name": user.full_name,
+        "city": user.city,
+        "eco_points": user.eco_points,
+        "level": user.level,
+        "streak": user.streak,
+        "total_scans": user.total_scans
+    }
