@@ -9,7 +9,7 @@ from app.models.user import User
 from app.schemas.scan import ScanResponse
 from app.services.ai_waste_detector import AIProviderError, analyze_waste_image
 from app.services.reward_service import points_for_waste
-from app.services.user_service import add_eco_points
+from app.services.user_service import add_eco_points, update_streak
 
 router = APIRouter(prefix="/scan", tags=["Scan"])
 
@@ -75,6 +75,7 @@ async def scan_waste(user_id: int, file: UploadFile = File(...), language: str =
     earned_points = points_for_waste(result["waste_type"])
     user.total_scans = (user.total_scans or 0) + 1
     user = add_eco_points(db, user, earned_points)
+    user = update_streak(db, user)
 
     scan_record = ScanHistory(
         user_id=user.id,

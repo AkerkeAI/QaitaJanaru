@@ -76,6 +76,9 @@ export const messages: Messages = {
     subtitle: "Лучшие борцы за экологию, меняющие мир к лучшему",
     retry: "Повторить",
     noDataAvailable: "Нет данных",
+    backToLeaderboard: "Назад к рейтингу",
+    cityLeaderboard: "Рейтинг города",
+    noUsersFoundInCity: "Пользователи из этого города не найдены.",
   },
   settings: {
     title: "Настройки",

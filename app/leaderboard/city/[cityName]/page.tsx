@@ -162,13 +162,13 @@ export default function CityLeaderboardPage() {
                 >
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
-                Back to Leaderboard
+                {messages.leaderboard.backToLeaderboard}
               </button>
               <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
                 📍 {decodeURIComponent(params.cityName as string)}
               </h2>
               <p className="text-sm md:text-base" style={{ color: colors.textSecondary }}>
-                City Leaderboard
+                {messages.leaderboard.cityLeaderboard}
               </p>
             </div>
 
@@ -201,7 +201,7 @@ export default function CityLeaderboardPage() {
                     <div className="w-20 h-20 mb-6 rounded-full flex items-center justify-center text-4xl" style={{ backgroundColor: `${colors.primary}20` }}>
                       🏆
                     </div>
-                    <p className="text-lg" style={{ color: colors.textSecondary }}>No users found in this city.</p>
+                    <p className="text-lg" style={{ color: colors.textSecondary }}>{messages.leaderboard.noUsersFoundInCity}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">

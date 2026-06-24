@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from datetime import date, timedelta
 
 from app.db.session import SessionLocal
 from app.models.user import User
 from app.schemas.user import UserCreate, UserLogin
+from app.services.user_service import update_streak
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -54,26 +54,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="INCORRECT_PASSWORD")
 
     # Update streak logic
-    today = date.today()
-    
-    if db_user.last_login_date is None:
-        # First login ever
-        db_user.streak = 1
-        db_user.last_login_date = today
-    elif db_user.last_login_date == today:
-        # Already logged in today, do nothing
-        pass
-    elif db_user.last_login_date == today - timedelta(days=1):
-        # Logged in yesterday, increment streak
-        db_user.streak += 1
-        db_user.last_login_date = today
-    else:
-        # Missed one or more days, reset streak
-        db_user.streak = 1
-        db_user.last_login_date = today
-    
-    db.commit()
-    db.refresh(db_user)
+    db_user = update_streak(db, db_user)
 
     return {
         "message": "Login successful",

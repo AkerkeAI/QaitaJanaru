@@ -76,6 +76,9 @@ export const messages: Messages = {
     subtitle: "Өзгеріс жасап жүрген үздік эко-батырлар",
     retry: "Қайталау",
     noDataAvailable: "Деректер жоқ",
+    backToLeaderboard: "Рейтингке оралу",
+    cityLeaderboard: "Қала рейтингі",
+    noUsersFoundInCity: "Осы қаладағы қолданушылар табылмады.",
   },
   settings: {
     title: "Параметрлер",

@@ -74,6 +74,9 @@ export interface Messages {
     subtitle: string;
     retry: string;
     noDataAvailable: string;
+    backToLeaderboard: string;
+    cityLeaderboard: string;
+    noUsersFoundInCity: string;
   };
   settings: {
     title: string;

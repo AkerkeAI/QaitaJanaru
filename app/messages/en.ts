@@ -76,6 +76,9 @@ export const messages: Messages = {
     subtitle: "Top eco warriors making a difference",
     retry: "Retry",
     noDataAvailable: "No data available",
+    backToLeaderboard: "Back to Leaderboard",
+    cityLeaderboard: "City Leaderboard",
+    noUsersFoundInCity: "No users found in this city.",
   },
   settings: {
     title: "Settings",
