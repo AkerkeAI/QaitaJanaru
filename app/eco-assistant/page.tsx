@@ -693,8 +693,20 @@ export default function EcoAssistantPage() {
 
       {/* Fixed Input Area */}
       <div className="flex-shrink-0 px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8 relative z-10">
+        {/* Hide Safari default media controls */}
+        <style jsx global>{`
+          /* Hide Safari's default media controls */
+          video::-webkit-media-controls,
+          audio::-webkit-media-controls,
+          *::-webkit-media-controls-enclosure,
+          *::-webkit-media-controls-panel {
+            display: none !important;
+            visibility: hidden !important;
+          }
+        `}</style>
+        
         <div 
-          className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-4"
+          className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-4 pt-8 md:pt-4"
           style={{ borderColor: `${colors.primary}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)` }}
         >
           <div 
@@ -704,12 +716,31 @@ export default function EcoAssistantPage() {
           
           <div className="flex gap-3 relative z-10">
             <div className="flex-1 relative">
+              {/* Recording/Processing Indicator inside container */}
+              {(isRecording || isProcessing) && (
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full flex items-center gap-2 transition-all duration-300 shadow-lg"
+                     style={{ 
+                       background: isRecording ? colors.danger : colors.primary,
+                       color: "#ffffff"
+                     }}>
+                  {isRecording && (
+                    <>
+                      <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                      <span>{recordingDuration}s</span>
+                    </>
+                  )}
+                  {isProcessing && (
+                    <span>Processing...</span>
+                  )}
+                </div>
+              )}
+              
               <textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={translations.ecoAssistant.placeholder}
-                className="w-full bg-white/5 backdrop-blur-xl rounded-2xl px-4 py-4 pr-24 md:pr-12 resize-none focus:outline-none transition-colors"
+                className="w-full bg-white/5 backdrop-blur-xl rounded-2xl px-4 py-4 pr-12 md:pr-12 resize-none focus:outline-none transition-colors"
                 style={{ 
                   borderColor: colors.border, 
                   borderWidth: 1,
@@ -718,6 +749,7 @@ export default function EcoAssistantPage() {
                 }}
                 rows={1}
               />
+              
               <button
                 onClick={handleVoiceButtonClick}
                 disabled={isProcessing}
@@ -787,21 +819,6 @@ export default function EcoAssistantPage() {
                   </svg>
                 )}
               </button>
-              
-              {/* Recording indicator */}
-              {isRecording && (
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-white text-xs px-2 py-1 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2" style={{ background: colors.danger }}>
-                  <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                  <span>{recordingDuration}s</span>
-                </div>
-              )}
-              
-              {/* Processing indicator */}
-              {isProcessing && (
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-white text-xs px-2 py-1 rounded-lg animate-in fade-in slide-in-from-bottom-2" style={{ background: colors.primary }}>
-                  Processing...
-                </div>
-              )}
             </div>
             <button
               onClick={() => sendMessage(inputText)}
