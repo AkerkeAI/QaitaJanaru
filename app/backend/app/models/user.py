@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Date
+from sqlalchemy.orm import relationship
 
 from app.db.session import Base
 
@@ -21,3 +22,6 @@ class User(Base):
     streak = Column(Integer, default=0)
     total_scans = Column(Integer, default=0)
     last_login_date = Column(Date, nullable=True)
+
+    # Relationship to task progress
+    task_progress = relationship("TaskProgress", back_populates="user", uselist=False)
