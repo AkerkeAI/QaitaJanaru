@@ -196,7 +196,7 @@ export interface Messages {
   };
   sidebar: {
     home: string;
-    profile: string;
+    profile:string;
     scan: string;
     leaderboard: string;
     settings: string;
@@ -205,32 +205,8 @@ export interface Messages {
     ecoAssistant: string;
     tasks: string;
   };
-  tasks: {
-    title: string;
-    subtitle: string;
-    dailyTasks: string;
-    weeklyTasks: string;
-    achievements: string;
-    points: string;
-    completed: string;
-    taskReward: string;
-    taskVisitApp: string;
-    taskVisitAppDesc: string;
-    taskAskQuestion: string;
-    taskAskQuestionDesc: string;
-    taskScanWaste: string;
-    taskScanWasteDesc: string;
-    taskOpenMap: string;
-    taskOpenMapDesc: string;
-    task7DaysStreak: string;
-    task7DaysStreakDesc: string;
-    task10Questions: string;
-    task10QuestionsDesc: string;
-    task5Scans: string;
-    task5ScansDesc: string;
-    task100Points: string;
-    task100PointsDesc: string;
-  };
+  
+   
   recyclingMap: {
     title: string;
     subtitle: string;
