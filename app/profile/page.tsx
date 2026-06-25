@@ -77,32 +77,30 @@ export default function ProfilePage() {
         localStorage.setItem("qaitaJanaru_total_scans", (data.total_scans || 0).toString());
         localStorage.setItem("qaitaJanaru_institution", data.institution || "Unknown");
 
-        // Check if this is a fresh login session and show streak notification
-        const hasShownNotification = sessionStorage.getItem("streak_notification_shown");
-        if (!hasShownNotification && data.streak && data.streak > 0) {
-          sessionStorage.setItem("streak_notification_shown", "true");
-          
+        // Check if should show streak notification (once per day)
+        const today = new Date().toDateString();
+        const lastNotificationDate = localStorage.getItem("streak_notification_date");
+        
+        if (data.streak && data.streak > 0 && lastNotificationDate !== today) {
           // Determine notification message based on streak
-          let message = "";
-          if (data.streak === 1) {
-            message = "Streak Updated! You are on a 1-day streak.";
-          } else {
-            message = `Great Job! ${data.streak}-day streak maintained.`;
-          }
+          let message = data.streak === 1 
+            ? messages.profile.streakNotification1Day 
+            : messages.profile.streakNotificationXDays.replace('{count}', String(data.streak));
           
           // Show notification after a short delay to ensure page is fully loaded
           setTimeout(() => {
             setStreakNotification({ show: true, streak: data.streak, message, fading: false });
+            localStorage.setItem("streak_notification_date", today);
             
-            // Start fade-out after 5.5 seconds (6 seconds total - 0.5s fade-out)
+            // Start fade-out after 4.5 seconds (5 seconds total)
             setTimeout(() => {
               setStreakNotification(prev => ({ ...prev, fading: true }));
               
               // Hide notification after fade-out completes
               setTimeout(() => {
-                setStreakNotification({ show: false, streak: 0, message: "", fading: false });
+                setStreakNotification({ show: false, streak: 0, message, fading: false });
               }, 500);
-            }, 5500);
+            }, 4500);
           }, 500);
         }
       } catch (err) {
@@ -113,7 +111,7 @@ export default function ProfilePage() {
     };
 
     loadProfile();
-  }, [router]);
+  }, [router, messages]);
 
   if (loading) {
     return (
@@ -537,11 +535,18 @@ export default function ProfilePage() {
 
       {/* Streak Notification */}
       {streakNotification.show && (
-        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-500 ${streakNotification.fading ? 'animate-out fade-out slide-out-to-top-4 duration-500' : ''}`}>
-          <div className="px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-xl" style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`, color: colors.buttonText }}>
-            <span className="text-3xl">🔥</span>
-            <div>
-              <div className="font-bold text-base">{streakNotification.message}</div>
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-md ${streakNotification.fading ? 'opacity-0 -translate-y-4 transition-all duration-500' : 'opacity-100 translate-y-0 transition-all duration-500'}`}>
+          <div 
+            className="px-5 py-4 rounded-3xl shadow-2xl flex items-center gap-4 backdrop-blur-2xl border-2"
+            style={{ 
+              background: `rgba(255,255,255,0.1)`, 
+              borderColor: `${colors.primary}40`, 
+              color: colors.text 
+            }}
+          >
+            <span className="text-4xl">🔥</span>
+            <div className="flex-1">
+              <div className="text-lg font-bold">{streakNotification.message}</div>
             </div>
           </div>
         </div>

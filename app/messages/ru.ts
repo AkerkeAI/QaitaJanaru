@@ -60,6 +60,8 @@ export const messages: Messages = {
     co2Saved: "CO₂ сохранено",
     treesSaved: "Деревья сохранены",
     waterSaved: "Вода сохранена",
+    streakNotification1Day: "Серия обновлена! У вас 1-дневная серия.",
+    streakNotificationXDays: "Отлично! Серия в {count} дней сохранена!",
   },
   leaderboard: {
     title: "Рейтинг",

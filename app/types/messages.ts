@@ -58,6 +58,8 @@ export interface Messages {
     co2Saved: string;
     treesSaved: string;
     waterSaved: string;
+    streakNotification1Day: string;
+    streakNotificationXDays: string;
   };
   leaderboard: {
     title: string;

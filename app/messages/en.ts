@@ -60,6 +60,8 @@ export const messages: Messages = {
     co2Saved: "CO₂ Saved",
     treesSaved: "Trees Saved",
     waterSaved: "Water Saved",
+    streakNotification1Day: "Streak Updated! You are on a 1-day streak.",
+    streakNotificationXDays: "Great job! {count}-day streak maintained!",
   },
   leaderboard: {
     title: "Leaderboard",
