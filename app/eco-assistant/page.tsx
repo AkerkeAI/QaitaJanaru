@@ -562,12 +562,6 @@ export default function EcoAssistantPage() {
 
         {/* Chat Messages */}
         <div className="space-y-4 pb-4">
-          {messages.length === 0 && (
-            <div className="text-center py-8" style={{ color: colors.textSecondary }}>
-              <p className="text-sm">Start a conversation by asking an environmental question</p>
-            </div>
-          )}
-          
           {messages.map((message) => (
             <div
               key={message.id}
@@ -706,7 +700,7 @@ export default function EcoAssistantPage() {
         `}</style>
         
         <div 
-          className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-4 pt-8 md:pt-4"
+          className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-4"
           style={{ borderColor: `${colors.primary}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)` }}
         >
           <div 
@@ -716,30 +710,11 @@ export default function EcoAssistantPage() {
           
           <div className="flex gap-3 relative z-10">
             <div className="flex-1 relative">
-              {/* Recording/Processing Indicator inside container */}
-              {(isRecording || isProcessing) && (
-                <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full flex items-center gap-2 transition-all duration-300 shadow-lg"
-                     style={{ 
-                       background: isRecording ? colors.danger : colors.primary,
-                       color: "#ffffff"
-                     }}>
-                  {isRecording && (
-                    <>
-                      <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                      <span>{recordingDuration}s</span>
-                    </>
-                  )}
-                  {isProcessing && (
-                    <span>Processing...</span>
-                  )}
-                </div>
-              )}
-              
               <textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={translations.ecoAssistant.placeholder}
+                placeholder={isRecording ? `🎤 Listening... ${recordingDuration}s` : isProcessing ? "⏳ Processing..." : translations.ecoAssistant.placeholder}
                 className="w-full bg-white/5 backdrop-blur-xl rounded-2xl px-4 py-4 pr-12 md:pr-12 resize-none focus:outline-none transition-colors"
                 style={{ 
                   borderColor: colors.border, 
