@@ -150,54 +150,6 @@ export default function ProfilePage() {
   const levelProgress = currentXP / nextLevelXP;
   const pointsToNextLevel = nextLevelXP - currentXP;
 
-  // Achievement definitions
-  const achievements = [
-    {
-      id: "eco-beginner",
-      icon: "🌱",
-      title: messages.profile.achievementEcoBeginner,
-      description: messages.profile.achievementEcoBeginnerDesc,
-      unlocked: true,
-    },
-    {
-      id: "first-scan",
-      icon: "📸",
-      title: messages.profile.achievementFirstScan,
-      description: messages.profile.achievementFirstScanDesc,
-      unlocked: profile.total_scans >= 1,
-    },
-    {
-      id: "eco-enthusiast",
-      icon: "🏆",
-      title: messages.profile.achievementEcoEnthusiast,
-      description: messages.profile.achievementEcoEnthusiastDesc,
-      unlocked: profile.eco_points >= 100,
-    },
-    {
-      id: "recycling-hero",
-      icon: "♻️",
-      title: messages.profile.achievementRecyclingHero,
-      description: messages.profile.achievementRecyclingHeroDesc,
-      unlocked: profile.eco_points >= 500,
-    },
-    {
-      id: "consistent",
-      icon: "🔥",
-      title: messages.profile.achievementStreakChampion,
-      description: messages.profile.achievementStreakChampionDesc,
-      unlocked: profile.streak >= 7,
-    },
-    {
-      id: "earth-guardian",
-      icon: "🌍",
-      title: messages.profile.achievementEarthGuardian,
-      description: messages.profile.achievementEarthGuardianDesc,
-      unlocked: profile.eco_points >= 1000,
-    },
-  ];
-
-  const unlockedCount = achievements.filter((a) => a.unlocked).length;
-
   return (
     <main className="min-h-screen relative overflow-hidden" style={{ background: colors.bg, color: colors.text }}>
       {/* Animated background orbs */}
@@ -398,67 +350,6 @@ export default function ProfilePage() {
                 <p style={{ color: colors.textSecondary }}>
                   <span className="font-bold" style={{ color: colors.text }}>{pointsToNextLevel}</span> {messages.profile.morePointsToReachLevel} {nextLevel}
                 </p>
-              </div>
-            </div>
-
-            {/* Achievements Section */}
-            <div className="relative rounded-3xl p-6 md:p-8 backdrop-blur-xl border shadow-xl" style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg" style={{ background: "linear-gradient(to bottom right, #fbbf24, #f97316)" }}>
-                  🏆
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold">{messages.profile.achievements}</h3>
-                  <p className="text-sm" style={{ color: colors.textSecondary }}>{unlockedCount} / {achievements.length} {messages.profile.unlocked}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {achievements.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className={`group relative rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02] ${
-                      achievement.unlocked
-                        ? ""
-                        : "opacity-60 hover:opacity-80"
-                    }`}
-                    style={{
-                      backgroundColor: achievement.unlocked ? `${colors.primary}15` : colors.cardBg,
-                      borderColor: achievement.unlocked ? `${colors.primary}40` : colors.border,
-                      borderWidth: 1
-                    }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div
-                        className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-lg flex-shrink-0`}
-                        style={{
-                          background: achievement.unlocked ? "linear-gradient(to bottom right, #fbbf24, #f97316)" : "linear-gradient(to bottom right, #4b5563, #374151)"
-                        }}
-                      >
-                        {achievement.unlocked ? achievement.icon : "🔒"}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-lg mb-1 truncate">
-                          {achievement.title}
-                        </div>
-                        <div
-                          className={`text-sm`}
-                          style={{
-                            color: achievement.unlocked ? colors.textSecondary : "#9ca3af"
-                          }}
-                        >
-                          {achievement.description}
-                        </div>
-                        {achievement.unlocked && (
-                          <div className="mt-2 inline-flex items-center gap-1 px-2 py-1 rounded-full border backdrop-blur-sm" style={{ backgroundColor: `${colors.primary}20`, borderColor: `${colors.primary}30`, color: colors.textSecondary }}>
-                            <span className="text-xs">✓</span>
-                            <span className="text-xs font-medium">{messages.profile.unlocked}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
 
