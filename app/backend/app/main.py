@@ -15,7 +15,9 @@ from app.models.scan_history import ScanHistory  # noqa: F401
 from app.models.chat_message import ChatMessage  # noqa: F401
 from app.models.task_progress import TaskProgress  # noqa: F401
 
-app = FastAPI()
+app = FastAPI(
+    title="QaitaJanaru Backend TEST 12345"
+)
 
 
 @app.on_event("startup")
