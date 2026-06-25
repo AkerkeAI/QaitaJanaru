@@ -273,8 +273,6 @@ export const messages: Messages = {
     totalPoints: "Жалпы ұпайлар",
     nearestRecyclingCenter: "Ең жақын қайта өңдеу орталығы",
     findWhereToRecycle: "Бұл қалдықтарды қайда қайта өңдеуге болатынын табыңыз",
-    recyclingCenterSubtitle: "Бұл материалды қабылдайтын ең жақын қайта өңдеу орталықтарын табыңыз",
-    openMap: "Картаны ашу",
     acceptedWasteTypes: "Қабылданатын қалдық түрлері",
     openInMaps: "Картада ашу",
     scanAnother: "Басқасын скандау",

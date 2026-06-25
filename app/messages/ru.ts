@@ -273,8 +273,6 @@ export const messages: Messages = {
     totalPoints: "Общие очки",
     nearestRecyclingCenter: "Ближайший центр переработки",
     findWhereToRecycle: "Найдите, где перерабатывать эти отходы",
-    recyclingCenterSubtitle: "Найдите ближайшие центры переработки, принимающие этот материал",
-    openMap: "Открыть карту",
     acceptedWasteTypes: "Принимаемые типы отходов",
     openInMaps: "Открыть в картах",
     scanAnother: "Сканировать еще",
