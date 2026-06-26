@@ -14,12 +14,12 @@ export interface ClaimRewardResponse {
   message: string;
 }
 
-export async function getTaskProgress(token: string): Promise<TaskProgressResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/tasks/task-progress`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export async function getTaskProgress(
+  userId: string
+): Promise<TaskProgressResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/tasks/task-progress/${userId}`
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch task progress");
@@ -29,18 +29,23 @@ export async function getTaskProgress(token: string): Promise<TaskProgressRespon
 }
 
 export async function updateTaskProgress(
-  token: string,
+  userId: string,
   taskId: string,
   progress: number
 ): Promise<{ success: boolean; message: string }> {
-  const response = await fetch(`${API_BASE_URL}/api/tasks/task-progress/update`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ task_id: taskId, progress }),
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/api/tasks/task-progress/update/${userId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        task_id: taskId,
+        progress,
+      }),
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to update task progress");
@@ -50,17 +55,21 @@ export async function updateTaskProgress(
 }
 
 export async function claimReward(
-  token: string,
+  userId: string,
   taskId: string
 ): Promise<ClaimRewardResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/tasks/claim-reward`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ task_id: taskId }),
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/api/tasks/claim-reward/${userId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        task_id: taskId,
+      }),
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to claim reward");
@@ -70,15 +79,17 @@ export async function claimReward(
 }
 
 export async function resetDailyTasks(
-  token: string
+  userId: string
 ): Promise<{ success: boolean; message: string }> {
-  const response = await fetch(`${API_BASE_URL}/api/tasks/reset-daily`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/api/tasks/reset-daily/${userId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to reset daily tasks");
@@ -88,15 +99,17 @@ export async function resetDailyTasks(
 }
 
 export async function resetWeeklyTasks(
-  token: string
+  userId: string
 ): Promise<{ success: boolean; message: string }> {
-  const response = await fetch(`${API_BASE_URL}/api/tasks/reset-weekly`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/api/tasks/reset-weekly/${userId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 
   if (!response.ok) {
     throw new Error("Failed to reset weekly tasks");
