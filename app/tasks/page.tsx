@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { Task, TaskType } from "../types/tasks";
+import { Task, AchievementChapter } from "../types/tasks";
 import { getProfile, ProfileResponse } from "../lib/api";
+import { getTaskProgress, claimReward } from "../lib/tasksApi";
+import { getDailyTasksForWeekday, getWeeklyTasksForSet, achievementChapters } from "../lib/taskConfig";
 
 export default function TasksPage() {
   const router = useRouter();
@@ -14,243 +16,148 @@ export default function TasksPage() {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [dailyTasks, setDailyTasks] = useState<Task[]>([]);
+  const [weeklyTasks, setWeeklyTasks] = useState<Task[]>([]);
+  const [chapters, setChapters] = useState<AchievementChapter[]>(achievementChapters);
   const [showRewardPopup, setShowRewardPopup] = useState<{ show: boolean; points: number; fading: boolean }>({ show: false, points: 0, fading: false });
+  const [taskProgress, setTaskProgress] = useState<Record<string, number>>({});
+  const [claimedRewards, setClaimedRewards] = useState<string[]>([]);
+  const [currentWeekSet, setCurrentWeekSet] = useState<string>("week-set-a");
   const { messages } = useLanguage();
   const { colors } = useTheme();
 
   useEffect(() => {
-    const loadProfile = async () => {
+    const loadData = async () => {
       const userId = localStorage.getItem("qaitaJanaru_user_id");
+      const token = localStorage.getItem("qaitaJanaru_token");
 
-      if (!userId) {
+      if (!userId || !token) {
         router.push("/login");
         return;
       }
 
       try {
-        const data = await getProfile(userId);
-        setProfile(data);
-        initializeTasks(data);
+        // Load profile data
+        const profileData = await getProfile(userId);
+        setProfile(profileData);
+
+        // Load task progress from backend
+        const progressData = await getTaskProgress(token);
+        setTaskProgress(progressData.task_progress || {});
+        setClaimedRewards(progressData.claimed_rewards || []);
+        setCurrentWeekSet(progressData.current_week_set || "week-set-a");
+
+        // Initialize tasks based on current weekday and week set
+        const currentWeekday = new Date().getDay();
+        const dailyTasksData = getDailyTasksForWeekday(currentWeekday);
+        const weeklyTasksData = getWeeklyTasksForSet(progressData.current_week_set || "week-set-a");
+
+        // Update task progress from backend
+        const updatedDailyTasks = dailyTasksData.map(task => ({
+          ...task,
+          current: progressData.task_progress?.[task.id] || 0,
+          completed: (progressData.task_progress?.[task.id] || 0) >= task.target,
+          claimed: progressData.claimed_rewards?.includes(task.id) || false,
+        }));
+
+        const updatedWeeklyTasks = weeklyTasksData.map(task => ({
+          ...task,
+          current: progressData.task_progress?.[task.id] || 0,
+          completed: (progressData.task_progress?.[task.id] || 0) >= task.target,
+          claimed: progressData.claimed_rewards?.includes(task.id) || false,
+        }));
+
+        setDailyTasks(updatedDailyTasks);
+        setWeeklyTasks(updatedWeeklyTasks);
+
+        // Update achievement chapters based on profile data
+        const updatedChapters = achievementChapters.map(chapter => {
+          const updatedAchievements = chapter.achievements.map(achievement => {
+            let current = 0;
+            switch (achievement.category) {
+              case "scan":
+                current = profileData.total_scans || 0;
+                break;
+              case "points":
+                current = profileData.eco_points || 0;
+                break;
+              case "streak":
+                current = profileData.streak || 0;
+                break;
+              default:
+                current = 0;
+            }
+            return {
+              ...achievement,
+              current,
+              completed: current >= achievement.target,
+            };
+          });
+
+          const allCompleted = updatedAchievements.every(a => a.completed);
+          const unlocked = chapter.id === 1 || 
+            (chapter.id > 1 && achievementChapters[chapter.id - 2].completed);
+
+          return {
+            ...chapter,
+            achievements: updatedAchievements,
+            unlocked,
+            completed: allCompleted,
+          };
+        });
+
+        setChapters(updatedChapters);
+
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load profile");
+        setError(err instanceof Error ? err.message : "Failed to load data");
       } finally {
         setLoading(false);
       }
     };
 
-    loadProfile();
+    loadData();
   }, [router]);
 
-  const initializeTasks = (profileData: ProfileResponse) => {
-    const dailyTasks: Task[] = [
-      {
-        id: "daily-visit",
-        title: messages.tasks.taskVisitApp,
-        description: messages.tasks.taskVisitAppDesc,
-        reward: 5,
-        target: 1,
-        current: 1,
-        completed: true,
-        claimed: false,
-        type: "daily",
-        icon: "📱",
-      },
-      {
-        id: "daily-eco",
-        title: messages.tasks.taskAskEco,
-        description: messages.tasks.taskAskEcoDesc,
-        reward: 5,
-        target: 1,
-        current: 0,
-        completed: false,
-        claimed: false,
-        type: "daily",
-        icon: "🤖",
-      },
-      {
-        id: "daily-scan",
-        title: messages.tasks.taskScanWaste,
-        description: messages.tasks.taskScanWasteDesc,
-        reward: 5,
-        target: 1,
-        current: Math.min(profileData.total_scans || 0, 1),
-        completed: (profileData.total_scans || 0) >= 1,
-        claimed: false,
-        type: "daily",
-        icon: "📸",
-      },
-      {
-        id: "daily-map",
-        title: messages.tasks.taskOpenMap,
-        description: messages.tasks.taskOpenMapDesc,
-        reward: 5,
-        target: 1,
-        current: 0,
-        completed: false,
-        claimed: false,
-        type: "daily",
-        icon: "🗺️",
-      },
-    ];
-
-    const weeklyTasks: Task[] = [
-      {
-        id: "weekly-streak",
-        title: messages.tasks.taskWeeklyStreak,
-        description: messages.tasks.taskWeeklyStreakDesc,
-        reward: 50,
-        target: 7,
-        current: profileData.streak || 0,
-        completed: (profileData.streak || 0) >= 7,
-        claimed: false,
-        type: "weekly",
-        icon: "🔥",
-      },
-      {
-        id: "weekly-eco",
-        title: messages.tasks.taskWeeklyEco,
-        description: messages.tasks.taskWeeklyEcoDesc,
-        reward: 75,
-        target: 100,
-        current: profileData.eco_points || 0,
-        completed: (profileData.eco_points || 0) >= 100,
-        claimed: false,
-        type: "weekly",
-        icon: "🏆",
-      },
-      {
-        id: "weekly-scans",
-        title: messages.tasks.taskWeeklyScans,
-        description: messages.tasks.taskWeeklyScansDesc,
-        reward: 50,
-        target: 5,
-        current: Math.min(profileData.total_scans || 0, 5),
-        completed: (profileData.total_scans || 0) >= 5,
-        claimed: false,
-        type: "weekly",
-        icon: "📸",
-      },
-      {
-        id: "weekly-questions",
-        title: messages.tasks.taskWeeklyQuestions,
-        description: messages.tasks.taskWeeklyQuestionsDesc,
-        reward: 40,
-        target: 10,
-        current: 0,
-        completed: false,
-        claimed: false,
-        type: "weekly",
-        icon: "🤖",
-      },
-    ];
-
-    const achievements: Task[] = [
-      {
-        id: "achievement-beginner",
-        title: messages.tasks.achievementEcoBeginner,
-        description: messages.tasks.achievementEcoBeginnerDesc,
-        reward: 0,
-        target: 1,
-        current: 1,
-        completed: true,
-        claimed: true,
-        type: "achievement",
-        icon: "🌱",
-      },
-      {
-        id: "achievement-first-scan",
-        title: messages.tasks.achievementFirstScan,
-        description: messages.tasks.achievementFirstScanDesc,
-        reward: 0,
-        target: 1,
-        current: profileData.total_scans || 0,
-        completed: (profileData.total_scans || 0) >= 1,
-        claimed: true,
-        type: "achievement",
-        icon: "📸",
-      },
-      {
-        id: "achievement-enthusiast",
-        title: messages.tasks.achievementEcoEnthusiast,
-        description: messages.tasks.achievementEcoEnthusiastDesc,
-        reward: 0,
-        target: 100,
-        current: profileData.eco_points || 0,
-        completed: (profileData.eco_points || 0) >= 100,
-        claimed: true,
-        type: "achievement",
-        icon: "🏆",
-      },
-      {
-        id: "achievement-hero",
-        title: messages.tasks.achievementRecyclingHero,
-        description: messages.tasks.achievementRecyclingHeroDesc,
-        reward: 0,
-        target: 500,
-        current: profileData.eco_points || 0,
-        completed: (profileData.eco_points || 0) >= 500,
-        claimed: true,
-        type: "achievement",
-        icon: "♻️",
-      },
-      {
-        id: "achievement-streak",
-        title: messages.tasks.achievementStreakChampion,
-        description: messages.tasks.achievementStreakChampionDesc,
-        reward: 0,
-        target: 7,
-        current: profileData.streak || 0,
-        completed: (profileData.streak || 0) >= 7,
-        claimed: true,
-        type: "achievement",
-        icon: "🔥",
-      },
-      {
-        id: "achievement-guardian",
-        title: messages.tasks.achievementEarthGuardian,
-        description: messages.tasks.achievementEarthGuardianDesc,
-        reward: 0,
-        target: 1000,
-        current: profileData.eco_points || 0,
-        completed: (profileData.eco_points || 0) >= 1000,
-        claimed: true,
-        type: "achievement",
-        icon: "🌍",
-      },
-    ];
-
-    setTasks([...dailyTasks, ...weeklyTasks, ...achievements]);
-  };
-
-  const handleClaimReward = (task: Task) => {
+  const handleClaimReward = async (task: Task) => {
     if (task.claimed || !task.completed) return;
 
-    const updatedTasks = tasks.map(t =>
-      t.id === task.id ? { ...t, claimed: true } : t
-    );
-    setTasks(updatedTasks);
+    const token = localStorage.getItem("qaitaJanaru_token");
+    if (!token) return;
 
-    // Update eco points in localStorage
-    const currentPoints = parseInt(localStorage.getItem("qaitaJanaru_eco_points") || "0", 10);
-    const newPoints = currentPoints + task.reward;
-    localStorage.setItem("qaitaJanaru_eco_points", newPoints.toString());
+    try {
+      const result = await claimReward(token, task.id);
+      
+      if (result.success) {
+        // Update local state
+        setClaimedRewards(prev => [...prev, task.id]);
+        
+        // Update tasks
+        const updateTaskList = (tasks: Task[]) => 
+          tasks.map(t => t.id === task.id ? { ...t, claimed: true } : t);
+        
+        setDailyTasks(updateTaskList);
+        setWeeklyTasks(updateTaskList);
 
-    // Show reward popup
-    setShowRewardPopup({ show: true, points: task.reward, fading: false });
+        // Update profile eco points
+        if (profile) {
+          setProfile({ ...profile, eco_points: result.eco_points });
+        }
 
-    // Start fade-out after 3 seconds
-    setTimeout(() => {
-      setShowRewardPopup(prev => ({ ...prev, fading: true }));
-      setTimeout(() => {
-        setShowRewardPopup({ show: false, points: 0, fading: false });
-      }, 500);
-    }, 3000);
+        // Show reward popup
+        setShowRewardPopup({ show: true, points: task.reward, fading: false });
+
+        // Start fade-out after 3 seconds
+        setTimeout(() => {
+          setShowRewardPopup(prev => ({ ...prev, fading: true }));
+          setTimeout(() => {
+            setShowRewardPopup({ show: false, points: 0, fading: false });
+          }, 500);
+        }, 3000);
+      }
+    } catch (err) {
+      console.error("Failed to claim reward:", err);
+    }
   };
-
-  const dailyTasks = tasks.filter(t => t.type === "daily");
-  const weeklyTasks = tasks.filter(t => t.type === "weekly");
-  const achievements = tasks.filter(t => t.type === "achievement");
 
   const TaskCard = ({ task }: { task: Task }) => {
     const progress = Math.min(task.current / task.target, 1);
@@ -470,7 +377,7 @@ export default function TasksPage() {
               </div>
             </div>
 
-            {/* Achievements Section */}
+            {/* Achievements Section with Chapters */}
             <div className="relative rounded-3xl p-6 md:p-8 backdrop-blur-xl border shadow-xl" style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}>
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg" style={{ background: "linear-gradient(to bottom right, #fbbf24, #f97316)" }}>
@@ -479,15 +386,114 @@ export default function TasksPage() {
                 <div className="flex-1">
                   <h3 className="text-xl font-bold">{messages.tasks.achievements}</h3>
                   <p className="text-sm" style={{ color: colors.textSecondary }}>
-                    {achievements.filter(t => t.completed).length} / {achievements.length} {messages.tasks.unlocked}
+                    {chapters.filter(c => c.completed).length} / {chapters.length} {messages.tasks.chapterComplete}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {achievements.map((task) => (
-                  <TaskCard key={task.id} task={task} />
+              {/* Chapter Navigation */}
+              <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                {chapters.map((chapter) => (
+                  <button
+                    key={chapter.id}
+                    disabled={!chapter.unlocked}
+                    className={`px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${
+                      chapter.unlocked
+                        ? "hover:scale-105 active:scale-95"
+                        : "opacity-50 cursor-not-allowed"
+                    }`}
+                    style={{
+                      background: chapter.unlocked
+                        ? `linear-gradient(to right, ${colors.primary}, ${colors.accent})`
+                        : "linear-gradient(to right, #4b5563, #374151)",
+                      color: chapter.unlocked ? colors.buttonText : "#9ca3af",
+                    }}
+                  >
+                    {messages.tasks.chapter} {chapter.id}
+                  </button>
                 ))}
+              </div>
+
+              {/* Chapter Content */}
+              <div className="space-y-4">
+                {chapters.map((chapter) => (
+                  <div
+                    key={chapter.id}
+                    className={`rounded-2xl p-5 transition-all ${
+                      !chapter.unlocked ? "opacity-50" : ""
+                    }`}
+                    style={{
+                      backgroundColor: chapter.unlocked ? `${colors.primary}10` : `${colors.text}5`,
+                      borderColor: chapter.unlocked ? `${colors.primary}30` : colors.border,
+                      borderWidth: 1,
+                    }}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: chapter.unlocked ? "linear-gradient(to bottom right, #fbbf24, #f97316)" : "linear-gradient(to bottom right, #4b5563, #374151)" }}>
+                        {chapter.unlocked ? chapter.icon : "🔒"}
+                      </div>
+                      <div>
+                        <h4 className="font-bold">{chapter.title}</h4>
+                        <p className="text-xs" style={{ color: colors.textSecondary }}>{chapter.description}</p>
+                      </div>
+                      {chapter.completed && (
+                        <div className="ml-auto px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: `${colors.primary}20`, color: colors.primary }}>
+                          ✓ {messages.tasks.chapterComplete}
+                        </div>
+                      )}
+                      {!chapter.unlocked && (
+                        <div className="ml-auto px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: `${colors.text}10`, color: colors.textSecondary }}>
+                          {messages.tasks.chapterLocked}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {chapter.achievements.map((achievement) => (
+                        <div
+                          key={achievement.id}
+                          className={`rounded-xl p-3 transition-all ${
+                            achievement.completed ? "" : "opacity-70"
+                          }`}
+                          style={{
+                            backgroundColor: achievement.completed ? `${colors.primary}15` : colors.cardBg,
+                            borderColor: achievement.completed ? `${colors.primary}30` : colors.border,
+                            borderWidth: 1,
+                          }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{achievement.completed ? achievement.icon : "🔒"}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm truncate">{achievement.title}</div>
+                              <div className="text-xs" style={{ color: colors.textSecondary }}>{achievement.current} / {achievement.target}</div>
+                            </div>
+                            {achievement.completed && (
+                              <span className="text-xs" style={{ color: colors.primary }}>✓</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* QR Tasks Coming Soon */}
+            <div className="relative rounded-3xl p-6 md:p-8 backdrop-blur-xl border shadow-xl" style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg" style={{ background: "linear-gradient(to bottom right, #6366f1, #8b5cf6)" }}>
+                  📱
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">QR Recycling Tasks</h3>
+                  <p className="text-sm" style={{ color: colors.textSecondary }}>{messages.tasks.qrTasksComingSoon}</p>
+                </div>
+              </div>
+              <div className="p-4 rounded-xl" style={{ backgroundColor: `${colors.text}5` }}>
+                <p className="text-sm" style={{ color: colors.textSecondary }}>
+                  Coming soon: Recycle plastic bottles, electronics, and more by scanning QR codes at recycling centers!
+                </p>
               </div>
             </div>
 
