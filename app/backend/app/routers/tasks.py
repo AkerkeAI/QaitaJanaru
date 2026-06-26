@@ -5,10 +5,16 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from app.db.session import get_db
+from app.db.session import SessionLocal
 from app.models.user import User
 
 router = APIRouter()
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 class TaskProgressUpdate(BaseModel):
