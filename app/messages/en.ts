@@ -18,7 +18,7 @@ export const messages: Messages = {
     featuresTitle: "Platform Features",
     feature1: "📸 Waste identification by photo",
     feature2: "📍 Search for nearest recycling points",
-    feature3: "🏆 User and school rankings",
+    feature3: "🏆 User and city rankings",
     feature4: "🎯 Eco tasks and achievements",
     feature5: "🌱 Learning eco habits",
   },

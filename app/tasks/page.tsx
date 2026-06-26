@@ -29,9 +29,8 @@ export default function TasksPage() {
   useEffect(() => {
     const loadData = async () => {
       const userId = localStorage.getItem("qaitaJanaru_user_id");
-      const token = localStorage.getItem("qaitaJanaru_token");
 
-      if (!userId || !token) {
+      if (!userId) {
         router.push("/login");
         return;
       }
@@ -42,7 +41,7 @@ export default function TasksPage() {
         setProfile(profileData);
 
         // Load task progress from backend
-        const progressData = await getTaskProgress(token);
+        const progressData = await getTaskProgress(userId);
         setTaskProgress(progressData.task_progress || {});
         setClaimedRewards(progressData.claimed_rewards || []);
         setCurrentWeekSet(progressData.current_week_set || "week-set-a");
@@ -121,11 +120,11 @@ export default function TasksPage() {
   const handleClaimReward = async (task: Task) => {
     if (task.claimed || !task.completed) return;
 
-    const token = localStorage.getItem("qaitaJanaru_token");
-    if (!token) return;
+    const userId = localStorage.getItem("qaitaJanaru_user_id");
+    if (!userId) return;
 
     try {
-      const result = await claimReward(token, task.id);
+      const result = await claimReward(userId, task.id);
       
       if (result.success) {
         // Update local state
