@@ -7,17 +7,13 @@ from app.routers import leaderboard
 from app.routers import scan
 from app.routers import chat
 from app.routers import routing
-from app.routers import tasks
 
 from app.db.session import Base, engine
 from app.models.user import User  # noqa: F401
 from app.models.scan_history import ScanHistory  # noqa: F401
 from app.models.chat_message import ChatMessage  # noqa: F401
-from app.models.task_progress import TaskProgress  # noqa: F401
 
-app = FastAPI(
-    title="QaitaJanaru Backend TEST 12345"
-)
+app = FastAPI()
 
 
 @app.on_event("startup")
@@ -39,7 +35,6 @@ app.include_router(leaderboard.router)
 app.include_router(scan.router)
 app.include_router(chat.router)
 app.include_router(routing.router)
-app.include_router(tasks.router)
 
 @app.get("/")
 def root():

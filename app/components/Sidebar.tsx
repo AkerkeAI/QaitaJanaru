@@ -19,8 +19,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const menuItems = [
     { icon: "👤", label: messages.sidebar.profile, href: "/profile" },
-    { icon: "📋", label: messages.sidebar.tasks, href: "/tasks" },
-    { icon: "📸", label: messages.sidebar.scan, href: "/scan-waste" },
+    { icon: "�", label: messages.sidebar.tasks, href: "/tasks" },
+    { icon: "�📸", label: messages.sidebar.scan, href: "/scan-waste" },
     { icon: "🏆", label: messages.sidebar.leaderboard, href: "/leaderboard" },
     { icon: "🗺️", label: messages.sidebar.recyclingMap, href: "/recycling-map" },
     { icon: "🤖", label: messages.sidebar.ecoAssistant, href: "/eco-assistant" },

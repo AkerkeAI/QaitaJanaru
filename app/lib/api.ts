@@ -40,41 +40,6 @@ export interface ProfileResponse {
   achievements: string[];
 }
 
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  reward: number;
-  target: number;
-  current: number;
-  completed: boolean;
-  claimed: boolean;
-  type: string;
-  category: string;
-  icon: string;
-  weekday?: number;
-  weekSet?: string;
-  chapter?: number;
-  chapterOrder?: number;
-}
-
-export interface TasksResponse {
-  daily_tasks: Task[];
-  weekly_tasks: Task[];
-  achievements: Task[];
-  eco_points: number;
-  level: number;
-  streak: number;
-  total_scans: number;
-}
-
-export interface ClaimRewardResponse {
-  message: string;
-  reward: number;
-  new_eco_points: number;
-  new_level: number;
-}
-
 export interface ApiError {
   detail: string;
 }
@@ -147,60 +112,6 @@ const response = await fetch(`${API_URL}/auth/profile/${userId}`, {
     const error: ApiError = await response.json();
     const errorCode = error.detail;
     throw new Error(ERROR_CODE_MAP[errorCode] || errorCode || "Failed to fetch profile");
-  }
-
-  return response.json();
-}
-
-// ─── Get Tasks ───────────────────────────────────────────────────────────────────
-
-export async function getTasks(userId: string): Promise<TasksResponse> {
-  const response = await fetch(`${API_URL}/tasks/${userId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    const error: ApiError = await response.json();
-    throw new Error(error.detail || "Failed to fetch tasks");
-  }
-
-  return response.json();
-}
-
-// ─── Claim Reward ───────────────────────────────────────────────────────────────
-
-export async function claimReward(userId: string, taskId: string): Promise<ClaimRewardResponse> {
-  const response = await fetch(`${API_URL}/tasks/${userId}/claim/${taskId}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    const error: ApiError = await response.json();
-    throw new Error(error.detail || "Failed to claim reward");
-  }
-
-  return response.json();
-}
-
-// ─── Complete Task ───────────────────────────────────────────────────────────────
-
-export async function completeTask(userId: string, taskId: string): Promise<{ message: string }> {
-  const response = await fetch(`${API_URL}/tasks/${userId}/complete/${taskId}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    const error: ApiError = await response.json();
-    throw new Error(error.detail || "Failed to complete task");
   }
 
   return response.json();

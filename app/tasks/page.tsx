@@ -6,7 +6,7 @@ import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { Task, TaskType } from "../types/tasks";
-import { getProfile, ProfileResponse, getTasks, claimReward, Task as ApiTask, TasksResponse } from "../lib/api";
+import { getProfile, ProfileResponse } from "../lib/api";
 
 export default function TasksPage() {
   const router = useRouter();
@@ -14,13 +14,13 @@ export default function TasksPage() {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tasksData, setTasksData] = useState<TasksResponse | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [showRewardPopup, setShowRewardPopup] = useState<{ show: boolean; points: number; fading: boolean }>({ show: false, points: 0, fading: false });
   const { messages } = useLanguage();
   const { colors } = useTheme();
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadProfile = async () => {
       const userId = localStorage.getItem("qaitaJanaru_user_id");
 
       if (!userId) {
@@ -29,55 +29,230 @@ export default function TasksPage() {
       }
 
       try {
-        const [profileData, tasksData] = await Promise.all([
-          getProfile(userId),
-          getTasks(userId)
-        ]);
-        setProfile(profileData);
-        setTasksData(tasksData);
+        const data = await getProfile(userId);
+        setProfile(data);
+        initializeTasks(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load data");
+        setError(err instanceof Error ? err.message : "Failed to load profile");
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
+    loadProfile();
   }, [router]);
 
-  const handleClaimReward = async (task: ApiTask) => {
-    if (task.claimed || !task.completed) return;
+  const initializeTasks = (profileData: ProfileResponse) => {
+    const dailyTasks: Task[] = [
+      {
+        id: "daily-visit",
+        title: messages.tasks.taskVisitApp,
+        description: messages.tasks.taskVisitAppDesc,
+        reward: 5,
+        target: 1,
+        current: 1,
+        completed: true,
+        claimed: false,
+        type: "daily",
+        icon: "📱",
+      },
+      {
+        id: "daily-eco",
+        title: messages.tasks.taskAskEco,
+        description: messages.tasks.taskAskEcoDesc,
+        reward: 5,
+        target: 1,
+        current: 0,
+        completed: false,
+        claimed: false,
+        type: "daily",
+        icon: "🤖",
+      },
+      {
+        id: "daily-scan",
+        title: messages.tasks.taskScanWaste,
+        description: messages.tasks.taskScanWasteDesc,
+        reward: 5,
+        target: 1,
+        current: Math.min(profileData.total_scans || 0, 1),
+        completed: (profileData.total_scans || 0) >= 1,
+        claimed: false,
+        type: "daily",
+        icon: "📸",
+      },
+      {
+        id: "daily-map",
+        title: messages.tasks.taskOpenMap,
+        description: messages.tasks.taskOpenMapDesc,
+        reward: 5,
+        target: 1,
+        current: 0,
+        completed: false,
+        claimed: false,
+        type: "daily",
+        icon: "🗺️",
+      },
+    ];
 
-    const userId = localStorage.getItem("qaitaJanaru_user_id");
-    if (!userId) return;
+    const weeklyTasks: Task[] = [
+      {
+        id: "weekly-streak",
+        title: messages.tasks.taskWeeklyStreak,
+        description: messages.tasks.taskWeeklyStreakDesc,
+        reward: 50,
+        target: 7,
+        current: profileData.streak || 0,
+        completed: (profileData.streak || 0) >= 7,
+        claimed: false,
+        type: "weekly",
+        icon: "🔥",
+      },
+      {
+        id: "weekly-eco",
+        title: messages.tasks.taskWeeklyEco,
+        description: messages.tasks.taskWeeklyEcoDesc,
+        reward: 75,
+        target: 100,
+        current: profileData.eco_points || 0,
+        completed: (profileData.eco_points || 0) >= 100,
+        claimed: false,
+        type: "weekly",
+        icon: "🏆",
+      },
+      {
+        id: "weekly-scans",
+        title: messages.tasks.taskWeeklyScans,
+        description: messages.tasks.taskWeeklyScansDesc,
+        reward: 50,
+        target: 5,
+        current: Math.min(profileData.total_scans || 0, 5),
+        completed: (profileData.total_scans || 0) >= 5,
+        claimed: false,
+        type: "weekly",
+        icon: "📸",
+      },
+      {
+        id: "weekly-questions",
+        title: messages.tasks.taskWeeklyQuestions,
+        description: messages.tasks.taskWeeklyQuestionsDesc,
+        reward: 40,
+        target: 10,
+        current: 0,
+        completed: false,
+        claimed: false,
+        type: "weekly",
+        icon: "🤖",
+      },
+    ];
 
-    try {
-      const result = await claimReward(userId, task.id);
-      
-      // Refresh tasks data
-      const updatedTasks = await getTasks(userId);
-      setTasksData(updatedTasks);
-      
-      // Show reward popup
-      setShowRewardPopup({ show: true, points: result.reward, fading: false });
+    const achievements: Task[] = [
+      {
+        id: "achievement-beginner",
+        title: messages.tasks.achievementEcoBeginner,
+        description: messages.tasks.achievementEcoBeginnerDesc,
+        reward: 0,
+        target: 1,
+        current: 1,
+        completed: true,
+        claimed: true,
+        type: "achievement",
+        icon: "🌱",
+      },
+      {
+        id: "achievement-first-scan",
+        title: messages.tasks.achievementFirstScan,
+        description: messages.tasks.achievementFirstScanDesc,
+        reward: 0,
+        target: 1,
+        current: profileData.total_scans || 0,
+        completed: (profileData.total_scans || 0) >= 1,
+        claimed: true,
+        type: "achievement",
+        icon: "📸",
+      },
+      {
+        id: "achievement-enthusiast",
+        title: messages.tasks.achievementEcoEnthusiast,
+        description: messages.tasks.achievementEcoEnthusiastDesc,
+        reward: 0,
+        target: 100,
+        current: profileData.eco_points || 0,
+        completed: (profileData.eco_points || 0) >= 100,
+        claimed: true,
+        type: "achievement",
+        icon: "🏆",
+      },
+      {
+        id: "achievement-hero",
+        title: messages.tasks.achievementRecyclingHero,
+        description: messages.tasks.achievementRecyclingHeroDesc,
+        reward: 0,
+        target: 500,
+        current: profileData.eco_points || 0,
+        completed: (profileData.eco_points || 0) >= 500,
+        claimed: true,
+        type: "achievement",
+        icon: "♻️",
+      },
+      {
+        id: "achievement-streak",
+        title: messages.tasks.achievementStreakChampion,
+        description: messages.tasks.achievementStreakChampionDesc,
+        reward: 0,
+        target: 7,
+        current: profileData.streak || 0,
+        completed: (profileData.streak || 0) >= 7,
+        claimed: true,
+        type: "achievement",
+        icon: "🔥",
+      },
+      {
+        id: "achievement-guardian",
+        title: messages.tasks.achievementEarthGuardian,
+        description: messages.tasks.achievementEarthGuardianDesc,
+        reward: 0,
+        target: 1000,
+        current: profileData.eco_points || 0,
+        completed: (profileData.eco_points || 0) >= 1000,
+        claimed: true,
+        type: "achievement",
+        icon: "🌍",
+      },
+    ];
 
-      // Start fade-out after 3 seconds
-      setTimeout(() => {
-        setShowRewardPopup(prev => ({ ...prev, fading: true }));
-        setTimeout(() => {
-          setShowRewardPopup({ show: false, points: 0, fading: false });
-        }, 500);
-      }, 3000);
-    } catch (err) {
-      console.error("Failed to claim reward:", err);
-    }
+    setTasks([...dailyTasks, ...weeklyTasks, ...achievements]);
   };
 
-  const dailyTasks = tasksData?.daily_tasks || [];
-  const weeklyTasks = tasksData?.weekly_tasks || [];
-  const achievements = tasksData?.achievements || [];
+  const handleClaimReward = (task: Task) => {
+    if (task.claimed || !task.completed) return;
 
-  const TaskCard = ({ task }: { task: ApiTask }) => {
+    const updatedTasks = tasks.map(t =>
+      t.id === task.id ? { ...t, claimed: true } : t
+    );
+    setTasks(updatedTasks);
+
+    // Update eco points in localStorage
+    const currentPoints = parseInt(localStorage.getItem("qaitaJanaru_eco_points") || "0", 10);
+    const newPoints = currentPoints + task.reward;
+    localStorage.setItem("qaitaJanaru_eco_points", newPoints.toString());
+
+    // Show reward popup
+    setShowRewardPopup({ show: true, points: task.reward, fading: false });
+
+    // Start fade-out after 3 seconds
+    setTimeout(() => {
+      setShowRewardPopup(prev => ({ ...prev, fading: true }));
+      setTimeout(() => {
+        setShowRewardPopup({ show: false, points: 0, fading: false });
+      }, 500);
+    }, 3000);
+  };
+
+  const dailyTasks = tasks.filter(t => t.type === "daily");
+  const weeklyTasks = tasks.filter(t => t.type === "weekly");
+  const achievements = tasks.filter(t => t.type === "achievement");
+
+  const TaskCard = ({ task }: { task: Task }) => {
     const progress = Math.min(task.current / task.target, 1);
     const canClaim = task.completed && !task.claimed && task.type !== "achievement";
 
