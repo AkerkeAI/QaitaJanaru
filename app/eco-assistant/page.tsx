@@ -62,26 +62,30 @@ export default function EcoAssistantPage() {
     // Load chat history from backend
     const loadChatHistory = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chat/history/${userId}`);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/chat/history/${userId}`,
+        );
         if (response.ok) {
           const data = await response.json();
           const messages = data.messages.map((msg: any) => ({
             id: msg.id,
             text: msg.text,
             isUser: msg.is_user,
-            timestamp: new Date(msg.timestamp)
+            timestamp: new Date(msg.timestamp),
           }));
           setMessages(messages);
         }
       } catch (error) {
         console.error("Failed to load chat history:", error);
         // Fallback to localStorage if backend fetch fails
-        const savedHistory = localStorage.getItem(`qaitaJanaru_chat_history_${userId}`);
+        const savedHistory = localStorage.getItem(
+          `qaitaJanaru_chat_history_${userId}`,
+        );
         if (savedHistory) {
           try {
             const parsedMessages = JSON.parse(savedHistory).map((msg: any) => ({
               ...msg,
-              timestamp: new Date(msg.timestamp)
+              timestamp: new Date(msg.timestamp),
             }));
             setMessages(parsedMessages);
           } catch (e) {
@@ -98,7 +102,10 @@ export default function EcoAssistantPage() {
   useEffect(() => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
     if (messages.length > 0 && userId) {
-      localStorage.setItem(`qaitaJanaru_chat_history_${userId}`, JSON.stringify(messages));
+      localStorage.setItem(
+        `qaitaJanaru_chat_history_${userId}`,
+        JSON.stringify(messages),
+      );
     }
   }, [messages]);
 
@@ -110,13 +117,39 @@ export default function EcoAssistantPage() {
   // Check if the query is about recycling locations or what to do with an item
   const isRecyclingQuery = (text: string): boolean => {
     const recyclingKeywords = [
-      "recycle", "recycling", "where", "куда", "где", "қайда", "тәуелсіз",
-      "пункт", "пункты", "центр", "центры", "ortaq", "point", "points", "center", "centers",
-      "сдать", "throw", "dispose", "утилизировать", "тастау", "тапсыру",
-      "what should i do with", "how to recycle", "how do i recycle",
-      "как утилизировать", "что делать с", "қайта өңдеу", "менімен не істеймін"
+      "recycle",
+      "recycling",
+      "where",
+      "куда",
+      "где",
+      "қайда",
+      "тәуелсіз",
+      "пункт",
+      "пункты",
+      "центр",
+      "центры",
+      "ortaq",
+      "point",
+      "points",
+      "center",
+      "centers",
+      "сдать",
+      "throw",
+      "dispose",
+      "утилизировать",
+      "тастау",
+      "тапсыру",
+      "what should i do with",
+      "how to recycle",
+      "how do i recycle",
+      "как утилизировать",
+      "что делать с",
+      "қайта өңдеу",
+      "менімен не істеймін",
     ];
-    return recyclingKeywords.some(keyword => text.toLowerCase().includes(keyword));
+    return recyclingKeywords.some((keyword) =>
+      text.toLowerCase().includes(keyword),
+    );
   };
 
   const sendMessage = async (text: string) => {
@@ -136,7 +169,7 @@ export default function EcoAssistantPage() {
     };
 
     const updatedMessages = [...messages, userMessage];
-    
+
     setMessages(updatedMessages);
     setInputText("");
     setIsTyping(true);
@@ -144,51 +177,89 @@ export default function EcoAssistantPage() {
     // Check if this is a recycling location query
     if (isRecyclingQuery(text)) {
       const matchingPoints = searchRecyclingPoints(text);
-      
+
       // Find which materials are mentioned to get preparation steps
       const normalizedQuery = text.toLowerCase();
       let detectedMaterial: string | null = null;
-      
+
       const materialKeywordsCheck: Record<string, string[]> = {
-        "Plastic": ["plastic", "plastik", "пластик", "пластик", "пластик", "pet", "pet bottle", "water bottle", "plastic bottle"],
-        "Paper": ["paper", "бумага", "қағаз"],
-        "Cardboard": ["cardboard", "carton", "картон"],
-        "Glass": ["glass", "glas", "стекло", "шыны"],
-        "Aluminum": ["aluminum", "aluminium", "алюминий"],
-        "Batteries": ["batteries", "battery", "батарейки", "батареялар"],
-        "E-waste": ["e-waste", "electronic", "electronics", "электроника", "laptop", "phone", "tv", "computer"],
-        "Organic Waste": ["organic", "organik", "органические отходы", "пищевые отходы", "органикалық қалдықтар"],
+        Plastic: [
+          "plastic",
+          "plastik",
+          "пластик",
+          "пластик",
+          "пластик",
+          "pet",
+          "pet bottle",
+          "water bottle",
+          "plastic bottle",
+        ],
+        Paper: ["paper", "бумага", "қағаз"],
+        Cardboard: ["cardboard", "carton", "картон"],
+        Glass: ["glass", "glas", "стекло", "шыны"],
+        Aluminum: ["aluminum", "aluminium", "алюминий"],
+        Batteries: ["batteries", "battery", "батарейки", "батареялар"],
+        "E-waste": [
+          "e-waste",
+          "electronic",
+          "electronics",
+          "электроника",
+          "laptop",
+          "phone",
+          "tv",
+          "computer",
+        ],
+        "Organic Waste": [
+          "organic",
+          "organik",
+          "органические отходы",
+          "пищевые отходы",
+          "органикалық қалдықтар",
+        ],
       };
-      
-      for (const [material, keywords] of Object.entries(materialKeywordsCheck)) {
-        if (keywords.some(keyword => normalizedQuery.includes(keyword))) {
+
+      for (const [material, keywords] of Object.entries(
+        materialKeywordsCheck,
+      )) {
+        if (keywords.some((keyword) => normalizedQuery.includes(keyword))) {
           detectedMaterial = material;
           break;
         }
       }
-      
+
       let messageText = "";
       if (detectedMaterial && preparationSteps[detectedMaterial]) {
         const steps = preparationSteps[detectedMaterial][language];
-        const intro = language === "ru" ? "Вот как правильно подготовить этот материал к переработке:" 
-                      : language === "kz" ? "Осы материалды қайта өңдеуге дұрыс дайындау жолдары:" 
-                      : "Here's how to properly prepare this material for recycling:";
+        const intro =
+          language === "ru"
+            ? "Вот как правильно подготовить этот материал к переработке:"
+            : language === "kz"
+              ? "Осы материалды қайта өңдеуге дұрыс дайындау жолдары:"
+              : "Here's how to properly prepare this material for recycling:";
         messageText = `${intro}\n\n${steps.join("\n")}`;
-        
+
         if (matchingPoints.length > 0) {
-          const addendum = language === "ru" ? "\n\nА вот несколько пунктов переработки, которые могут вам подойти:" 
-                         : language === "kz" ? "\n\nМұнды сәйкес келетін қайта өңдеу орталықтары:" 
-                         : "\n\nHere are some recycling locations that might interest you:";
+          const addendum =
+            language === "ru"
+              ? "\n\nА вот несколько пунктов переработки, которые могут вам подойти:"
+              : language === "kz"
+                ? "\n\nМұнды сәйкес келетін қайта өңдеу орталықтары:"
+                : "\n\nHere are some recycling locations that might interest you:";
           messageText += addendum;
         }
       } else {
-        messageText = matchingPoints.length > 0 
-          ? (language === "ru" ? "Вот несколько пунктов переработки, которые могут вам подойти:" 
-            : language === "kz" ? "Мұнды сәйкес келетін қайта өңдеу орталықтары:" 
-            : "Here are some recycling locations that might interest you:")
-          : (language === "ru" ? translations.recyclingMap.noLocationsFound 
-            : language === "kz" ? translations.recyclingMap.noLocationsFound 
-            : translations.recyclingMap.noLocationsFound);
+        messageText =
+          matchingPoints.length > 0
+            ? language === "ru"
+              ? "Вот несколько пунктов переработки, которые могут вам подойти:"
+              : language === "kz"
+                ? "Мұнды сәйкес келетін қайта өңдеу орталықтары:"
+                : "Here are some recycling locations that might interest you:"
+            : language === "ru"
+              ? translations.recyclingMap.noLocationsFound
+              : language === "kz"
+                ? translations.recyclingMap.noLocationsFound
+                : translations.recyclingMap.noLocationsFound;
       }
 
       const assistantMessage: Message = {
@@ -214,7 +285,7 @@ export default function EcoAssistantPage() {
             headers: {
               "Content-Type": "application/json",
             },
-          }
+          },
         );
       } catch (error) {
         console.error("Failed to save user message to backend:", error);
@@ -224,11 +295,22 @@ export default function EcoAssistantPage() {
       const profile = {
         name: localStorage.getItem("qaitaJanaru_name") || "Unknown",
         city: localStorage.getItem("qaitaJanaru_city") || "Unknown",
-        ecoPoints: parseInt(localStorage.getItem("qaitaJanaru_eco_points") || "0", 10),
+        ecoPoints: parseInt(
+          localStorage.getItem("qaitaJanaru_eco_points") || "0",
+          10,
+        ),
         streak: parseInt(localStorage.getItem("qaitaJanaru_streak") || "0", 10),
-        achievementsCount: parseInt(localStorage.getItem("qaitaJanaru_achievements_count") || "0", 10),
-        level: parseInt(localStorage.getItem("qaitaJanaru_level") || "0", 10) || "Unknown",
-        totalScans: parseInt(localStorage.getItem("qaitaJanaru_total_scans") || "0", 10)
+        achievementsCount: parseInt(
+          localStorage.getItem("qaitaJanaru_achievements_count") || "0",
+          10,
+        ),
+        level:
+          parseInt(localStorage.getItem("qaitaJanaru_level") || "0", 10) ||
+          "Unknown",
+        totalScans: parseInt(
+          localStorage.getItem("qaitaJanaru_total_scans") || "0",
+          10,
+        ),
       };
 
       // Keep only last 10 messages to reduce token usage
@@ -239,12 +321,12 @@ export default function EcoAssistantPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          history: recentMessages.map(msg => ({
+        body: JSON.stringify({
+          history: recentMessages.map((msg) => ({
             role: msg.isUser ? "user" : "model",
-            text: msg.text
+            text: msg.text,
           })),
-          profile
+          profile,
         }),
       });
 
@@ -265,7 +347,7 @@ export default function EcoAssistantPage() {
         isUser: false,
         timestamp: new Date(),
       };
-      
+
       // Save assistant message to backend
       try {
         await fetch(
@@ -275,7 +357,7 @@ export default function EcoAssistantPage() {
             headers: {
               "Content-Type": "application/json",
             },
-          }
+          },
         );
       } catch (error) {
         console.error("Failed to save assistant message to backend:", error);
@@ -309,13 +391,16 @@ export default function EcoAssistantPage() {
 
   const handleClearChat = async () => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
-    
+
     // Clear from backend
     if (userId) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chat/history/${userId}`, {
-          method: "DELETE",
-        });
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/chat/history/${userId}`,
+          {
+            method: "DELETE",
+          },
+        );
       } catch (error) {
         console.error("Failed to clear chat history from backend:", error);
       }
@@ -367,7 +452,11 @@ export default function EcoAssistantPage() {
     let offset = 44;
     for (let i = 0; i < length; i++) {
       const sample = Math.max(-1, Math.min(1, buffer[i]));
-      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      view.setInt16(
+        offset,
+        sample < 0 ? sample * 0x8000 : sample * 0x7fff,
+        true,
+      );
       offset += 2;
     }
 
@@ -386,7 +475,7 @@ export default function EcoAssistantPage() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
+
       mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
 
@@ -397,10 +486,12 @@ export default function EcoAssistantPage() {
       };
 
       mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
+
         // Stop all tracks
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
 
         setIsProcessing(true);
         setIsRecording(false);
@@ -409,7 +500,7 @@ export default function EcoAssistantPage() {
         try {
           // Convert to WAV format
           const wavBlob = await convertToWav(audioBlob);
-          
+
           // Send to transcription endpoint
           const formData = new FormData();
           formData.append("audio", wavBlob, "recording.wav");
@@ -440,7 +531,7 @@ export default function EcoAssistantPage() {
 
       // Start recording timer
       recordingTimerRef.current = setInterval(() => {
-        setRecordingDuration(prev => {
+        setRecordingDuration((prev) => {
           if (prev >= 30) {
             stopRecording();
             return prev;
@@ -448,14 +539,17 @@ export default function EcoAssistantPage() {
           return prev + 1;
         });
       }, 1000);
-
     } catch (error) {
       console.error("Microphone access error:", error);
       if (error instanceof Error) {
         if (error.name === "NotAllowedError") {
-          alert("Microphone permission denied. Please enable microphone access in your browser settings.");
+          alert(
+            "Microphone permission denied. Please enable microphone access in your browser settings.",
+          );
         } else if (error.name === "NotFoundError") {
-          alert("No microphone found. Please connect a microphone and try again.");
+          alert(
+            "No microphone found. Please connect a microphone and try again.",
+          );
         } else {
           alert("Failed to access microphone. Please try again.");
         }
@@ -473,23 +567,23 @@ export default function EcoAssistantPage() {
   };
 
   return (
-    <main 
-      className="h-screen text-white relative overflow-hidden flex flex-col" 
+    <main
+      className="h-screen text-white relative overflow-hidden flex flex-col"
       style={{ background: colors.bg }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       {/* Animated background orbs */}
-      <div 
+      <div
         className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] animate-pulse"
         style={{ background: `${colors.primary}10` }}
       ></div>
-      <div 
+      <div
         className="fixed bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[100px] animate-pulse delay-1000"
         style={{ background: `${colors.accent}10` }}
       ></div>
-      <div 
+      <div
         className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full blur-[80px] animate-pulse delay-500"
         style={{ background: `${colors.primary}05` }}
       ></div>
@@ -497,11 +591,15 @@ export default function EcoAssistantPage() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Fixed Header */}
-      <header className="flex-shrink-0 flex items-center justify-between p-4 md:p-6 lg:p-8 relative z-10">
+      <header className="flex-shrink-0 flex items-center justify-between p-4 md:p-6 lg:p-8 relative z-10 pr-20 md:pr-24 lg:pr-28">
         <button
           onClick={() => setSidebarOpen(true)}
           className="p-3 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
-          style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1 }}
+          style={{
+            background: colors.cardBg,
+            borderColor: colors.border,
+            borderWidth: 1,
+          }}
           aria-label="Open menu"
         >
           <svg
@@ -513,8 +611,10 @@ export default function EcoAssistantPage() {
             viewBox="0 0 24 24"
             stroke={colors.textSecondary}
             style={{ color: colors.textSecondary }}
-            onMouseEnter={(e) => e.currentTarget.style.stroke = colors.text}
-            onMouseLeave={(e) => e.currentTarget.style.stroke = colors.textSecondary}
+            onMouseEnter={(e) => (e.currentTarget.style.stroke = colors.text)}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.stroke = colors.textSecondary)
+            }
           >
             <path d="M4 6h16M4 12h16M4 18h16" />
           </svg>
@@ -522,13 +622,20 @@ export default function EcoAssistantPage() {
 
         <div className="flex items-center gap-3">
           <span className="text-2xl md:text-3xl">🤖</span>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight">{translations.common.appName}</h1>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">
+            {translations.common.appName}
+          </h1>
         </div>
 
         <button
           onClick={handleClearChat}
-          className="px-4 py-2 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg text-sm flex-shrink-0"
-          style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
+          className="px-4 py-2 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg text-sm flex-shrink-0 mr-16 md:mr-18 lg:mr-20"
+          style={{
+            background: colors.cardBg,
+            borderColor: colors.border,
+            borderWidth: 1,
+            color: colors.textSecondary,
+          }}
         >
           {translations.ecoAssistant.clearChat}
         </button>
@@ -538,26 +645,46 @@ export default function EcoAssistantPage() {
       <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 relative z-10">
         {/* Page Title */}
         <div className="mb-6 text-center">
-          <div 
+          <div
             className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 shadow-lg"
-            style={{ background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})` }}
+            style={{
+              background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})`,
+            }}
           >
             <span className="text-4xl">🤖</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">{translations.ecoAssistant.title}</h2>
-          <p className="text-sm md:text-base" style={{ color: colors.textSecondary }}>{translations.ecoAssistant.subtitle}</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
+            {translations.ecoAssistant.title}
+          </h2>
+          <p
+            className="text-sm md:text-base"
+            style={{ color: colors.textSecondary }}
+          >
+            {translations.ecoAssistant.subtitle}
+          </p>
         </div>
 
         {/* Welcome Card */}
-        <div 
+        <div
           className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-6 mb-6"
-          style={{ borderColor: `${colors.primary}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)` }}
+          style={{
+            borderColor: `${colors.primary}30`,
+            borderWidth: 1,
+            background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)`,
+          }}
         >
-          <div 
+          <div
             className="absolute inset-0 rounded-3xl pointer-events-none"
-            style={{ background: `linear-gradient(to right, ${colors.primary}10, ${colors.accent}10, ${colors.primary}10)` }}
+            style={{
+              background: `linear-gradient(to right, ${colors.primary}10, ${colors.accent}10, ${colors.primary}10)`,
+            }}
           ></div>
-          <p className="text-sm md:text-base relative z-10" style={{ color: colors.text }}>{translations.ecoAssistant.welcomeMessage}</p>
+          <p
+            className="text-sm md:text-base relative z-10"
+            style={{ color: colors.text }}
+          >
+            {translations.ecoAssistant.welcomeMessage}
+          </p>
         </div>
 
         {/* Chat Messages */}
@@ -570,61 +697,91 @@ export default function EcoAssistantPage() {
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-3`}
                 style={{
-                  background: message.isUser 
-                    ? `linear-gradient(to right, ${colors.primary}, ${colors.accent})` 
+                  background: message.isUser
+                    ? `linear-gradient(to right, ${colors.primary}, ${colors.accent})`
                     : colors.cardBg,
                   borderColor: message.isUser ? "transparent" : colors.border,
                   borderWidth: message.isUser ? 0 : 1,
-                  color: message.isUser ? "#ffffff" : colors.text
+                  color: message.isUser ? "#ffffff" : colors.text,
                 }}
               >
-                <p className="text-sm md:text-base whitespace-pre-wrap">{message.text}</p>
+                <p className="text-sm md:text-base whitespace-pre-wrap">
+                  {message.text}
+                </p>
 
                 {/* Recycling Points */}
-                {!message.isUser && message.recyclingPoints && message.recyclingPoints.length > 0 && (
-                  <div className="mt-4 space-y-3">
-                    {message.recyclingPoints.slice(0, 5).map((point, idx) => (
-                      <div key={idx} className="bg-black/20 rounded-xl p-3 space-y-2">
-                        <p className="font-semibold" style={{ color: colors.text }}>{point.name}</p>
-                        <p className="text-xs" style={{ color: colors.textSecondary }}>{point.address}, {point.city}</p>
-                        <p className="text-xs" style={{ color: colors.textSecondary }}>
-                          {translations.recyclingMap.acceptedMaterials}: {translateWasteType(point.waste_type, language)}
-                        </p>
-                        <button
-                          onClick={() => buildRoute(point)}
-                          className="mt-2 px-3 py-1.5 rounded-lg text-white text-xs font-semibold hover:scale-105 transition-transform"
-                          style={{ background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})` }}
+                {!message.isUser &&
+                  message.recyclingPoints &&
+                  message.recyclingPoints.length > 0 && (
+                    <div className="mt-4 space-y-3">
+                      {message.recyclingPoints.slice(0, 5).map((point, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-black/20 rounded-xl p-3 space-y-2"
                         >
-                          {translations.recyclingMap.buildRoute}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                          <p
+                            className="font-semibold"
+                            style={{ color: colors.text }}
+                          >
+                            {point.name}
+                          </p>
+                          <p
+                            className="text-xs"
+                            style={{ color: colors.textSecondary }}
+                          >
+                            {point.address}, {point.city}
+                          </p>
+                          <p
+                            className="text-xs"
+                            style={{ color: colors.textSecondary }}
+                          >
+                            {translations.recyclingMap.acceptedMaterials}:{" "}
+                            {translateWasteType(point.waste_type, language)}
+                          </p>
+                          <button
+                            onClick={() => buildRoute(point)}
+                            className="mt-2 px-3 py-1.5 rounded-lg text-white text-xs font-semibold hover:scale-105 transition-transform"
+                            style={{
+                              background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
+                            }}
+                          >
+                            {translations.recyclingMap.buildRoute}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                 <p className="text-xs opacity-70 mt-1">
-                  {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
               </div>
             </div>
           ))}
-          
+
           {isTyping && (
             <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div 
+              <div
                 className="rounded-2xl px-4 py-3"
-                style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1 }}
+                style={{
+                  background: colors.cardBg,
+                  borderColor: colors.border,
+                  borderWidth: 1,
+                }}
               >
                 <div className="flex space-x-2">
-                  <div 
+                  <div
                     className="w-2 h-2 rounded-full animate-bounce"
                     style={{ background: colors.primary }}
                   ></div>
-                  <div 
+                  <div
                     className="w-2 h-2 rounded-full animate-bounce delay-100"
                     style={{ background: colors.primary }}
                   ></div>
-                  <div 
+                  <div
                     className="w-2 h-2 rounded-full animate-bounce delay-200"
                     style={{ background: colors.primary }}
                   ></div>
@@ -632,7 +789,7 @@ export default function EcoAssistantPage() {
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
 
@@ -640,44 +797,98 @@ export default function EcoAssistantPage() {
         <div className="mb-6">
           <div className="flex flex-wrap gap-2 justify-center">
             <button
-              onClick={() => handleSuggestionClick(translations.ecoAssistant.suggestionPlastic)}
+              onClick={() =>
+                handleSuggestionClick(
+                  translations.ecoAssistant.suggestionPlastic,
+                )
+              }
               className="px-4 py-2 rounded-full backdrop-blur-xl hover:scale-105 transition-all duration-300 text-sm"
-              style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
+              style={{
+                background: colors.cardBg,
+                borderColor: colors.border,
+                borderWidth: 1,
+                color: colors.textSecondary,
+              }}
             >
               {translations.ecoAssistant.suggestionPlastic}
             </button>
             <button
-              onClick={() => handleSuggestionClick(translations.ecoAssistant.suggestionBatteries)}
+              onClick={() =>
+                handleSuggestionClick(
+                  translations.ecoAssistant.suggestionBatteries,
+                )
+              }
               className="px-4 py-2 rounded-full backdrop-blur-xl hover:scale-105 transition-all duration-300 text-sm"
-              style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
+              style={{
+                background: colors.cardBg,
+                borderColor: colors.border,
+                borderWidth: 1,
+                color: colors.textSecondary,
+              }}
             >
               {translations.ecoAssistant.suggestionBatteries}
             </button>
             <button
-              onClick={() => handleSuggestionClick(translations.ecoAssistant.suggestionReduceWaste)}
+              onClick={() =>
+                handleSuggestionClick(
+                  translations.ecoAssistant.suggestionReduceWaste,
+                )
+              }
               className="px-4 py-2 rounded-full backdrop-blur-xl hover:scale-105 transition-all duration-300 text-sm"
-              style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
+              style={{
+                background: colors.cardBg,
+                borderColor: colors.border,
+                borderWidth: 1,
+                color: colors.textSecondary,
+              }}
             >
               {translations.ecoAssistant.suggestionReduceWaste}
             </button>
             <button
-              onClick={() => handleSuggestionClick(translations.ecoAssistant.suggestionClimateChange)}
+              onClick={() =>
+                handleSuggestionClick(
+                  translations.ecoAssistant.suggestionClimateChange,
+                )
+              }
               className="px-4 py-2 rounded-full backdrop-blur-xl hover:scale-105 transition-all duration-300 text-sm"
-              style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
+              style={{
+                background: colors.cardBg,
+                borderColor: colors.border,
+                borderWidth: 1,
+                color: colors.textSecondary,
+              }}
             >
               {translations.ecoAssistant.suggestionClimateChange}
             </button>
             <button
-              onClick={() => handleSuggestionClick(translations.ecoAssistant.suggestionStudents)}
+              onClick={() =>
+                handleSuggestionClick(
+                  translations.ecoAssistant.suggestionStudents,
+                )
+              }
               className="px-4 py-2 rounded-full backdrop-blur-xl hover:scale-105 transition-all duration-300 text-sm"
-              style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
+              style={{
+                background: colors.cardBg,
+                borderColor: colors.border,
+                borderWidth: 1,
+                color: colors.textSecondary,
+              }}
             >
               {translations.ecoAssistant.suggestionStudents}
             </button>
             <button
-              onClick={() => handleSuggestionClick(translations.ecoAssistant.suggestionHazardous)}
+              onClick={() =>
+                handleSuggestionClick(
+                  translations.ecoAssistant.suggestionHazardous,
+                )
+              }
               className="px-4 py-2 rounded-full backdrop-blur-xl hover:scale-105 transition-all duration-300 text-sm"
-              style={{ background: colors.cardBg, borderColor: colors.border, borderWidth: 1, color: colors.textSecondary }}
+              style={{
+                background: colors.cardBg,
+                borderColor: colors.border,
+                borderWidth: 1,
+                color: colors.textSecondary,
+              }}
             >
               {translations.ecoAssistant.suggestionHazardous}
             </button>
@@ -698,40 +909,54 @@ export default function EcoAssistantPage() {
             visibility: hidden !important;
           }
         `}</style>
-        
-        <div 
+
+        <div
           className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-4"
-          style={{ borderColor: `${colors.primary}30`, borderWidth: 1, background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)` }}
+          style={{
+            borderColor: `${colors.primary}30`,
+            borderWidth: 1,
+            background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)`,
+          }}
         >
-          <div 
+          <div
             className="absolute inset-0 rounded-3xl pointer-events-none"
-            style={{ background: `linear-gradient(to right, ${colors.primary}10, ${colors.accent}10, ${colors.primary}10)` }}
+            style={{
+              background: `linear-gradient(to right, ${colors.primary}10, ${colors.accent}10, ${colors.primary}10)`,
+            }}
           ></div>
-          
+
           <div className="flex gap-3 relative z-10">
             <div className="flex-1 relative">
               <textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={isRecording ? `🎤 Listening... ${recordingDuration}s` : isProcessing ? "⏳ Processing..." : translations.ecoAssistant.placeholder}
+                placeholder={
+                  isRecording
+                    ? `🎤 Listening... ${recordingDuration}s`
+                    : isProcessing
+                      ? "⏳ Processing..."
+                      : translations.ecoAssistant.placeholder
+                }
                 className="w-full bg-white/5 backdrop-blur-xl rounded-2xl px-4 py-4 pr-12 md:pr-12 resize-none focus:outline-none transition-colors"
-                style={{ 
-                  borderColor: colors.border, 
+                style={{
+                  borderColor: colors.border,
                   borderWidth: 1,
                   color: colors.text,
-                  minHeight: "56px"
+                  minHeight: "56px",
                 }}
                 rows={1}
               />
-              
+
               <button
                 onClick={handleVoiceButtonClick}
                 disabled={isProcessing}
                 className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
-                style={{ 
-                  background: isRecording ? `${colors.danger}20` : "transparent",
-                  color: isRecording ? colors.danger : colors.textSecondary
+                style={{
+                  background: isRecording
+                    ? `${colors.danger}20`
+                    : "transparent",
+                  color: isRecording ? colors.danger : colors.textSecondary,
                 }}
                 title={isRecording ? "Stop recording" : "Voice input"}
                 onMouseEnter={(e) => {
@@ -799,16 +1024,26 @@ export default function EcoAssistantPage() {
               onClick={() => sendMessage(inputText)}
               disabled={!inputText.trim() || isTyping}
               className="px-6 py-4 md:px-6 md:py-4 rounded-2xl md:rounded-2xl hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 font-semibold whitespace-nowrap w-12 h-12 md:w-auto md:h-auto rounded-full md:rounded-2xl flex items-center justify-center"
-              style={{ 
-                background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`, 
+              style={{
+                background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
                 minHeight: "56px",
-                color: "#ffffff"
+                color: "#ffffff",
               }}
             >
-              <svg className="w-5 h-5 md:hidden" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="w-5 h-5 md:hidden"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
-              <span className="hidden md:inline">{translations.ecoAssistant.send}</span>
+              <span className="hidden md:inline">
+                {translations.ecoAssistant.send}
+              </span>
             </button>
           </div>
         </div>
