@@ -4,6 +4,7 @@ import io
 import zipfile
 from typing import Any, Dict, List
 
+import segno
 from app.models.qr_claim import QrClaim
 from app.models.recycling_point import RecyclingPoint
 from app.models.user import User
@@ -19,23 +20,22 @@ def build_qr_value(point: RecyclingPoint) -> str:
     return f"{QR_BASE_URL}/{point.id}"
 
 
+def _build_qr_code(point: RecyclingPoint):
+    return segno.make(build_qr_value(point), error="m", micro=False)
+
+
 def build_qr_svg(point: RecyclingPoint) -> str:
-    value = build_qr_value(point)
-    safe_value = value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-    return (
-        '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">'
-        '<rect width="256" height="256" fill="white"/>'
-        '<rect x="24" y="24" width="56" height="56" fill="black"/>'
-        '<rect x="176" y="24" width="56" height="56" fill="black"/>'
-        '<rect x="24" y="176" width="56" height="56" fill="black"/>'
-        '<rect x="104" y="104" width="48" height="48" fill="black"/>'
-        f'<text x="128" y="248" font-size="10" text-anchor="middle" fill="black">{safe_value}</text>'
-        "</svg>"
-    )
+    qr = _build_qr_code(point)
+    buffer = io.BytesIO()
+    qr.save(buffer, kind="svg", scale=8, border=2, dark="#000000", light="#ffffff")
+    return buffer.getvalue().decode("utf-8")
 
 
 def build_qr_png_bytes(point: RecyclingPoint) -> bytes:
-    return build_qr_svg(point).encode("utf-8")
+    qr = _build_qr_code(point)
+    buffer = io.BytesIO()
+    qr.save(buffer, kind="png", scale=8, border=2, dark="#000000", light="#ffffff")
+    return buffer.getvalue()
 
 
 def serialize_point(point: RecyclingPoint) -> Dict[str, str | int]:
