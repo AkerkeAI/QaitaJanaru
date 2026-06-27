@@ -8,7 +8,10 @@ import { useTheme } from "../contexts/ThemeContext";
 import { searchRecyclingPoints, buildRoute } from "../lib/recyclingSearch";
 import { translateWasteType, preparationSteps } from "../lib/wasteTranslations";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
-import type { RecyclingPoint } from "../data/recyclingPoints";
+import {
+  getRecyclingPoints,
+  type RecyclingPoint,
+} from "../lib/recyclingPointsApi";
 
 interface Message {
   id: number;
@@ -23,6 +26,7 @@ export default function EcoAssistantPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
+  const [recyclingPoints, setRecyclingPoints] = useState<RecyclingPoint[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -96,7 +100,17 @@ export default function EcoAssistantPage() {
       }
     };
 
+    const loadRecyclingPoints = async () => {
+      try {
+        const data = await getRecyclingPoints();
+        setRecyclingPoints(data.items);
+      } catch (error) {
+        console.error("Failed to load recycling points:", error);
+      }
+    };
+
     loadChatHistory();
+    void loadRecyclingPoints();
   }, [router]);
 
   // Save chat history to localStorage as backup (user-specific key with user_id)
@@ -177,7 +191,7 @@ export default function EcoAssistantPage() {
 
     // Check if this is a recycling location query
     if (isRecyclingQuery(text)) {
-      const matchingPoints = searchRecyclingPoints(text);
+      const matchingPoints = searchRecyclingPoints(text, recyclingPoints);
 
       // Find which materials are mentioned to get preparation steps
       const normalizedQuery = text.toLowerCase();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sidebar } from "../../components/Sidebar";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
@@ -17,6 +17,7 @@ export default function AdminQrPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [items, setItems] = useState<QrPointItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     const run = async () => {
@@ -30,6 +31,19 @@ export default function AdminQrPage() {
 
     void run();
   }, []);
+
+  const filteredItems = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return items;
+    }
+
+    return items.filter((item) => {
+      return [item.city, item.name, item.address].some((value) =>
+        value.toLowerCase().includes(normalizedQuery),
+      );
+    });
+  }, [items, query]);
 
   return (
     <main
@@ -85,11 +99,26 @@ export default function AdminQrPage() {
         </header>
 
         <div className="px-4 pb-8 md:px-6 lg:px-8">
+          <div className="mb-6 max-w-md">
+            <input
+              type="text"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search by city, name, or address"
+              className="w-full px-4 py-3 rounded-2xl border outline-none"
+              style={{
+                backgroundColor: colors.cardBg,
+                borderColor: colors.border,
+                color: colors.text,
+              }}
+            />
+          </div>
+
           {loading ? (
             <div>Loading...</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <div
                   key={item.id}
                   className="rounded-3xl p-6 border shadow-xl"

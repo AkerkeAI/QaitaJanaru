@@ -1,40 +1,12 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
 from app.models.recycling_point import RecyclingPoint
 
-SEED_RECYCLING_POINTS = [
-    {
-        "id": 1,
-        "name": "ТОО Taza.Likee",
-        "city": "Aktau",
-        "address": "Микрорайон 15, дом 56, офис 11",
-        "latitude": 43.6543,
-        "longitude": 51.1648,
-        "description": "Официальное экологическое предприятие. Занимается сбором, сортировкой и подготовкой ТБО к вторичному циклу. Имеет прессы для ПЭТ-бутылок, ПНД-флаконов и гофрокартона.",
-        "waste_type": "Plastic, Paper, Cardboard",
-        "facility_type": "Sorting Station",
-    },
-    {
-        "id": 2,
-        "name": "Eco Waste Aqtau (Главный пункт)",
-        "city": "Aktau",
-        "address": "Микрорайон 3Б, 39/3",
-        "latitude": 43.6425,
-        "longitude": 51.1578,
-        "description": "Популярный городской пункт розничного приема вторичного сырья у населения за денежное вознаграждение.",
-        "waste_type": "Paper, Plastic, Aluminum",
-        "facility_type": "Collection Point",
-    },
-    {
-        "id": 3,
-        "name": "Eco Waste Aqtau (База Промзона)",
-        "city": "Aktau",
-        "address": "Промзона 4, здание 51",
-        "latitude": 43.6821,
-        "longitude": 51.215,
-        "description": "Производственная площадка, где собранные в городе бумага и пластик проходят глубокую досортировку по видам и цветам, прессуются в гигантские тюки и отправляются на заводы рециклинга.",
-        "waste_type": "Paper, Plastic, Cardboard, Aluminum",
-        "facility_type": "Sorting Station",
-    },
-]
+SEED_DATA_PATH = Path(__file__).with_name("recycling_points_seed.json")
+SEED_RECYCLING_POINTS = json.loads(SEED_DATA_PATH.read_text(encoding="utf-8"))
 
 
 def build_qr_identifier(point_id: int) -> str:
@@ -42,19 +14,31 @@ def build_qr_identifier(point_id: int) -> str:
 
 
 def seed_recycling_points(db) -> None:
+    seed_ids = set()
+
     for item in SEED_RECYCLING_POINTS:
+        point_id = int(item["id"])
+        seed_ids.add(point_id)
         existing = (
-            db.query(RecyclingPoint).filter(RecyclingPoint.id == item["id"]).first()
+            db.query(RecyclingPoint).filter(RecyclingPoint.id == point_id).first()
         )
+
         if existing:
-            if not existing.qr_identifier:
-                existing.qr_identifier = build_qr_identifier(existing.id)
+            existing.qr_identifier = build_qr_identifier(point_id)
+            existing.name = item["name"]
+            existing.city = item["city"]
+            existing.address = item["address"]
+            existing.latitude = item["latitude"]
+            existing.longitude = item["longitude"]
+            existing.description = item["description"]
+            existing.waste_type = item["waste_type"]
+            existing.facility_type = item["facility_type"]
             continue
 
         db.add(
             RecyclingPoint(
-                id=item["id"],
-                qr_identifier=build_qr_identifier(item["id"]),
+                id=point_id,
+                qr_identifier=build_qr_identifier(point_id),
                 name=item["name"],
                 city=item["city"],
                 address=item["address"],
@@ -65,5 +49,10 @@ def seed_recycling_points(db) -> None:
                 facility_type=item["facility_type"],
             )
         )
+
+    stale_points = db.query(RecyclingPoint).all()
+    for point in stale_points:
+        if int(point.id) not in seed_ids:
+            db.delete(point)
 
     db.commit()

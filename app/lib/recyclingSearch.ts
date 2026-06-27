@@ -1,31 +1,24 @@
-import { recyclingPoints, type RecyclingPoint } from "../data/recyclingPoints";
+import type { RecyclingPoint } from "./recyclingPointsApi";
 import { emitTaskEvent } from "./taskEvents";
 
-// Create a mapping of material keywords (multi-language) to canonical waste types
 const materialKeywords: Record<string, string[]> = {
   Plastic: [
     "plastic",
     "plastik",
     "пластик",
-    "пластик",
-    "пластик",
+    "пэт",
     "pet",
     "pet bottle",
     "pet-bottle",
-    "пэт",
     "пэт бутылка",
     "water bottle",
     "plastic bottle",
     "пластиковая бутылка",
-    "пластиковая бутылка",
-    "пластик bottle",
   ],
-  Paper: ["paper", "paper", "бумага", "бумага", "қағаз"],
+  Paper: ["paper", "бумага", "қағаз"],
   Cardboard: [
     "cardboard",
     "carton",
-    "картон",
-    "картон",
     "картон",
     "cardboard box",
     "картонная коробка",
@@ -34,17 +27,14 @@ const materialKeywords: Record<string, string[]> = {
     "glass",
     "glas",
     "стекло",
-    "стекло",
     "шыны",
     "glass bottle",
     "стеклянная бутылка",
   ],
-  Metal: ["metal", "metall", "металл", "металл", "металл"],
+  Metal: ["metal", "metall", "металл"],
   Aluminum: [
     "aluminum",
     "aluminium",
-    "алюминий",
-    "алюминий",
     "алюминий",
     "aluminum can",
     "алюминиевая банка",
@@ -54,7 +44,6 @@ const materialKeywords: Record<string, string[]> = {
     "organic",
     "organik",
     "органические отходы",
-    "органические отходы",
     "органикалық қалдықтар",
     "food waste",
     "пищевые отходы",
@@ -63,8 +52,6 @@ const materialKeywords: Record<string, string[]> = {
     "e-waste",
     "electronic",
     "electronics",
-    "электроника",
-    "электроника",
     "электроника",
     "laptop",
     "laptops",
@@ -83,48 +70,37 @@ const materialKeywords: Record<string, string[]> = {
     "computers",
     "компьютер",
     "компьютеры",
-    "electronics",
     "бытовая техника",
-    "электроника",
   ],
   Batteries: [
     "batteries",
     "battery",
     "батарейки",
-    "батарейки",
     "батареялар",
     "аккумуляторы",
     "accumulators",
   ],
-  Textile: [
-    "textile",
-    "textil",
-    "текстиль",
-    "текстиль",
-    "тоқыма",
-    "clothes",
-    "одежда",
-    "одежа",
-  ],
+  Textile: ["textile", "textil", "текстиль", "тоқыма", "clothes", "одежда"],
   Hazardous: [
     "hazardous",
     "danger",
-    "опасные",
     "опасные",
     "қауіпті",
     "mercury",
     "ртутные лампы",
     "ртуть",
   ],
-  Rubber: ["rubber", "tires", "резина", "шины", "резина", "шины", "tyres"],
-  "Tetra Pak": ["tetra pak", "tetrapak", "тетра пак", "тетра пак", "тетра пак"],
-  Wood: ["wood", "wood", "дерево", "дерево", "ағаш"],
+  Rubber: ["rubber", "tires", "резина", "шины", "tyres"],
+  "Tetra Pak": ["tetra pak", "tetrapak", "тетра пак"],
+  Wood: ["wood", "дерево", "ағаш"],
 };
 
-export function searchRecyclingPoints(query: string): RecyclingPoint[] {
+export function searchRecyclingPoints(
+  query: string,
+  points: RecyclingPoint[],
+): RecyclingPoint[] {
   const normalizedQuery = query.toLowerCase();
 
-  // Find which materials are being searched for
   const searchedMaterials: string[] = [];
   for (const [canonical, keywords] of Object.entries(materialKeywords)) {
     if (keywords.some((keyword) => normalizedQuery.includes(keyword))) {
@@ -132,24 +108,21 @@ export function searchRecyclingPoints(query: string): RecyclingPoint[] {
     }
   }
 
-  // If no specific material is mentioned, return first 10 points
   if (searchedMaterials.length === 0) {
-    return recyclingPoints.slice(0, 10);
+    return points.slice(0, 10);
   }
 
-  // Find points that accept at least one of the searched materials
-  const matchingPoints = recyclingPoints.filter((point) => {
+  return points.filter((point) => {
     const wasteTypes = point.waste_type
       .toLowerCase()
       .split(",")
       .map((t) => t.trim());
+
     return searchedMaterials.some((material) => {
       const materialLower = material.toLowerCase();
       return wasteTypes.some((wasteType) => wasteType.includes(materialLower));
     });
   });
-
-  return matchingPoints;
 }
 
 export function buildRoute(point: RecyclingPoint) {

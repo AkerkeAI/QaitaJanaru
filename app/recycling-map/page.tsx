@@ -14,7 +14,10 @@ import type {
   Marker as MarkerType,
   Popup as PopupType,
 } from "react-leaflet";
-import { recyclingPoints, type RecyclingPoint } from "../data/recyclingPoints";
+import {
+  getRecyclingPoints,
+  type RecyclingPoint,
+} from "../lib/recyclingPointsApi";
 import {
   translateWasteType,
   translateFacilityType,
@@ -74,6 +77,7 @@ export default function RecyclingMapPage() {
     null,
   );
   const [loadingLocation, setLoadingLocation] = useState(false);
+  const [recyclingPoints, setRecyclingPoints] = useState<RecyclingPoint[]>([]);
   const mapRef = useRef<any>(null);
   const { messages, language } = useLanguage();
   const { theme, colors } = useTheme();
@@ -98,17 +102,6 @@ export default function RecyclingMapPage() {
       setSidebarOpen(true);
     }
   };
-
-  useEffect(() => {
-    const userId = localStorage.getItem("qaitaJanaru_user_id");
-    if (!userId) {
-      router.push("/login");
-      return;
-    }
-
-    // Automatically request location on component mount
-    requestUserLocation();
-  }, [router]);
 
   const requestUserLocation = () => {
     setLoadingLocation(true);
@@ -147,6 +140,28 @@ export default function RecyclingMapPage() {
     }
   };
 
+  useEffect(() => {
+    const userId = localStorage.getItem("qaitaJanaru_user_id");
+    if (!userId) {
+      router.push("/login");
+      return;
+    }
+
+    const loadRecyclingPoints = async () => {
+      try {
+        const data = await getRecyclingPoints();
+        setRecyclingPoints(data.items);
+      } catch (error) {
+        console.error("Failed to load recycling points:", error);
+      }
+    };
+
+    void loadRecyclingPoints();
+    setTimeout(() => {
+      requestUserLocation();
+    }, 0);
+  }, [router]);
+
   // Prepare filtered points by category for performance
   const filteredPoints = useMemo(() => {
     const c = categoryFilter
@@ -164,7 +179,7 @@ export default function RecyclingMapPage() {
       );
     };
     return recyclingPoints.filter(matchesCategory);
-  }, [categoryFilter]);
+  }, [categoryFilter, recyclingPoints]);
 
   const handleFindLocation = () => {
     requestUserLocation();
@@ -305,7 +320,7 @@ export default function RecyclingMapPage() {
           <div className="flex items-center gap-3">
             <span className="text-2xl md:text-3xl">♻️</span>
             <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-              {messages.common.appName}
+              {messages.recyclingMap.title}
             </h1>
           </div>
 

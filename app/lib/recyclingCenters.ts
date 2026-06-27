@@ -1,4 +1,4 @@
-import { recyclingPoints, type RecyclingPoint } from "../data/recyclingPoints";
+import type { RecyclingPoint } from "./recyclingPointsApi";
 import { emitTaskEvent } from "./taskEvents";
 
 export interface NearestRecyclingCenter {
@@ -20,14 +20,7 @@ const CATEGORY_ALIASES: Record<string, string[]> = {
   metal: ["metal", "aluminum"],
   aluminum: ["aluminum", "metal"],
   organic: ["organic"],
-  ewaste: [
-    "ewaste",
-    "electronics",
-    "ewaste",
-    "battery",
-    "batteries",
-    "hazardous",
-  ],
+  ewaste: ["ewaste", "electronics", "battery", "batteries", "hazardous"],
   battery: ["hazardous", "battery", "batteries"],
   mixed: ["plastic", "paper", "cardboard", "metal", "glass"],
   unknown: [],
@@ -82,11 +75,12 @@ export function calculateDistanceKm(
 }
 
 export function findNearestRecyclingCenters(
+  points: RecyclingPoint[],
   category: string,
   userLocation: [number, number] | null,
   limit = 3,
 ): NearestRecyclingCenter[] {
-  const filtered = recyclingPoints.filter((point) =>
+  const filtered = points.filter((point) =>
     pointAcceptsCategory(point, category),
   );
 

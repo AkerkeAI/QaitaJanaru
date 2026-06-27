@@ -4,7 +4,17 @@ from app.models.qr_claim import QrClaim  # noqa: F401
 from app.models.recycling_point import RecyclingPoint  # noqa: F401
 from app.models.scan_history import ScanHistory  # noqa: F401
 from app.models.user import User  # noqa: F401
-from app.routers import auth, chat, leaderboard, profile, qr, routing, scan, tasks
+from app.routers import (
+    auth,
+    chat,
+    leaderboard,
+    profile,
+    qr,
+    recycling_points,
+    routing,
+    scan,
+    tasks,
+)
 from app.services.recycling_points_seed import seed_recycling_points
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,6 +48,7 @@ app.include_router(chat.router)
 app.include_router(routing.router)
 app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
 app.include_router(qr.router)
+app.include_router(recycling_points.router)
 
 
 @app.get("/")

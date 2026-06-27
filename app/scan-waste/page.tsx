@@ -18,6 +18,10 @@ import {
 } from "../lib/recyclingCenters";
 import { translateWasteType } from "../lib/wasteTranslations";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
+import {
+  getRecyclingPoints,
+  type RecyclingPoint,
+} from "../lib/recyclingPointsApi";
 
 export default function ScanWastePage() {
   const router = useRouter();
@@ -36,6 +40,7 @@ export default function ScanWastePage() {
     null,
   );
   const [error, setError] = useState<string | null>(null);
+  const [recyclingPoints, setRecyclingPoints] = useState<RecyclingPoint[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { messages, language } = useLanguage();
@@ -65,6 +70,17 @@ export default function ScanWastePage() {
       router.push("/login");
       return;
     }
+
+    const loadRecyclingPoints = async () => {
+      try {
+        const data = await getRecyclingPoints();
+        setRecyclingPoints(data.items);
+      } catch (loadError) {
+        console.error("Failed to load recycling points:", loadError);
+      }
+    };
+
+    void loadRecyclingPoints();
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -174,6 +190,7 @@ export default function ScanWastePage() {
       setScanResponse(data);
       setNearestCenters(
         findNearestRecyclingCenters(
+          recyclingPoints,
           result.recycling_category || result.category,
           userLocation,
           3,
