@@ -4,6 +4,11 @@ import os
 from typing import Any, Dict, List
 
 import requests
+from app.services.scan_localization import (
+    get_localized_preparation_steps,
+    localize_scan_result,
+)
+
 
 def _load_env_var_from_dotenv(key: str) -> str:
     value = os.getenv(key)
@@ -19,7 +24,9 @@ def _load_env_var_from_dotenv(key: str) -> str:
                     for line in f:
                         stripped = line.strip()
                         if stripped.startswith(f"{key}="):
-                            return stripped.split("=", 1)[1].strip().strip('"').strip("'")
+                            return (
+                                stripped.split("=", 1)[1].strip().strip('"').strip("'")
+                            )
             except Exception:
                 break
 
@@ -185,7 +192,7 @@ def _build_prompt(language: str = "en") -> str:
         "ru": "Respond in Russian.",
         "kz": "Respond in Kazakh.",
     }
-    
+
     return (
         f"You are a waste classification assistant for Kazakhstan recycling education.\n"
         f"{language_instructions.get(language, 'Respond in English.')}\n"
@@ -261,7 +268,9 @@ def analyze_waste_image(image: bytes, language: str = "en") -> Dict[str, Any]:
                 timeout=AI_TIMEOUT_SECONDS,
             )
         except requests.exceptions.Timeout as exc:
-            raise AIProviderError("AI_TIMEOUT", "AI analysis timed out. Please try again.") from exc
+            raise AIProviderError(
+                "AI_TIMEOUT", "AI analysis timed out. Please try again."
+            ) from exc
         except requests.exceptions.RequestException as exc:
             raise AIProviderError(
                 "AI_UNAVAILABLE",
@@ -293,7 +302,10 @@ def analyze_waste_image(image: bytes, language: str = "en") -> Dict[str, Any]:
                 pass
 
             if response.status_code == 400 and "image" in detail.lower():
-                raise AIProviderError("INVALID_IMAGE", "Invalid or unsupported image. Please upload a clear photo.")
+                raise AIProviderError(
+                    "INVALID_IMAGE",
+                    "Invalid or unsupported image. Please upload a clear photo.",
+                )
 
             raise AIProviderError(
                 "AI_UNAVAILABLE",
@@ -302,7 +314,7 @@ def analyze_waste_image(image: bytes, language: str = "en") -> Dict[str, Any]:
             )
 
         data = response.json()
-        return _parse_gemini_response(data)
+        return _parse_gemini_response(data, language)
 
     if last_error:
         raise last_error
@@ -313,21 +325,23 @@ def analyze_waste_image(image: bytes, language: str = "en") -> Dict[str, Any]:
     )
 
 
-def _parse_gemini_response(data: Dict[str, Any]) -> Dict[str, Any]:
+def _parse_gemini_response(
+    data: Dict[str, Any], language: str = "en"
+) -> Dict[str, Any]:
     candidates = data.get("candidates") or []
     if not candidates or not isinstance(candidates, list):
-        return _build_unknown_result()
+        return _build_unknown_result(language)
 
     first_candidate = candidates[0]
     text_response = _extract_text_from_candidate(first_candidate)
     if not text_response:
-        return _build_unknown_result()
+        return _build_unknown_result(language)
 
     parsed_json = _extract_json_object(text_response)
     if parsed_json:
-        return _build_result_from_json(parsed_json)
+        return _build_result_from_json(parsed_json, language)
 
-    return _build_result_from_free_text(text_response)
+    return _build_result_from_free_text(text_response, language)
 
 
 def _extract_text_from_candidate(candidate: Dict[str, Any]) -> str:
@@ -370,13 +384,15 @@ def _extract_json_object(text: str) -> Dict[str, Any] | None:
     return None
 
 
-def _normalize_preparation_steps(raw_steps: Any, waste_type: str) -> List[str]:
+def _normalize_preparation_steps(
+    raw_steps: Any, waste_type: str, language: str = "en"
+) -> List[str]:
     if isinstance(raw_steps, list):
         cleaned = [str(step).strip() for step in raw_steps if str(step).strip()]
         if cleaned:
             return cleaned[:4]
 
-    return PREPARATION_STEPS.get(waste_type, PREPARATION_STEPS["Unknown Waste"])
+    return get_localized_preparation_steps(waste_type, language)
 
 
 def _normalize_waste_type(raw: str) -> str:
@@ -389,7 +405,10 @@ def _normalize_waste_type(raw: str) -> str:
         return lookup[normalized.lower()]
 
     for waste_type in WASTE_CLASSES:
-        if waste_type.lower() in normalized.lower() or normalized.lower() in waste_type.lower():
+        if (
+            waste_type.lower() in normalized.lower()
+            or normalized.lower() in waste_type.lower()
+        ):
             return waste_type
 
     aliases = {
@@ -407,19 +426,23 @@ def _normalize_waste_type(raw: str) -> str:
     return aliases.get(normalized.lower(), normalized)
 
 
-def _build_result_from_json(parsed: Dict[str, Any]) -> Dict[str, Any]:
-    waste_type = _normalize_waste_type(parsed.get("waste_type") or parsed.get("label") or "Unknown Waste")
+def _build_result_from_json(
+    parsed: Dict[str, Any], language: str = "en"
+) -> Dict[str, Any]:
+    waste_type = _normalize_waste_type(
+        parsed.get("waste_type") or parsed.get("label") or "Unknown Waste"
+    )
     confidence = float(parsed.get("confidence", 0.0) or 0.0)
 
     if waste_type not in WASTE_CLASSES:
-        return _build_unknown_result()
+        return _build_unknown_result(language)
 
     if confidence < CONFIDENCE_THRESHOLD:
         # Keep a useful classification when the model is confident in label but omitted score.
         if parsed.get("waste_type") and waste_type != "Unknown Waste":
             confidence = max(CONFIDENCE_THRESHOLD, 0.72)
         else:
-            return _build_unknown_result()
+            return _build_unknown_result(language)
 
     category = CATEGORY_MAP.get(waste_type, "Unknown")
     recyclable = parsed.get("recyclable")
@@ -430,44 +453,63 @@ def _build_result_from_json(parsed: Dict[str, Any]) -> Dict[str, Any]:
     else:
         recyclable = bool(recyclable)
 
-    return {
-        "waste_type": waste_type,
-        "category": category,
-        "recycling_category": category,
-        "confidence": confidence,
-        "eco_tip": ECO_TIPS.get(waste_type, ECO_TIPS["Unknown Waste"]),
-        "recycling_advice": RECYCLING_ADVICE.get(waste_type, RECYCLING_ADVICE["Unknown Waste"]),
-        "preparation_steps": _normalize_preparation_steps(parsed.get("preparation_steps"), waste_type),
-        "recyclable": recyclable,
-    }
+    return localize_scan_result(
+        {
+            "waste_type": waste_type,
+            "category": category,
+            "recycling_category": category,
+            "confidence": confidence,
+            "eco_tip": ECO_TIPS.get(waste_type, ECO_TIPS["Unknown Waste"]),
+            "recycling_advice": RECYCLING_ADVICE.get(
+                waste_type, RECYCLING_ADVICE["Unknown Waste"]
+            ),
+            "preparation_steps": _normalize_preparation_steps(
+                parsed.get("preparation_steps"), waste_type, language
+            ),
+            "recyclable": recyclable,
+        },
+        language,
+    )
 
 
-def _build_result_from_free_text(text: str) -> Dict[str, Any]:
+def _build_result_from_free_text(text: str, language: str = "en") -> Dict[str, Any]:
     normalized = text.lower()
     for waste_type in WASTE_CLASSES:
         if waste_type.lower() in normalized:
-            return {
-                "waste_type": waste_type,
-                "category": CATEGORY_MAP.get(waste_type, "Unknown"),
-                "recycling_category": CATEGORY_MAP.get(waste_type, "Unknown"),
-                "confidence": max(CONFIDENCE_THRESHOLD, 0.7),
-                "eco_tip": ECO_TIPS.get(waste_type, ECO_TIPS["Unknown Waste"]),
-                "recycling_advice": RECYCLING_ADVICE.get(waste_type, RECYCLING_ADVICE["Unknown Waste"]),
-                "preparation_steps": PREPARATION_STEPS.get(waste_type, PREPARATION_STEPS["Unknown Waste"]),
-                "recyclable": RECYCLABLE_MAP.get(waste_type, False),
-            }
+            return localize_scan_result(
+                {
+                    "waste_type": waste_type,
+                    "category": CATEGORY_MAP.get(waste_type, "Unknown"),
+                    "recycling_category": CATEGORY_MAP.get(waste_type, "Unknown"),
+                    "confidence": max(CONFIDENCE_THRESHOLD, 0.7),
+                    "eco_tip": ECO_TIPS.get(waste_type, ECO_TIPS["Unknown Waste"]),
+                    "recycling_advice": RECYCLING_ADVICE.get(
+                        waste_type, RECYCLING_ADVICE["Unknown Waste"]
+                    ),
+                    "preparation_steps": get_localized_preparation_steps(
+                        waste_type, language
+                    ),
+                    "recyclable": RECYCLABLE_MAP.get(waste_type, False),
+                },
+                language,
+            )
 
-    return _build_unknown_result()
+    return _build_unknown_result(language)
 
 
-def _build_unknown_result() -> Dict[str, Any]:
-    return {
-        "waste_type": "Unknown Waste",
-        "category": "Unknown",
-        "recycling_category": "Unknown",
-        "confidence": 0.0,
-        "eco_tip": ECO_TIPS["Unknown Waste"],
-        "recycling_advice": RECYCLING_ADVICE["Unknown Waste"],
-        "preparation_steps": PREPARATION_STEPS["Unknown Waste"],
-        "recyclable": False,
-    }
+def _build_unknown_result(language: str = "en") -> Dict[str, Any]:
+    return localize_scan_result(
+        {
+            "waste_type": "Unknown Waste",
+            "category": "Unknown",
+            "recycling_category": "Unknown",
+            "confidence": 0.0,
+            "eco_tip": ECO_TIPS["Unknown Waste"],
+            "recycling_advice": RECYCLING_ADVICE["Unknown Waste"],
+            "preparation_steps": get_localized_preparation_steps(
+                "Unknown Waste", language
+            ),
+            "recyclable": False,
+        },
+        language,
+    )

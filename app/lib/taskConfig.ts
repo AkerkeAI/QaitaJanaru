@@ -183,7 +183,7 @@ export const achievementChapters: AchievementChapter[] = [
       {
         id: "achievement-recycling-hero",
         title: "Герой переработки",
-        description: "Заработайте 500 Эко Поинтов",
+        description: "Заработайте 500 Эко-баллов",
         reward: 0,
         target: 500,
         current: 0,
@@ -198,7 +198,7 @@ export const achievementChapters: AchievementChapter[] = [
       {
         id: "achievement-earth-guardian",
         title: "Хранитель Земли",
-        description: "Заработайте 1000 Эко Поинтов",
+        description: "Заработайте 1000 Эко-баллов",
         reward: 0,
         target: 1000,
         current: 0,

@@ -51,8 +51,8 @@ DAILY_TASKS: List[Dict[str, Any]] = [
     },
     {
         "id": "daily-earn-20",
-        "title": "Заработать 20 Эко Поинтов сегодня",
-        "description": "Получите 20 Эко Поинтов за сегодня",
+        "title": "Заработать 20 Эко-баллов сегодня",
+        "description": "Получите 20 Эко-баллов за сегодня",
         "reward": 10,
         "target": 20,
         "type": "daily",
@@ -71,8 +71,8 @@ DAILY_TASKS: List[Dict[str, Any]] = [
     },
     {
         "id": "daily-map-1",
-        "title": "Посетить Эко Карту",
-        "description": "Откройте Эко Карту сегодня",
+        "title": "Посетить Карту переработки",
+        "description": "Откройте Карту переработки сегодня",
         "reward": 5,
         "target": 1,
         "type": "daily",
@@ -104,8 +104,8 @@ WEEKLY_TASKS: List[Dict[str, Any]] = [
     },
     {
         "id": "weekly-earn-300",
-        "title": "Заработать 300 Эко Поинтов",
-        "description": "Получите 300 Эко Поинтов за неделю",
+        "title": "Заработать 300 Эко-баллов",
+        "description": "Получите 300 Эко-баллов за неделю",
         "reward": 75,
         "target": 300,
         "type": "weekly",
@@ -389,6 +389,46 @@ def claim_task_reward(user: User, task_id: str) -> Tuple[bool, int, str]:
 
     db_user = user
     return True, int(db_user.eco_points), f"Reward claimed: +{reward}"
+
+
+def auto_claim_completed_tasks(user: User) -> Dict[str, Any]:
+    _ensure_meta(user)
+    sync_task_state(user)
+    recompute_all_task_progress(user)
+
+    claimed_task_ids: List[str] = []
+    daily_task_rewards = 0
+    weekly_task_rewards = 0
+
+    for task in DAILY_TASKS + WEEKLY_TASKS:
+        task_id = task["id"]
+        if task_id in user.claimed_rewards:
+            continue
+
+        current = _get_progress(user, task_id)
+        target = int(task["target"])
+        if current < target:
+            continue
+
+        reward = int(TASK_REWARDS.get(task_id, 0))
+        user.eco_points = int(user.eco_points or 0) + reward
+        user.claimed_rewards.append(task_id)
+        claimed_task_ids.append(task_id)
+
+        if task["type"] == "daily":
+            daily_task_rewards += reward
+        else:
+            weekly_task_rewards += reward
+
+    if claimed_task_ids:
+        user.level = max(1, user.eco_points // 100 + 1)
+
+    return {
+        "claimed_task_ids": claimed_task_ids,
+        "daily_task_rewards": daily_task_rewards,
+        "weekly_task_rewards": weekly_task_rewards,
+        "task_rewards": daily_task_rewards + weekly_task_rewards,
+    }
 
 
 def get_total_chat_messages_this_week(

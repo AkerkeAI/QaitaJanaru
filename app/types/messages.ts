@@ -196,7 +196,7 @@ export interface Messages {
   };
   sidebar: {
     home: string;
-    profile:string;
+    profile: string;
     scan: string;
     leaderboard: string;
     settings: string;
@@ -205,8 +205,7 @@ export interface Messages {
     ecoAssistant: string;
     tasks: string;
   };
-  
-   
+
   recyclingMap: {
     title: string;
     subtitle: string;
@@ -343,6 +342,12 @@ export interface Messages {
     recyclingCenterComingSoon: string;
     recyclingCenterSubtitle: string;
     openMap: string;
+    userNotFound: string;
+    scanReward: string;
+    taskRewards: string;
+    dailyTaskRewards: string;
+    weeklyTaskRewards: string;
+    autoBonuses: string;
   };
   tasks: {
     title: string;

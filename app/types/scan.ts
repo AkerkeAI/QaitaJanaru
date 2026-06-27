@@ -29,6 +29,12 @@ export interface ScanResponse {
   preparation_steps: string[];
   recyclable: boolean;
   earned_points: number;
+  scan_reward: number;
+  task_rewards: number;
+  daily_task_rewards: number;
+  weekly_task_rewards: number;
+  auto_claimed_task_ids: string[];
+  total_reward: number;
   new_total_points: number;
 }
 
@@ -42,4 +48,5 @@ export interface ScanState {
   recyclingCenter: RecyclingCenter | null;
 }
 
-export type LoadingState = 'idle' | 'uploading' | 'analyzing' | 'generating' | 'complete' | 'error';
+export type LoadingState =
+  "idle" | "uploading" | "analyzing" | "generating" | "complete" | "error";
