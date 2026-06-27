@@ -474,5 +474,12 @@ export const messages: Messages = {
     weekSetB: "Б жиынтығы",
     weekSetC: "В жиынтығы",
     qrTasksComingSoon: "QR қайта өңдеу тапсырмалары жақын арада қосылады",
+    openQrScanner: "QR сканерін ашу",
+    qrScannerTitle: "QR сканері",
+    qrScannerDescription: "Камераны QR кодқа бағыттаңыз.",
+    qrScannerHint: "QR код табылса, нәтиже әзірге тек консольге шығарылады.",
+    qrPermissionDenied: "QR кодтарды сканерлеу үшін камераға рұқсат қажет.",
+    qrUnsupported:
+      "Бұл құрылғыда немесе браузерде QR сканерлеу қолдау таппайды.",
   },
 };

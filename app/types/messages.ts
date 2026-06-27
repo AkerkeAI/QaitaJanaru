@@ -458,5 +458,11 @@ export interface Messages {
     weekSetB: string;
     weekSetC: string;
     qrTasksComingSoon: string;
+    openQrScanner: string;
+    qrScannerTitle: string;
+    qrScannerDescription: string;
+    qrScannerHint: string;
+    qrPermissionDenied: string;
+    qrUnsupported: string;
   };
 }

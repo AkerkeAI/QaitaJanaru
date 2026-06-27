@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -8,7 +8,8 @@ import { useTheme } from "../contexts/ThemeContext";
 import { AchievementChapter, Task } from "../types/tasks";
 import { getProfile, ProfileResponse } from "../lib/api";
 import { claimReward, getTaskProgress } from "../lib/tasksApi";
-import { achievementChapters } from "../lib/taskConfig";
+import { getAchievementChapters } from "../lib/taskConfig";
+import { buildAchievementCampaign } from "../lib/achievementCampaign";
 
 export default function TasksPage() {
   const router = useRouter();
@@ -18,8 +19,7 @@ export default function TasksPage() {
   const [error, setError] = useState<string | null>(null);
   const [dailyTasks, setDailyTasks] = useState<Task[]>([]);
   const [weeklyTasks, setWeeklyTasks] = useState<Task[]>([]);
-  const [chapters, setChapters] =
-    useState<AchievementChapter[]>(achievementChapters);
+  const [chapters, setChapters] = useState<AchievementChapter[]>([]);
   const [showRewardPopup, setShowRewardPopup] = useState<{
     show: boolean;
     points: number;
@@ -28,7 +28,7 @@ export default function TasksPage() {
   const { messages } = useLanguage();
   const { colors } = useTheme();
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
 
     if (!userId) {
@@ -45,83 +45,28 @@ export default function TasksPage() {
       setProfile(profileData);
       setDailyTasks(progressData.daily_tasks as Task[]);
       setWeeklyTasks(progressData.weekly_tasks as Task[]);
-
-      const updatedChapters = achievementChapters.map((chapter, index) => {
-        const updatedAchievements = chapter.achievements.map((achievement) => {
-          let current = 0;
-          switch (achievement.category) {
-            case "scan":
-              current = profileData.total_scans || 0;
-              break;
-            case "points":
-              current = profileData.eco_points || 0;
-              break;
-            case "streak":
-              current = profileData.streak || 0;
-              break;
-            case "eco_assistant":
-              current =
-                achievement.id === "achievement-first-eco-question"
-                  ? Math.min(
-                      (progressData.task_progress["daily-chat-1"] || 0) +
-                        (progressData.task_progress["weekly-chat-10"] || 0),
-                      1,
-                    )
-                  : progressData.task_progress["weekly-chat-10"] || 0;
-              break;
-            case "map":
-              current = Math.min(
-                (progressData.task_progress["daily-map-1"] || 0) +
-                  (progressData.task_progress["daily-route-1"] || 0),
-                1,
-              );
-              break;
-            case "visit":
-              current = progressData.task_progress["daily-login"] || 0;
-              break;
-            case "recycling":
-              current = progressData.weekly_tasks.filter(
-                (task) => task.completed,
-              ).length;
-              break;
-            default:
-              current = 0;
-          }
-
-          return {
-            ...achievement,
-            current,
-            completed: current >= achievement.target,
-          };
-        });
-
-        const allCompleted = updatedAchievements.every(
-          (achievement) => achievement.completed,
-        );
-        const unlocked =
-          index === 0 ||
-          (profileData.eco_points || 0) >= chapter.requiredPoints;
-
-        return {
-          ...chapter,
-          achievements: updatedAchievements,
-          unlocked,
-          completed: allCompleted,
-        };
-      });
-
-      setChapters(updatedChapters);
+      setChapters(
+        buildAchievementCampaign(
+          getAchievementChapters(messages),
+          profileData,
+          progressData,
+        ),
+      );
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
       setLoading(false);
     }
-  };
+  }, [router, messages]);
 
   useEffect(() => {
-    loadData();
-  }, [router]);
+    const run = async () => {
+      await loadData();
+    };
+
+    void run();
+  }, [loadData]);
 
   const handleClaimReward = async (task: Task) => {
     if (task.claimed || !task.completed) return;
@@ -155,9 +100,7 @@ export default function TasksPage() {
 
     return (
       <div
-        className={`group relative rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02] ${
-          task.completed ? "" : "opacity-90"
-        }`}
+        className={`group relative rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02] ${task.completed ? "" : "opacity-90"}`}
         style={{
           backgroundColor: task.completed
             ? `${colors.primary}15`
@@ -168,9 +111,7 @@ export default function TasksPage() {
       >
         <div className="flex items-start gap-4">
           <div
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-lg flex-shrink-0 ${
-              task.completed ? "animate-bounce" : ""
-            }`}
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-lg flex-shrink-0 ${task.completed ? "animate-bounce" : ""}`}
             style={{
               background: task.completed
                 ? "linear-gradient(to bottom right, #fbbf24, #f97316)"
@@ -514,6 +455,17 @@ export default function TasksPage() {
                           ✓ {messages.tasks.chapterComplete}
                         </div>
                       )}
+                      {!chapter.unlocked && (
+                        <div
+                          className="ml-auto px-3 py-1 rounded-full text-xs font-medium"
+                          style={{
+                            backgroundColor: `${colors.text}10`,
+                            color: colors.textSecondary,
+                          }}
+                        >
+                          {messages.tasks.chapterLocked}
+                        </div>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -533,7 +485,11 @@ export default function TasksPage() {
                         >
                           <div className="flex items-center gap-2">
                             <span className="text-lg">
-                              {achievement.completed ? achievement.icon : "🔒"}
+                              {achievement.completed
+                                ? achievement.icon
+                                : chapter.unlocked
+                                  ? achievement.icon
+                                  : "🔒"}
                             </span>
                             <div className="flex-1 min-w-0">
                               <div className="font-medium text-sm truncate">

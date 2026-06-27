@@ -471,5 +471,12 @@ export const messages: Messages = {
     weekSetB: "Week Set B",
     weekSetC: "Week Set C",
     qrTasksComingSoon: "QR recycling tasks coming soon",
+    openQrScanner: "Open QR scanner",
+    qrScannerTitle: "QR Scanner",
+    qrScannerDescription: "Point your camera at a QR code.",
+    qrScannerHint:
+      "If a QR code is detected, the result will be logged for now.",
+    qrPermissionDenied: "Camera access is required to scan QR codes.",
+    qrUnsupported: "QR scanning is not supported on this device or browser.",
   },
 };

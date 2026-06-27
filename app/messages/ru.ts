@@ -475,5 +475,13 @@ export const messages: Messages = {
     weekSetB: "Набор Б",
     weekSetC: "Набор В",
     qrTasksComingSoon: "QR-задания по переработке скоро будут доступны",
+    openQrScanner: "Открыть QR-сканер",
+    qrScannerTitle: "QR-сканер",
+    qrScannerDescription: "Наведите камеру на QR-код.",
+    qrScannerHint:
+      "Если QR-код будет найден, результат пока просто выведется в консоль.",
+    qrPermissionDenied: "Для сканирования QR-кодов нужен доступ к камере.",
+    qrUnsupported:
+      "QR-сканирование не поддерживается на этом устройстве или в этом браузере.",
   },
 };
