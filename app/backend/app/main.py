@@ -1,18 +1,13 @@
+from app.db.session import Base, SessionLocal, engine
+from app.models.chat_message import ChatMessage  # noqa: F401
+from app.models.qr_claim import QrClaim  # noqa: F401
+from app.models.recycling_point import RecyclingPoint  # noqa: F401
+from app.models.scan_history import ScanHistory  # noqa: F401
+from app.models.user import User  # noqa: F401
+from app.routers import auth, chat, leaderboard, profile, qr, routing, scan, tasks
+from app.services.recycling_points_seed import seed_recycling_points
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.routers import auth
-from app.routers import profile
-from app.routers import leaderboard
-from app.routers import scan
-from app.routers import chat
-from app.routers import routing
-from app.routers import tasks
-
-from app.db.session import Base, engine
-from app.models.user import User  # noqa: F401
-from app.models.scan_history import ScanHistory  # noqa: F401
-from app.models.chat_message import ChatMessage  # noqa: F401
 
 app = FastAPI()
 
@@ -20,6 +15,11 @@ app = FastAPI()
 @app.on_event("startup")
 def ensure_database_tables() -> None:
     Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        seed_recycling_points(db)
+    finally:
+        db.close()
 
 
 app.add_middleware(
@@ -37,6 +37,8 @@ app.include_router(scan.router)
 app.include_router(chat.router)
 app.include_router(routing.router)
 app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
+app.include_router(qr.router)
+
 
 @app.get("/")
 def root():
