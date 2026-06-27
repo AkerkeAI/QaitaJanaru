@@ -1,6 +1,17 @@
 export type TaskType = "daily" | "weekly" | "achievement" | "qr";
 
-export type TaskCategory = "visit" | "scan" | "eco_assistant" | "map" | "profile" | "leaderboard" | "settings" | "recycling" | "streak" | "points";
+export type TaskCategory =
+  | "visit"
+  | "scan"
+  | "eco_assistant"
+  | "map"
+  | "profile"
+  | "leaderboard"
+  | "settings"
+  | "recycling"
+  | "streak"
+  | "points"
+  | string;
 
 export interface Task {
   id: string;

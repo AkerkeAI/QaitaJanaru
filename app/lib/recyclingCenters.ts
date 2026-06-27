@@ -1,4 +1,5 @@
 import { recyclingPoints, type RecyclingPoint } from "../data/recyclingPoints";
+import { emitTaskEvent } from "./taskEvents";
 
 export interface NearestRecyclingCenter {
   id: number;
@@ -19,7 +20,14 @@ const CATEGORY_ALIASES: Record<string, string[]> = {
   metal: ["metal", "aluminum"],
   aluminum: ["aluminum", "metal"],
   organic: ["organic"],
-  ewaste: ["ewaste", "electronics", "ewaste", "battery", "batteries", "hazardous"],
+  ewaste: [
+    "ewaste",
+    "electronics",
+    "ewaste",
+    "battery",
+    "batteries",
+    "hazardous",
+  ],
   battery: ["hazardous", "battery", "batteries"],
   mixed: ["plastic", "paper", "cardboard", "metal", "glass"],
   unknown: [],
@@ -34,7 +42,10 @@ function categoryTokens(category: string): string[] {
   return CATEGORY_ALIASES[normalized] ?? [normalized];
 }
 
-function pointAcceptsCategory(point: RecyclingPoint, category: string): boolean {
+function pointAcceptsCategory(
+  point: RecyclingPoint,
+  category: string,
+): boolean {
   const wanted = categoryTokens(category);
   if (wanted.length === 0) {
     return true;
@@ -55,7 +66,7 @@ export function calculateDistanceKm(
   fromLat: number,
   fromLon: number,
   toLat: number,
-  toLon: number
+  toLon: number,
 ): number {
   const earthRadiusKm = 6371;
   const dLat = toRadians(toLat - fromLat);
@@ -73,9 +84,11 @@ export function calculateDistanceKm(
 export function findNearestRecyclingCenters(
   category: string,
   userLocation: [number, number] | null,
-  limit = 3
+  limit = 3,
 ): NearestRecyclingCenter[] {
-  const filtered = recyclingPoints.filter((point) => pointAcceptsCategory(point, category));
+  const filtered = recyclingPoints.filter((point) =>
+    pointAcceptsCategory(point, category),
+  );
 
   const withDistance = filtered.map((point) => ({
     id: point.id,
@@ -86,7 +99,12 @@ export function findNearestRecyclingCenters(
     longitude: point.longitude,
     waste_type: point.waste_type,
     distanceKm: userLocation
-      ? calculateDistanceKm(userLocation[0], userLocation[1], point.latitude, point.longitude)
+      ? calculateDistanceKm(
+          userLocation[0],
+          userLocation[1],
+          point.latitude,
+          point.longitude,
+        )
       : Number.POSITIVE_INFINITY,
   }));
 
@@ -94,10 +112,20 @@ export function findNearestRecyclingCenters(
   return withDistance.slice(0, limit);
 }
 
-export function openExternalNavigation(latitude: number, longitude: number): void {
+export function openExternalNavigation(
+  latitude: number,
+  longitude: number,
+): void {
+  emitTaskEvent("map_visit");
+  emitTaskEvent("route_open");
+
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
   const twoGisUrl = `https://2gis.kz/search/${latitude},${longitude}`;
-  const navigationWindow = window.open(googleMapsUrl, "_blank", "noopener,noreferrer");
+  const navigationWindow = window.open(
+    googleMapsUrl,
+    "_blank",
+    "noopener,noreferrer",
+  );
 
   if (!navigationWindow) {
     window.location.href = twoGisUrl;

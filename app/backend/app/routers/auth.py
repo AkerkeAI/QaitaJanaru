@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-
 from app.db.session import SessionLocal
 from app.models.user import User
 from app.schemas.user import UserCreate, UserLogin
+from app.services.task_service import record_login
 from app.services.user_service import update_streak
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -26,20 +26,17 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="EMAIL_ALREADY_EXISTS")
 
     new_user = User(
-    full_name=user.full_name,
-    email=user.email,
-    password=user.password,
-    city=user.city,
-)
+        full_name=user.full_name,
+        email=user.email,
+        password=user.password,
+        city=user.city,
+    )
 
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    return {
-        "message": "User registered successfully",
-        "user_id": new_user.id
-    }
+    return {"message": "User registered successfully", "user_id": new_user.id}
 
 
 @router.post("/login")
@@ -55,13 +52,18 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
 
     # Update streak logic
     db_user = update_streak(db, db_user)
+    record_login(db_user)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
 
     return {
         "message": "Login successful",
         "user_id": db_user.id,
         "eco_points": db_user.eco_points,
-        "streak": db_user.streak
+        "streak": db_user.streak,
     }
+
 
 @router.get("/profile/{user_id}")
 def get_profile(user_id: int, db: Session = Depends(get_db)):

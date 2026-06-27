@@ -1,14 +1,25 @@
 from datetime import datetime
-from typing import List, Optional
-
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from typing import Dict, List, Optional
 
 from app.db.session import SessionLocal
 from app.models.user import User
+from app.services.task_service import (
+    DAILY_TASK_IDS,
+    WEEKLY_TASK_IDS,
+    build_task_payload,
+    claim_task_reward,
+    recompute_all_task_progress,
+    reset_daily_tasks_if_needed,
+    reset_weekly_tasks_if_needed,
+    sync_task_state,
+)
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 router = APIRouter()
+
+
 def get_db():
     db = SessionLocal()
     try:
@@ -26,14 +37,27 @@ class ClaimRewardRequest(BaseModel):
     task_id: str
 
 
+class TaskItemResponse(BaseModel):
+    id: str
+    title: str
+    description: str
+    reward: int
+    target: int
+    current: int
+    completed: bool
+    claimed: bool
+    type: str
+    category: str
+    icon: str
 
 
 class TaskProgressResponse(BaseModel):
-    task_progress: dict
+    task_progress: Dict[str, int]
     claimed_rewards: List[str]
     last_daily_reset: Optional[datetime]
     last_weekly_reset: Optional[datetime]
-    current_week_set: str
+    daily_tasks: List[TaskItemResponse]
+    weekly_tasks: List[TaskItemResponse]
 
 
 class ClaimRewardResponse(BaseModel):
@@ -52,14 +76,10 @@ def get_user(db: Session, user_id: int):
 @router.get("/task-progress/{user_id}", response_model=TaskProgressResponse)
 async def get_task_progress(user_id: int, db: Session = Depends(get_db)):
     user = get_user(db, user_id)
-
-    return TaskProgressResponse(
-        task_progress=user.task_progress or {},
-        claimed_rewards=user.claimed_rewards or [],
-        last_daily_reset=user.last_daily_reset,
-        last_weekly_reset=user.last_weekly_reset,
-        current_week_set=user.current_week_set or "week-set-a",
-    )
+    sync_task_state(user, db)
+    recompute_all_task_progress(user, db)
+    payload = build_task_payload(user)
+    return TaskProgressResponse(**payload)
 
 
 @router.post("/task-progress/update/{user_id}")
@@ -69,12 +89,17 @@ async def update_task_progress(
     db: Session = Depends(get_db),
 ):
     user = get_user(db, user_id)
+    sync_task_state(user)
+
+    valid_task_ids = DAILY_TASK_IDS | WEEKLY_TASK_IDS
+    if request.task_id not in valid_task_ids:
+        raise HTTPException(status_code=400, detail="Unknown task id")
 
     if user.task_progress is None:
         user.task_progress = {}
 
-    user.task_progress[request.task_id] = request.progress
-
+    user.task_progress[request.task_id] = max(0, int(request.progress))
+    db.add(user)
     db.commit()
 
     return {
@@ -90,54 +115,16 @@ async def claim_reward(
     db: Session = Depends(get_db),
 ):
     user = get_user(db, user_id)
-
-    if user.claimed_rewards is None:
-        user.claimed_rewards = []
-
-    if request.task_id in user.claimed_rewards:
-        return ClaimRewardResponse(
-            success=False,
-            eco_points=user.eco_points,
-            message="Reward already claimed",
-        )
-
-    rewards = {
-        "daily-visit": 5,
-        "daily-eco": 5,
-        "daily-scan": 5,
-        "daily-map": 5,
-        "weekly-streak": 50,
-        "weekly-eco": 75,
-        "weekly-scans": 50,
-        "weekly-questions": 40,
-    }
-
-    reward = rewards.get(request.task_id, 0)
-
-    user.eco_points += reward
-    user.claimed_rewards.append(request.task_id)
-    user.level = max(1, user.eco_points // 100 + 1)
-
-    db.commit()
+    success, eco_points, message = claim_task_reward(user, request.task_id)
+    if success:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
     return ClaimRewardResponse(
-        success=True,
-        eco_points=user.eco_points,
-        message=f"Reward claimed: +{reward}",
-    )
-
-    reward = rewards.get(request.task_id, 0)
-
-    user.eco_points += reward
-    user.claimed_rewards.append(request.task_id)
-    user.level = max(1, user.eco_points // 100 + 1)
-
-    db.commit()
-
-    return ClaimRewardResponse(
-        success=True,
-        eco_points=user.eco_points,
-        message=f"Reward claimed: +{reward}",
+        success=success,
+        eco_points=eco_points,
+        message=message,
     )
 
 
@@ -147,27 +134,14 @@ async def reset_daily_tasks(
     db: Session = Depends(get_db),
 ):
     user = get_user(db, user_id)
-
-    now = datetime.utcnow()
-
-    if user.task_progress is None:
-        user.task_progress = {}
-
-    for task in [
-        "daily-visit",
-        "daily-eco",
-        "daily-scan",
-        "daily-map",
-    ]:
-        user.task_progress.pop(task, None)
-
-    user.last_daily_reset = now
-
+    changed = reset_daily_tasks_if_needed(user)
+    recompute_all_task_progress(user)
+    db.add(user)
     db.commit()
 
     return {
         "success": True,
-        "message": "Daily tasks reset",
+        "message": "Daily tasks reset" if changed else "Daily tasks already up to date",
     }
 
 
@@ -177,36 +151,46 @@ async def reset_weekly_tasks(
     db: Session = Depends(get_db),
 ):
     user = get_user(db, user_id)
-
-    now = datetime.utcnow()
-
-    if user.task_progress is None:
-        user.task_progress = {}
-
-    for task in [
-        "weekly-streak",
-        "weekly-eco",
-        "weekly-scans",
-        "weekly-questions",
-    ]:
-        user.task_progress.pop(task, None)
-
-    week_sets = [
-        "week-set-a",
-        "week-set-b",
-        "week-set-c",
-    ]
-
-    current = user.current_week_set or "week-set-a"
-
-    idx = week_sets.index(current)
-    user.current_week_set = week_sets[(idx + 1) % 3]
-
-    user.last_weekly_reset = now
-
+    changed = reset_weekly_tasks_if_needed(user)
+    recompute_all_task_progress(user)
+    db.add(user)
     db.commit()
 
     return {
         "success": True,
-        "message": "Weekly tasks reset",
+        "message": "Weekly tasks reset"
+        if changed
+        else "Weekly tasks already up to date",
+    }
+
+
+class TaskEventRequest(BaseModel):
+    event: str
+
+
+@router.post("/event/{user_id}")
+async def register_task_event(
+    user_id: int, request: TaskEventRequest, db: Session = Depends(get_db)
+):
+    user = get_user(db, user_id)
+    sync_task_state(user, db)
+
+    if request.event == "map_visit":
+        from app.services.task_service import record_map_visit
+
+        record_map_visit(user)
+    elif request.event == "route_open":
+        from app.services.task_service import record_route_open
+
+        record_route_open(user)
+    else:
+        raise HTTPException(status_code=400, detail="Unknown task event")
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "success": True,
+        "message": "Task event registered",
     }

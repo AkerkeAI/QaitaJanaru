@@ -1,7 +1,5 @@
-from datetime import datetime
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
-from sqlalchemy.orm import Session
 import traceback
+from datetime import datetime
 
 from app.db.session import SessionLocal
 from app.models.scan_history import ScanHistory
@@ -9,7 +7,10 @@ from app.models.user import User
 from app.schemas.scan import ScanResponse
 from app.services.ai_waste_detector import AIProviderError, analyze_waste_image
 from app.services.reward_service import points_for_waste
+from app.services.task_service import record_scan
 from app.services.user_service import add_eco_points, update_streak
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/scan", tags=["Scan"])
 
@@ -36,14 +37,21 @@ def _map_ai_error(exc: AIProviderError) -> HTTPException:
 
 
 @router.post("/{user_id}", response_model=ScanResponse)
-async def scan_waste(user_id: int, file: UploadFile = File(...), language: str = "en", db: Session = Depends(get_db)):
+async def scan_waste(
+    user_id: int,
+    file: UploadFile = File(...),
+    language: str = "en",
+    db: Session = Depends(get_db),
+):
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
     if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Unsupported file type. Please upload an image.")
+        raise HTTPException(
+            status_code=400, detail="Unsupported file type. Please upload an image."
+        )
 
     try:
         image_bytes = await file.read()
@@ -76,6 +84,7 @@ async def scan_waste(user_id: int, file: UploadFile = File(...), language: str =
     user.total_scans = (user.total_scans or 0) + 1
     user = add_eco_points(db, user, earned_points)
     user = update_streak(db, user)
+    record_scan(user, earned_points)
 
     scan_record = ScanHistory(
         user_id=user.id,
