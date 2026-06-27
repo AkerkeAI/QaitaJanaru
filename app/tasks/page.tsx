@@ -10,6 +10,7 @@ import { getProfile, ProfileResponse } from "../lib/api";
 import { claimReward, getTaskProgress } from "../lib/tasksApi";
 import { getAchievementChapters } from "../lib/taskConfig";
 import { buildAchievementCampaign } from "../lib/achievementCampaign";
+import { QrHeaderAction } from "../components/qr/QrHeaderAction";
 
 export default function TasksPage() {
   const router = useRouter();
@@ -298,7 +299,7 @@ export default function TasksPage() {
             </h1>
           </div>
 
-          <div className="w-12"></div>
+          <QrHeaderAction />
         </header>
 
         <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">

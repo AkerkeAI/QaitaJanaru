@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { GlobalQrScanner } from "./components/qr/GlobalQrScanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,10 +31,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <LanguageProvider>
-            {children}
-            <GlobalQrScanner />
-          </LanguageProvider>
+          <LanguageProvider>{children}</LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -17,6 +17,7 @@ import {
   type NearestRecyclingCenter,
 } from "../lib/recyclingCenters";
 import { translateWasteType } from "../lib/wasteTranslations";
+import { QrHeaderAction } from "../components/qr/QrHeaderAction";
 
 export default function ScanWastePage() {
   const router = useRouter();
@@ -315,7 +316,7 @@ export default function ScanWastePage() {
             </h1>
           </div>
 
-          <div className="w-12 flex-shrink-0"></div>
+          <QrHeaderAction />
         </header>
 
         <div className="flex-1 px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8">

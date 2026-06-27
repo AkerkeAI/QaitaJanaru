@@ -7,6 +7,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { searchRecyclingPoints, buildRoute } from "../lib/recyclingSearch";
 import { translateWasteType, preparationSteps } from "../lib/wasteTranslations";
+import { QrHeaderAction } from "../components/qr/QrHeaderAction";
 import type { RecyclingPoint } from "../data/recyclingPoints";
 
 interface Message {
@@ -590,8 +591,7 @@ export default function EcoAssistantPage() {
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Fixed Header */}
-      <header className="flex-shrink-0 flex items-center justify-between p-4 md:p-6 lg:p-8 relative z-10 pr-20 md:pr-24 lg:pr-28">
+      <header className="flex-shrink-0 flex items-center justify-between p-4 md:p-6 lg:p-8 relative z-10 gap-3">
         <button
           onClick={() => setSidebarOpen(true)}
           className="p-3 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
@@ -620,25 +620,9 @@ export default function EcoAssistantPage() {
           </svg>
         </button>
 
-        <div className="flex items-center gap-3">
-          <span className="text-2xl md:text-3xl">🤖</span>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-            {translations.common.appName}
-          </h1>
-        </div>
+        <div className="flex-1"></div>
 
-        <button
-          onClick={handleClearChat}
-          className="px-4 py-2 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg text-sm flex-shrink-0 mr-16 md:mr-18 lg:mr-20"
-          style={{
-            background: colors.cardBg,
-            borderColor: colors.border,
-            borderWidth: 1,
-            color: colors.textSecondary,
-          }}
-        >
-          {translations.ecoAssistant.clearChat}
-        </button>
+        <QrHeaderAction />
       </header>
 
       {/* Scrollable Chat Area */}
@@ -662,6 +646,21 @@ export default function EcoAssistantPage() {
           >
             {translations.ecoAssistant.subtitle}
           </p>
+        </div>
+
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={handleClearChat}
+            className="px-4 py-2 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg text-sm"
+            style={{
+              background: colors.cardBg,
+              borderColor: colors.border,
+              borderWidth: 1,
+              color: colors.textSecondary,
+            }}
+          >
+            {translations.ecoAssistant.clearChat}
+          </button>
         </div>
 
         {/* Welcome Card */}

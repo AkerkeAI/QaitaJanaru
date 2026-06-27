@@ -7,6 +7,7 @@ import { languageNames, Language } from "../lib/language";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { themeNames, Theme } from "../lib/theme";
+import { QrHeaderAction } from "../components/qr/QrHeaderAction";
 
 interface Profile {
   id: number;
@@ -75,7 +76,9 @@ export default function SettingsPage() {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
     if (!userId) return;
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile/${userId}`);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/profile/${userId}`,
+      );
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
@@ -103,9 +106,12 @@ export default function SettingsPage() {
     if (!userId) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profile/${userId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/profile/${userId}`,
+        {
+          method: "DELETE",
+        },
+      );
       if (response.ok) {
         localStorage.clear();
         alert(messages.settings.deleteAccountSuccess);
@@ -164,10 +170,12 @@ export default function SettingsPage() {
 
           <div className="flex items-center gap-3">
             <span className="text-2xl md:text-3xl">♻️</span>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">{messages.common.appName}</h1>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight">
+              {messages.common.appName}
+            </h1>
           </div>
 
-          <div className="w-12 flex-shrink-0"></div>
+          <QrHeaderAction />
         </header>
 
         {/* Content Area */}
@@ -175,8 +183,13 @@ export default function SettingsPage() {
           <div className="max-w-2xl mx-auto">
             {/* Page Title */}
             <div className="mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">⚙️ {messages.settings.title}</h2>
-              <p className="text-sm md:text-base" style={{ color: colors.textSecondary }}>
+              <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
+                ⚙️ {messages.settings.title}
+              </h2>
+              <p
+                className="text-sm md:text-base"
+                style={{ color: colors.textSecondary }}
+              >
                 {messages.settings.subtitle}
               </p>
             </div>
@@ -186,7 +199,10 @@ export default function SettingsPage() {
               {/* Theme Row */}
               <div
                 className="rounded-xl backdrop-blur-xl border overflow-hidden"
-                style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
+                style={{
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.border,
+                }}
               >
                 <button
                   onClick={() => setShowThemeModal(true)}
@@ -195,13 +211,20 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-base shadow-lg flex-shrink-0"
-                      style={{ background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})` }}
+                      style={{
+                        background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})`,
+                      }}
                     >
                       🎨
                     </div>
                     <div className="text-left min-w-0">
-                      <div className="font-semibold text-sm truncate">{messages.settings.theme}</div>
-                      <div className="text-xs truncate" style={{ color: colors.textSecondary }}>
+                      <div className="font-semibold text-sm truncate">
+                        {messages.settings.theme}
+                      </div>
+                      <div
+                        className="text-xs truncate"
+                        style={{ color: colors.textSecondary }}
+                      >
                         {themeNames[theme]}
                       </div>
                     </div>
@@ -225,7 +248,10 @@ export default function SettingsPage() {
               {/* Language Row */}
               <div
                 className="rounded-xl backdrop-blur-xl border overflow-hidden"
-                style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
+                style={{
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.border,
+                }}
               >
                 <button
                   onClick={() => setShowLanguageModal(true)}
@@ -234,13 +260,20 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-base shadow-lg flex-shrink-0"
-                      style={{ background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})` }}
+                      style={{
+                        background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})`,
+                      }}
                     >
                       🌍
                     </div>
                     <div className="text-left min-w-0">
-                      <div className="font-semibold text-sm truncate">{messages.settings.language}</div>
-                      <div className="text-xs truncate" style={{ color: colors.textSecondary }}>
+                      <div className="font-semibold text-sm truncate">
+                        {messages.settings.language}
+                      </div>
+                      <div
+                        className="text-xs truncate"
+                        style={{ color: colors.textSecondary }}
+                      >
                         {languageNames[language]}
                       </div>
                     </div>
@@ -264,7 +297,10 @@ export default function SettingsPage() {
               {/* Account Information Row */}
               <div
                 className="rounded-xl backdrop-blur-xl border overflow-hidden"
-                style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
+                style={{
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.border,
+                }}
               >
                 <button
                   onClick={fetchProfile}
@@ -273,13 +309,20 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-base shadow-lg flex-shrink-0"
-                      style={{ background: `linear-gradient(to bottom right, ${colors.accent}, ${colors.primary})` }}
+                      style={{
+                        background: `linear-gradient(to bottom right, ${colors.accent}, ${colors.primary})`,
+                      }}
                     >
                       👤
                     </div>
                     <div className="text-left min-w-0">
-                      <div className="font-semibold text-sm truncate">{messages.settings.accountInformation}</div>
-                      <div className="text-xs truncate" style={{ color: colors.textSecondary }}>
+                      <div className="font-semibold text-sm truncate">
+                        {messages.settings.accountInformation}
+                      </div>
+                      <div
+                        className="text-xs truncate"
+                        style={{ color: colors.textSecondary }}
+                      >
                         {messages.settings.accountInformationDescription}
                       </div>
                     </div>
@@ -303,7 +346,10 @@ export default function SettingsPage() {
               {/* Logout Row */}
               <div
                 className="rounded-xl backdrop-blur-xl border overflow-hidden"
-                style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
+                style={{
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.border,
+                }}
               >
                 <button
                   onClick={handleLogout}
@@ -312,12 +358,16 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-base shadow-lg flex-shrink-0"
-                      style={{ background: `linear-gradient(to bottom right, ${colors.warning}, ${colors.danger})` }}
+                      style={{
+                        background: `linear-gradient(to bottom right, ${colors.warning}, ${colors.danger})`,
+                      }}
                     >
                       🚪
                     </div>
                     <div className="text-left min-w-0">
-                      <div className="font-semibold text-sm truncate">{messages.settings.logout}</div>
+                      <div className="font-semibold text-sm truncate">
+                        {messages.settings.logout}
+                      </div>
                     </div>
                   </div>
                 </button>
@@ -326,7 +376,10 @@ export default function SettingsPage() {
               {/* Delete Account Row */}
               <div
                 className="rounded-xl backdrop-blur-xl border overflow-hidden"
-                style={{ backgroundColor: colors.dangerLight, borderColor: `${colors.danger}50` }}
+                style={{
+                  backgroundColor: colors.dangerLight,
+                  borderColor: `${colors.danger}50`,
+                }}
               >
                 <button
                   onClick={() => setShowDeleteConfirmModal(true)}
@@ -335,7 +388,9 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center text-base shadow-lg flex-shrink-0"
-                      style={{ background: `linear-gradient(to bottom right, ${colors.danger}, #7f1d1d)` }}
+                      style={{
+                        background: `linear-gradient(to bottom right, ${colors.danger}, #7f1d1d)`,
+                      }}
                     >
                       🗑️
                     </div>
@@ -389,8 +444,13 @@ export default function SettingsPage() {
               borderColor: colors.border,
             }}
           >
-            <div className="px-6 py-4 border-b flex justify-between items-center" style={{ borderColor: colors.border }}>
-              <h3 className="text-xl font-bold tracking-tight">🎨 {messages.settings.chooseTheme}</h3>
+            <div
+              className="px-6 py-4 border-b flex justify-between items-center"
+              style={{ borderColor: colors.border }}
+            >
+              <h3 className="text-xl font-bold tracking-tight">
+                🎨 {messages.settings.chooseTheme}
+              </h3>
               <button
                 onClick={() => setShowThemeModal(false)}
                 style={{ color: colors.textSecondary }}
@@ -412,7 +472,8 @@ export default function SettingsPage() {
                     style={{
                       background: tc.bg,
                       border: `2px solid ${theme === t ? tc.primary : tc.border}`,
-                      boxShadow: theme === t ? `0 0 0 2px ${tc.primary}40` : "none",
+                      boxShadow:
+                        theme === t ? `0 0 0 2px ${tc.primary}40` : "none",
                     }}
                   >
                     <div className="flex flex-col items-center gap-2">
@@ -429,7 +490,9 @@ export default function SettingsPage() {
                         {themeNames[t]}
                       </span>
                       {theme === t && (
-                        <span className="text-xs" style={{ color: tc.primary }}>✓</span>
+                        <span className="text-xs" style={{ color: tc.primary }}>
+                          ✓
+                        </span>
                       )}
                     </div>
                   </button>
@@ -455,8 +518,13 @@ export default function SettingsPage() {
               borderColor: colors.border,
             }}
           >
-            <div className="px-6 py-4 border-b" style={{ borderColor: colors.border }}>
-              <h3 className="text-xl font-bold tracking-tight">⚙️ {messages.settings.language}</h3>
+            <div
+              className="px-6 py-4 border-b"
+              style={{ borderColor: colors.border }}
+            >
+              <h3 className="text-xl font-bold tracking-tight">
+                ⚙️ {messages.settings.language}
+              </h3>
             </div>
             <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
               {Object.keys(languageNames).map((lang) => (
@@ -465,8 +533,12 @@ export default function SettingsPage() {
                   onClick={() => handleLanguageSelect(lang as Language)}
                   className="w-full px-4 py-3 flex items-center justify-between rounded-xl transition-colors text-sm font-medium"
                   style={{
-                    backgroundColor: language === lang ? `${colors.primary}30` : "transparent",
-                    border: language === lang ? `1px solid ${colors.primary}60` : "none",
+                    backgroundColor:
+                      language === lang ? `${colors.primary}30` : "transparent",
+                    border:
+                      language === lang
+                        ? `1px solid ${colors.primary}60`
+                        : "none",
                   }}
                 >
                   <span>{languageNames[lang as Language]}</span>
@@ -495,8 +567,13 @@ export default function SettingsPage() {
               borderColor: colors.border,
             }}
           >
-            <div className="px-6 py-4 border-b flex justify-between items-center" style={{ borderColor: colors.border }}>
-              <h3 className="text-xl font-bold tracking-tight">👤 {messages.settings.accountInformation}</h3>
+            <div
+              className="px-6 py-4 border-b flex justify-between items-center"
+              style={{ borderColor: colors.border }}
+            >
+              <h3 className="text-xl font-bold tracking-tight">
+                👤 {messages.settings.accountInformation}
+              </h3>
               <button
                 onClick={() => setShowAccountModal(false)}
                 style={{ color: colors.textSecondary }}
@@ -591,8 +668,13 @@ export default function SettingsPage() {
               borderColor: colors.border,
             }}
           >
-            <div className="px-6 py-4 border-b flex justify-between items-center" style={{ borderColor: colors.border }}>
-              <h3 className="text-xl font-bold tracking-tight">🗑️ {messages.settings.deleteAccount}</h3>
+            <div
+              className="px-6 py-4 border-b flex justify-between items-center"
+              style={{ borderColor: colors.border }}
+            >
+              <h3 className="text-xl font-bold tracking-tight">
+                🗑️ {messages.settings.deleteAccount}
+              </h3>
               <button
                 onClick={() => setShowDeleteConfirmModal(false)}
                 style={{ color: colors.textSecondary }}
@@ -602,7 +684,9 @@ export default function SettingsPage() {
               </button>
             </div>
             <div className="p-6 space-y-6">
-              <p className="text-lg">{messages.settings.deleteAccountConfirm}</p>
+              <p className="text-lg">
+                {messages.settings.deleteAccountConfirm}
+              </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteConfirmModal(false)}
