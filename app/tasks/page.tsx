@@ -94,6 +94,73 @@ export default function TasksPage() {
     }
   };
 
+  const getLocalizedTask = (task: Task): Task => {
+    const localizedMap: Record<string, { title: string; description: string }> =
+      {
+        "daily-login": {
+          title: messages.tasks.dailyLoginTitle,
+          description: messages.tasks.dailyLoginDesc,
+        },
+        "daily-scan-1": {
+          title: messages.tasks.dailyScan1Title,
+          description: messages.tasks.dailyScan1Desc,
+        },
+        "daily-scan-3": {
+          title: messages.tasks.dailyScan3Title,
+          description: messages.tasks.dailyScan3Desc,
+        },
+        "daily-chat-1": {
+          title: messages.tasks.dailyChat1Title,
+          description: messages.tasks.dailyChat1Desc,
+        },
+        "daily-earn-20": {
+          title: messages.tasks.dailyEarn20Title,
+          description: messages.tasks.dailyEarn20Desc,
+        },
+        "daily-route-1": {
+          title: messages.tasks.dailyRoute1Title,
+          description: messages.tasks.dailyRoute1Desc,
+        },
+        "daily-map-1": {
+          title: messages.tasks.dailyMap1Title,
+          description: messages.tasks.dailyMap1Desc,
+        },
+        "weekly-scan-15": {
+          title: messages.tasks.weeklyScan15Title,
+          description: messages.tasks.weeklyScan15Desc,
+        },
+        "weekly-scan-30": {
+          title: messages.tasks.weeklyScan30Title,
+          description: messages.tasks.weeklyScan30Desc,
+        },
+        "weekly-earn-300": {
+          title: messages.tasks.weeklyEarn300Title,
+          description: messages.tasks.weeklyEarn300Desc,
+        },
+        "weekly-streak-5": {
+          title: messages.tasks.weeklyStreak5Title,
+          description: messages.tasks.weeklyStreak5Desc,
+        },
+        "weekly-chat-10": {
+          title: messages.tasks.weeklyChat10Title,
+          description: messages.tasks.weeklyChat10Desc,
+        },
+        "weekly-route-5": {
+          title: messages.tasks.weeklyRoute5Title,
+          description: messages.tasks.weeklyRoute5Desc,
+        },
+      };
+
+    const localized = localizedMap[task.id];
+    return localized
+      ? {
+          ...task,
+          title: localized.title,
+          description: localized.description,
+        }
+      : task;
+  };
+
   const TaskCard = ({ task }: { task: Task }) => {
     const progress = Math.min(task.current / task.target, 1);
     const canClaim =
@@ -336,7 +403,7 @@ export default function TasksPage() {
 
               <div className="grid grid-cols-1 gap-4">
                 {dailyTasks.map((task) => (
-                  <TaskCard key={task.id} task={task} />
+                  <TaskCard key={task.id} task={getLocalizedTask(task)} />
                 ))}
               </div>
             </div>
@@ -374,7 +441,7 @@ export default function TasksPage() {
 
               <div className="grid grid-cols-1 gap-4">
                 {weeklyTasks.map((task) => (
-                  <TaskCard key={task.id} task={task} />
+                  <TaskCard key={task.id} task={getLocalizedTask(task)} />
                 ))}
               </div>
             </div>

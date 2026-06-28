@@ -605,7 +605,7 @@ export default function EcoAssistantPage() {
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <header className="flex-shrink-0 flex items-center justify-between p-4 md:p-6 lg:p-8 relative z-10 gap-3">
+      <header className="flex-shrink-0 flex items-center justify-between p-4 md:p-6 lg:p-8 relative gap-3">
         <button
           onClick={() => setSidebarOpen(true)}
           className="p-3 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
@@ -670,7 +670,7 @@ export default function EcoAssistantPage() {
       </header>
 
       {/* Scrollable Chat Area */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 relative z-10">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 relative">
         {/* Page Title */}
         <div className="mb-6 text-center">
           <div
@@ -925,7 +925,7 @@ export default function EcoAssistantPage() {
       </div>
 
       {/* Fixed Input Area */}
-      <div className="flex-shrink-0 px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8 relative z-10">
+      <div className="flex-shrink-0 px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8 relative">
         {/* Hide Safari default media controls */}
         <style jsx global>{`
           /* Hide Safari's default media controls */
