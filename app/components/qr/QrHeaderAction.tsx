@@ -1,5 +1,7 @@
 "use client";
 
+import jsQR from "jsqr";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -13,6 +15,7 @@ type BarcodeDetectorCtor = new (options: {
 }) => BarcodeDetectorLike;
 
 export function QrHeaderAction() {
+  const router = useRouter();
   const { messages } = useLanguage();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
@@ -22,6 +25,8 @@ export function QrHeaderAction() {
   const streamRef = useRef<MediaStream | null>(null);
   const detectorRef = useRef<BarcodeDetectorLike | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const navigatingRef = useRef(false);
 
   const stopScanner = useCallback(() => {
     if (animationFrameRef.current !== null) {
@@ -49,6 +54,68 @@ export function QrHeaderAction() {
     if (!open) {
       return;
     }
+
+    const handleDetectedValue = (rawValue: string) => {
+      if (navigatingRef.current) {
+        return;
+      }
+
+      let targetPath: string | null = null;
+
+      try {
+        const parsedUrl = new URL(rawValue);
+        if (parsedUrl.pathname.startsWith("/qr/")) {
+          targetPath = `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+        }
+      } catch {
+        if (rawValue.startsWith("/qr/")) {
+          targetPath = rawValue;
+        }
+      }
+
+      if (!targetPath) {
+        const match = rawValue.match(/\/qr\/(\d+)/);
+        if (match) {
+          targetPath = `/qr/${match[1]}`;
+        }
+      }
+
+      if (!targetPath) {
+        setPermissionError(messages.tasks.qrUnsupported);
+        return;
+      }
+
+      navigatingRef.current = true;
+      stopScanner();
+      setOpen(false);
+      router.push(targetPath);
+    };
+
+    const decodeWithJsQr = (video: HTMLVideoElement): string | null => {
+      const canvas = canvasRef.current ?? document.createElement("canvas");
+      canvasRef.current = canvas;
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+
+      if (!width || !height) {
+        return null;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context) {
+        return null;
+      }
+
+      context.drawImage(video, 0, 0, width, height);
+      const imageData = context.getImageData(0, 0, width, height);
+      const decoded = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert",
+      });
+
+      return decoded?.data ?? null;
+    };
 
     const startScanner = async () => {
       try {
@@ -95,16 +162,20 @@ export function QrHeaderAction() {
           }
 
           try {
+            let rawValue: string | null = null;
+
             if (detectorRef.current) {
               const barcodes = await detectorRef.current.detect(video);
-              if (barcodes?.length) {
-                const rawValue = barcodes[0]?.rawValue;
-                if (rawValue) {
-                  console.log("QR detected:", rawValue);
-                  setOpen(false);
-                  return;
-                }
-              }
+              rawValue = barcodes?.[0]?.rawValue ?? null;
+            }
+
+            if (!rawValue) {
+              rawValue = decodeWithJsQr(video);
+            }
+
+            if (rawValue) {
+              handleDetectedValue(rawValue);
+              return;
             }
           } catch (error) {
             console.error("QR scan error:", error);
@@ -128,6 +199,7 @@ export function QrHeaderAction() {
 
     return () => {
       stopScanner();
+      navigatingRef.current = false;
       setPermissionError(null);
       setScannerReady(false);
     };
@@ -135,6 +207,7 @@ export function QrHeaderAction() {
     open,
     messages.tasks.qrPermissionDenied,
     messages.tasks.qrUnsupported,
+    router,
     stopScanner,
   ]);
 

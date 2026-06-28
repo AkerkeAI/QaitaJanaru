@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@libsql/client": "^0.17.3",
+    "jsqr": "^1.4.0",
     "leaflet": "^1.9.4",
     "next": "16.2.6",
     "next-auth": "^5.0.0-beta.31",
