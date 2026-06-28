@@ -7,5 +7,6 @@ passlib[bcrypt]
 python-multipart
 pydantic
 pydantic-settings
+email-validator
 requests
 segno
