@@ -1,7 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
-import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
 
 interface UserStatusHeaderProps {
@@ -10,16 +8,12 @@ interface UserStatusHeaderProps {
   level?: number;
 }
 
-export function UserStatusHeader({ ecoPoints = 0, streak = 0, level = 1 }: UserStatusHeaderProps) {
-  const { messages } = useLanguage();
+export function UserStatusHeader({
+  ecoPoints = 0,
+  streak = 0,
+  level = 1,
+}: UserStatusHeaderProps) {
   const { colors } = useTheme();
-
-  const streakLabel = useMemo(() => {
-    if (streak === 1) {
-      return messages.statusBar.dayStreak;
-    }
-    return messages.statusBar.daysStreak.replace("{count}", String(streak));
-  }, [messages.statusBar.dayStreak, messages.statusBar.daysStreak, streak]);
 
   return (
     <div
@@ -33,15 +27,14 @@ export function UserStatusHeader({ ecoPoints = 0, streak = 0, level = 1 }: UserS
           borderColor: colors.border,
         }}
       >
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 md:gap-x-4 text-sm md:text-base">
-          <span className="font-semibold" style={{ color: colors.text }}>
-            🌱 {messages.statusBar.ecoPoints}: {ecoPoints}
-          </span>
-          <span style={{ color: colors.textSecondary }}>
-            🔥 {streakLabel}
-          </span>
-          <span className="hidden sm:inline" style={{ color: colors.textSecondary }}>
-            ⭐ {messages.statusBar.level}: {level}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 md:gap-x-4 text-sm md:text-base font-semibold">
+          <span style={{ color: colors.text }}>🌱 {ecoPoints}</span>
+          <span style={{ color: colors.textSecondary }}>🔥 {streak}</span>
+          <span
+            className="hidden sm:inline"
+            style={{ color: colors.textSecondary }}
+          >
+            ⭐ {level}
           </span>
         </div>
       </div>

@@ -24,6 +24,9 @@ import {
 } from "../lib/wasteTranslations";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
 import { buildRoute } from "../lib/recyclingSearch";
+import { UserStatusHeader } from "../components/UserStatusHeader";
+import { getStatusHeaderValues } from "../lib/profileHelpers";
+import { getProfile, ProfileResponse } from "../lib/api";
 
 // Dynamically import Leaflet components to avoid SSR issues
 const MapContainer = dynamic(
@@ -78,6 +81,7 @@ export default function RecyclingMapPage() {
   );
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [recyclingPoints, setRecyclingPoints] = useState<RecyclingPoint[]>([]);
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const mapRef = useRef<any>(null);
   const { messages, language } = useLanguage();
   const { theme, colors } = useTheme();
@@ -146,6 +150,10 @@ export default function RecyclingMapPage() {
       router.push("/login");
       return;
     }
+
+    void getProfile(userId)
+      .then(setProfile)
+      .catch((error) => console.error("Failed to load profile header:", error));
 
     const loadRecyclingPoints = async () => {
       try {
@@ -288,7 +296,7 @@ export default function RecyclingMapPage() {
 
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header */}
-        <header className="flex items-center justify-between p-4 md:p-6 lg:p-8 flex-shrink-0">
+        <header className="flex items-center justify-between gap-3 p-4 md:p-6 lg:p-8 flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-3 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
@@ -317,31 +325,13 @@ export default function RecyclingMapPage() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-3">
-            <span className="text-2xl md:text-3xl">♻️</span>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-              {messages.recyclingMap.title}
-            </h1>
-          </div>
+          <UserStatusHeader {...getStatusHeaderValues(profile)} />
 
           <QrHeaderAction />
         </header>
 
         {/* Content Area */}
         <div className="flex-1 px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8">
-          {/* Page Title */}
-          <div className="mb-4">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
-              🗺️ {messages.recyclingMap.title}
-            </h2>
-            <p
-              className="text-sm md:text-base"
-              style={{ color: colors.textSecondary }}
-            >
-              {messages.recyclingMap.subtitle}
-            </p>
-          </div>
-
           {/* Map Container - Integrated into page */}
           <div
             className="relative rounded-3xl overflow-hidden backdrop-blur-xl"

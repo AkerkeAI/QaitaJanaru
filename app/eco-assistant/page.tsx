@@ -8,6 +8,9 @@ import { useTheme } from "../contexts/ThemeContext";
 import { searchRecyclingPoints, buildRoute } from "../lib/recyclingSearch";
 import { translateWasteType, preparationSteps } from "../lib/wasteTranslations";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
+import { UserStatusHeader } from "../components/UserStatusHeader";
+import { getStatusHeaderValues } from "../lib/profileHelpers";
+import { getProfile, ProfileResponse } from "../lib/api";
 import {
   getRecyclingPoints,
   type RecyclingPoint,
@@ -28,6 +31,7 @@ export default function EcoAssistantPage() {
   const [inputText, setInputText] = useState("");
   const [recyclingPoints, setRecyclingPoints] = useState<RecyclingPoint[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
@@ -65,6 +69,10 @@ export default function EcoAssistantPage() {
     }
 
     // Load chat history from backend
+    void getProfile(userId)
+      .then(setProfile)
+      .catch((error) => console.error("Failed to load profile header:", error));
+
     const loadChatHistory = async () => {
       try {
         const response = await fetch(
@@ -634,7 +642,9 @@ export default function EcoAssistantPage() {
           </svg>
         </button>
 
-        <div className="ml-auto flex items-center gap-3">
+        <UserStatusHeader {...getStatusHeaderValues(profile)} />
+
+        <div className="flex items-center gap-3">
           <button
             onClick={handleClearChat}
             className="px-4 py-2.5 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg text-sm flex items-center gap-2"
@@ -671,27 +681,6 @@ export default function EcoAssistantPage() {
 
       {/* Scrollable Chat Area */}
       <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 relative">
-        {/* Page Title */}
-        <div className="mb-6 text-center">
-          <div
-            className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 shadow-lg"
-            style={{
-              background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})`,
-            }}
-          >
-            <span className="text-4xl">🤖</span>
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
-            {translations.ecoAssistant.title}
-          </h2>
-          <p
-            className="text-sm md:text-base"
-            style={{ color: colors.textSecondary }}
-          >
-            {translations.ecoAssistant.subtitle}
-          </p>
-        </div>
-
         {/* Welcome Card */}
         <div
           className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-6 mb-6"

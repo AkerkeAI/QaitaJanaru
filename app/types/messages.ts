@@ -82,6 +82,7 @@ export interface Messages {
     otherRecyclable: string;
     submissionCount: string;
     streakDays: string;
+    showAllActivity: string;
   };
   leaderboard: {
     title: string;

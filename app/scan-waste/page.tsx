@@ -18,6 +18,9 @@ import {
 } from "../lib/recyclingCenters";
 import { translateWasteType } from "../lib/wasteTranslations";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
+import { UserStatusHeader } from "../components/UserStatusHeader";
+import { getStatusHeaderValues } from "../lib/profileHelpers";
+import { getProfile, ProfileResponse } from "../lib/api";
 import {
   getRecyclingPoints,
   type RecyclingPoint,
@@ -32,7 +35,7 @@ export default function ScanWastePage() {
   const [scanResult, setScanResult] = useState<WasteDetectionResult | null>(
     null,
   );
-  const [scanResponse, setScanResponse] = useState<ScanResponse | null>(null);
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [nearestCenters, setNearestCenters] = useState<
     NearestRecyclingCenter[]
   >([]);
@@ -70,6 +73,10 @@ export default function ScanWastePage() {
       router.push("/login");
       return;
     }
+
+    void getProfile(userId)
+      .then(setProfile)
+      .catch((error) => console.error("Failed to load profile header:", error));
 
     const loadRecyclingPoints = async () => {
       try {
@@ -147,7 +154,6 @@ export default function ScanWastePage() {
     setLoadingState("uploading");
     setError(null);
     setScanResult(null);
-    setScanResponse(null);
     setNearestCenters([]);
 
     try {
@@ -187,7 +193,6 @@ export default function ScanWastePage() {
       };
 
       setScanResult(result);
-      setScanResponse(data);
       setNearestCenters(
         findNearestRecyclingCenters(
           recyclingPoints,
@@ -210,7 +215,6 @@ export default function ScanWastePage() {
     setSelectedImage(null);
     setSelectedFile(null);
     setScanResult(null);
-    setScanResponse(null);
     setNearestCenters([]);
     setError(null);
     setLoadingState("idle");
@@ -314,29 +318,12 @@ export default function ScanWastePage() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-3">
-            <span className="text-2xl md:text-3xl">♻️</span>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-              {messages.scanWaste.title}
-            </h1>
-          </div>
+          <UserStatusHeader {...getStatusHeaderValues(profile)} />
 
           <QrHeaderAction />
         </header>
 
         <div className="flex-1 px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8">
-          <div className="mb-6">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
-              📸 {messages.scanWaste.title}
-            </h2>
-            <p
-              className="text-sm md:text-base"
-              style={{ color: colors.textSecondary }}
-            >
-              {messages.scanWaste.subtitle}
-            </p>
-          </div>
-
           {!selectedImage && loadingState === "idle" && !scanResult && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -647,79 +634,6 @@ export default function ScanWastePage() {
                   </div>
                 </div>
               </div>
-
-              {scanResponse && (
-                <div
-                  className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-6"
-                  style={{
-                    borderColor: `${colors.primary}30`,
-                    borderWidth: 1,
-                    background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)`,
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p
-                        className="text-sm mb-1"
-                        style={{ color: colors.textSecondary }}
-                      >
-                        {messages.scanWaste.pointsEarned}
-                      </p>
-                      <p
-                        className="text-2xl font-bold"
-                        style={{ color: colors.text }}
-                      >
-                        +{scanResponse.total_reward}
-                      </p>
-                      <div
-                        className="mt-3 space-y-1 text-sm"
-                        style={{ color: colors.textSecondary }}
-                      >
-                        <div>
-                          {messages.scanWaste.scanReward}: +
-                          {scanResponse.scan_reward}
-                        </div>
-                        <div>
-                          {messages.scanWaste.taskRewards}: +
-                          {scanResponse.task_rewards}
-                        </div>
-                        {scanResponse.daily_task_rewards > 0 && (
-                          <div>
-                            {messages.scanWaste.dailyTaskRewards}: +
-                            {scanResponse.daily_task_rewards}
-                          </div>
-                        )}
-                        {scanResponse.weekly_task_rewards > 0 && (
-                          <div>
-                            {messages.scanWaste.weeklyTaskRewards}: +
-                            {scanResponse.weekly_task_rewards}
-                          </div>
-                        )}
-                        {scanResponse.auto_claimed_task_ids.length > 0 && (
-                          <div>
-                            {messages.scanWaste.autoBonuses}:{" "}
-                            {scanResponse.auto_claimed_task_ids.length}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p
-                        className="text-sm mb-1"
-                        style={{ color: colors.textSecondary }}
-                      >
-                        {messages.scanWaste.totalPoints}
-                      </p>
-                      <p
-                        className="text-2xl font-bold"
-                        style={{ color: colors.text }}
-                      >
-                        {scanResponse.new_total_points}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <div
                 className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-6"

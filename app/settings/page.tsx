@@ -8,6 +8,8 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { themeNames, Theme } from "../lib/theme";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
+import { UserStatusHeader } from "../components/UserStatusHeader";
+import { getStatusHeaderValues } from "../lib/profileHelpers";
 
 interface Profile {
   id: number;
@@ -168,12 +170,7 @@ export default function SettingsPage() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-3">
-            <span className="text-2xl md:text-3xl">♻️</span>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-              {messages.common.appName}
-            </h1>
-          </div>
+          <UserStatusHeader {...getStatusHeaderValues(profile)} />
 
           <QrHeaderAction />
         </header>
@@ -181,19 +178,6 @@ export default function SettingsPage() {
         {/* Content Area */}
         <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
           <div className="max-w-2xl mx-auto">
-            {/* Page Title */}
-            <div className="mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
-                ⚙️ {messages.settings.title}
-              </h2>
-              <p
-                className="text-sm md:text-base"
-                style={{ color: colors.textSecondary }}
-              >
-                {messages.settings.subtitle}
-              </p>
-            </div>
-
             {/* Settings List */}
             <div className="space-y-3">
               {/* Theme Row */}

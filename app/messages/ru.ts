@@ -85,6 +85,7 @@ export const messages: Messages = {
     otherRecyclable: "Другие перерабатываемые отходы",
     submissionCount: "отправок",
     streakDays: "дней серии",
+    showAllActivity: "Показать всю активность",
   },
   statusBar: {
     ecoPoints: "Эко-баллы",

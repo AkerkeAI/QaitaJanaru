@@ -6,6 +6,9 @@ import { Sidebar } from "../../../components/Sidebar";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { QrHeaderAction } from "../../../components/qr/QrHeaderAction";
+import { UserStatusHeader } from "../../../components/UserStatusHeader";
+import { getStatusHeaderValues } from "../../../lib/profileHelpers";
+import { getProfile, ProfileResponse } from "../../../lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -27,6 +30,7 @@ export default function CityLeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const { messages } = useLanguage();
   const { colors } = useTheme();
   const touchStartX = useRef(0);
@@ -59,6 +63,13 @@ export default function CityLeaderboardPage() {
   }, [sidebarOpen]);
 
   useEffect(() => {
+    const userId = localStorage.getItem("qaitaJanaru_user_id");
+    if (userId) {
+      void getProfile(userId)
+        .then(setProfile)
+        .catch((err) => console.error("Failed to load profile header:", err));
+    }
+
     const loadLeaderboard = async () => {
       if (!params.cityName) return;
 
@@ -120,7 +131,7 @@ export default function CityLeaderboardPage() {
 
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header with hamburger menu */}
-        <header className="flex items-center justify-between p-4 md:p-6 lg:p-8">
+        <header className="flex items-center justify-between gap-3 p-4 md:p-6 lg:p-8">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group"
@@ -143,12 +154,7 @@ export default function CityLeaderboardPage() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-3">
-            <span className="text-2xl md:text-3xl">♻️</span>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-              {messages.common.appName}
-            </h1>
-          </div>
+          <UserStatusHeader {...getStatusHeaderValues(profile)} />
 
           <QrHeaderAction />
         </header>
@@ -180,15 +186,12 @@ export default function CityLeaderboardPage() {
                 </svg>
                 {messages.leaderboard.backToLeaderboard}
               </button>
-              <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
-                📍 {decodeURIComponent(params.cityName as string)}
-              </h2>
-              <p
-                className="text-sm md:text-base"
+              <div
+                className="text-base md:text-lg font-semibold"
                 style={{ color: colors.textSecondary }}
               >
-                {messages.leaderboard.cityLeaderboard}
-              </p>
+                📍 {decodeURIComponent(params.cityName as string)}
+              </div>
             </div>
 
             {/* Leaderboard Card */}

@@ -85,6 +85,7 @@ export const messages: Messages = {
     otherRecyclable: "Басқа қайта өңделетін қалдықтар",
     submissionCount: "жіберілім",
     streakDays: "күндік серия",
+    showAllActivity: "Барлық белсенділікті көрсету",
   },
   statusBar: {
     ecoPoints: "Эко-ұпайлар",

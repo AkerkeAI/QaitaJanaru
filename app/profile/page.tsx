@@ -33,6 +33,7 @@ export default function ProfilePage() {
     message: string;
     fading: boolean;
   }>({ show: false, streak: 0, message: "", fading: false });
+  const [showAllActivity, setShowAllActivity] = useState(false);
   const { messages } = useLanguage();
   const { colors } = useTheme();
   const touchStartX = useRef(0);
@@ -199,6 +200,10 @@ export default function ProfilePage() {
       }),
     }));
   }, [materialLabelMap, profile]);
+
+  const visibleRecentActivity = showAllActivity
+    ? recentActivity
+    : recentActivity.slice(0, 3);
 
   if (loading) {
     return (
@@ -588,7 +593,7 @@ export default function ProfilePage() {
 
               <div className="space-y-4">
                 {recentActivity.length > 0 ? (
-                  recentActivity.map((activity, index) => (
+                  visibleRecentActivity.map((activity, index) => (
                     <div
                       key={`${activity.id}-${activity.material}-${index}`}
                       className="rounded-2xl border p-4 md:p-5"
@@ -668,6 +673,20 @@ export default function ProfilePage() {
                   </div>
                 )}
               </div>
+
+              {recentActivity.length > 3 && !showAllActivity ? (
+                <button
+                  type="button"
+                  onClick={() => setShowAllActivity(true)}
+                  className="mt-5 w-full md:w-auto px-5 py-3 rounded-2xl font-semibold transition-all duration-300 hover:scale-[1.02]"
+                  style={{
+                    background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
+                    color: colors.buttonText,
+                  }}
+                >
+                  {messages.profile.showAllActivity}
+                </button>
+              ) : null}
             </section>
           </div>
         </div>

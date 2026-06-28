@@ -6,6 +6,9 @@ import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
+import { UserStatusHeader } from "../components/UserStatusHeader";
+import { getStatusHeaderValues } from "../lib/profileHelpers";
+import { getProfile, ProfileResponse } from "../lib/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -27,6 +30,7 @@ export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const { messages } = useLanguage();
   const { colors } = useTheme();
   const touchStartX = useRef(0);
@@ -64,6 +68,10 @@ export default function LeaderboardPage() {
       router.push("/login");
       return;
     }
+
+    void getProfile(userId)
+      .then(setProfile)
+      .catch((err) => console.error("Failed to load profile header:", err));
   }, [router]);
 
   useEffect(() => {
@@ -142,7 +150,7 @@ export default function LeaderboardPage() {
 
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header with hamburger menu */}
-        <header className="flex items-center justify-between p-4 md:p-6 lg:p-8">
+        <header className="flex items-center justify-between gap-3 p-4 md:p-6 lg:p-8">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group"
@@ -165,12 +173,7 @@ export default function LeaderboardPage() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-3">
-            <span className="text-2xl md:text-3xl">♻️</span>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-              {messages.common.appName}
-            </h1>
-          </div>
+          <UserStatusHeader {...getStatusHeaderValues(profile)} />
 
           <QrHeaderAction />
         </header>
@@ -178,19 +181,6 @@ export default function LeaderboardPage() {
         {/* Main Content */}
         <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
           <div className="max-w-4xl mx-auto space-y-8 md:space-y-10">
-            {/* Page Title */}
-            <div className="text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-2 tracking-tight">
-                {messages.leaderboard.title}
-              </h2>
-              <p
-                className="text-sm md:text-base"
-                style={{ color: colors.textSecondary }}
-              >
-                {messages.leaderboard.subtitle}
-              </p>
-            </div>
-
             {/* Tabs */}
             <div
               className="relative rounded-2xl backdrop-blur-xl border shadow-xl p-2"

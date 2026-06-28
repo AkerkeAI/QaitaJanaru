@@ -85,6 +85,7 @@ export const messages: Messages = {
     otherRecyclable: "Other recyclable waste",
     submissionCount: "submissions",
     streakDays: "day streak",
+    showAllActivity: "Show all activity",
   },
   statusBar: {
     ecoPoints: "Eco Points",
