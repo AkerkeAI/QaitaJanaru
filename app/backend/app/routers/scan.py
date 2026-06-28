@@ -6,9 +6,8 @@ from app.models.scan_history import ScanHistory
 from app.models.user import User
 from app.schemas.scan import ScanResponse
 from app.services.ai_waste_detector import AIProviderError, analyze_waste_image
+from app.services.progression_service import apply_recycling_action_progression
 from app.services.reward_service import points_for_waste
-from app.services.task_service import auto_claim_completed_tasks, record_scan
-from app.services.user_service import add_eco_points, update_streak
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
@@ -81,12 +80,13 @@ async def scan_waste(
         ) from exc
 
     earned_points = points_for_waste(result["waste_type"])
-    user.total_scans = (user.total_scans or 0) + 1
-    user = add_eco_points(db, user, earned_points)
-    user = update_streak(db, user)
-    record_scan(user, earned_points)
-    reward_summary = auto_claim_completed_tasks(user)
-    total_reward = earned_points + int(reward_summary["task_rewards"])
+    progression = apply_recycling_action_progression(
+        db,
+        user,
+        earned_points=earned_points,
+        scan_increment=1,
+    )
+    user = progression["user"]
 
     scan_record = ScanHistory(
         user_id=user.id,
@@ -121,10 +121,10 @@ async def scan_waste(
         "recyclable": result["recyclable"],
         "earned_points": earned_points,
         "scan_reward": earned_points,
-        "task_rewards": int(reward_summary["task_rewards"]),
-        "daily_task_rewards": int(reward_summary["daily_task_rewards"]),
-        "weekly_task_rewards": int(reward_summary["weekly_task_rewards"]),
-        "auto_claimed_task_ids": list(reward_summary["claimed_task_ids"]),
-        "total_reward": total_reward,
+        "task_rewards": int(progression["task_rewards"]),
+        "daily_task_rewards": int(progression["daily_task_rewards"]),
+        "weekly_task_rewards": int(progression["weekly_task_rewards"]),
+        "auto_claimed_task_ids": list(progression["auto_claimed_task_ids"]),
+        "total_reward": int(progression["total_reward"]),
         "new_total_points": user.eco_points,
     }

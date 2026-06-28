@@ -8,8 +8,8 @@ import segno
 from app.models.qr_claim import QrClaim
 from app.models.recycling_point import RecyclingPoint
 from app.models.user import User
+from app.services.progression_service import apply_recycling_action_progression
 from app.services.recycling_points_seed import build_qr_identifier
-from app.services.task_service import auto_claim_completed_tasks
 from sqlalchemy.orm import Session
 
 QR_BASE_URL = "https://qaita-janaru.vercel.app/qr"
@@ -130,11 +130,13 @@ def claim_qr_reward(
             "total_reward": 0,
         }
 
-    user.eco_points = int(user.eco_points or 0) + QR_REWARD_POINTS
-    user.level = max(1, user.eco_points // 100 + 1)
-
-    reward_summary = auto_claim_completed_tasks(user)
-    total_reward = QR_REWARD_POINTS + int(reward_summary["task_rewards"])
+    progression = apply_recycling_action_progression(
+        db,
+        user,
+        earned_points=QR_REWARD_POINTS,
+        scan_increment=1,
+    )
+    user = progression["user"]
 
     db.add(
         QrClaim(
@@ -144,7 +146,6 @@ def claim_qr_reward(
             points_awarded=QR_REWARD_POINTS,
         )
     )
-    db.add(user)
     db.commit()
     db.refresh(user)
 
@@ -156,8 +157,8 @@ def claim_qr_reward(
         "qr_identifier": point.qr_identifier,
         "points_awarded": QR_REWARD_POINTS,
         "eco_points": int(user.eco_points or 0),
-        "task_rewards": int(reward_summary["task_rewards"]),
-        "total_reward": total_reward,
+        "task_rewards": int(progression["task_rewards"]),
+        "total_reward": int(progression["total_reward"]),
     }
 
 
