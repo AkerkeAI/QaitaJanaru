@@ -11,6 +11,8 @@ import { claimReward, getTaskProgress } from "../lib/tasksApi";
 import { getAchievementChapters } from "../lib/taskConfig";
 import { buildAchievementCampaign } from "../lib/achievementCampaign";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
+import { UserStatusHeader } from "../components/UserStatusHeader";
+import { getStatusHeaderValues } from "../lib/profileHelpers";
 
 export default function TasksPage() {
   const router = useRouter();
@@ -192,7 +194,9 @@ export default function TasksPage() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2 gap-2">
-              <h4 className="font-bold text-lg truncate">{task.title}</h4>
+              <h4 className="font-bold text-lg leading-snug break-words whitespace-normal">
+                {task.title}
+              </h4>
               {task.reward > 0 && (
                 <div
                   className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold"
@@ -336,7 +340,7 @@ export default function TasksPage() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="relative z-10 min-h-screen flex flex-col">
-        <header className="flex items-center justify-between p-4 md:p-6 lg:p-8">
+        <header className="flex items-center justify-between gap-3 p-4 md:p-6 lg:p-8">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group"
@@ -359,12 +363,7 @@ export default function TasksPage() {
             </svg>
           </button>
 
-          <div className="flex items-center gap-3">
-            <span className="text-2xl md:text-3xl">📋</span>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-              {messages.tasks.title}
-            </h1>
-          </div>
+          <UserStatusHeader {...getStatusHeaderValues(profile)} />
 
           <QrHeaderAction />
         </header>

@@ -60,6 +60,28 @@ export interface Messages {
     waterSaved: string;
     streakNotification1Day: string;
     streakNotificationXDays: string;
+    recyclingSummary: string;
+    totalRecyclingActions: string;
+    totalEcoPointsEarned: string;
+    materialsRecycled: string;
+    recyclingDistribution: string;
+    recentActivity: string;
+    noRecentActivity: string;
+    recyclingPoint: string;
+    material: string;
+    quantity: string;
+    ecoPointsEarned: string;
+    date: string;
+    plasticBottles: string;
+    glass: string;
+    paper: string;
+    metalCans: string;
+    batteries: string;
+    electronics: string;
+    cardboard: string;
+    otherRecyclable: string;
+    submissionCount: string;
+    streakDays: string;
   };
   leaderboard: {
     title: string;
@@ -232,6 +254,13 @@ export interface Messages {
     sortingStation: string;
     recyclingPlant: string;
     hazardousDisposal: string;
+  };
+  statusBar: {
+    ecoPoints: string;
+    streak: string;
+    dayStreak: string;
+    daysStreak: string;
+    level: string;
   };
   qr: {
     title: string;

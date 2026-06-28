@@ -26,8 +26,29 @@ export interface LoginResponse {
   streak: number;
 }
 
+export interface RecyclingMaterialStatsResponse {
+  key: string;
+  quantity: number;
+}
+
+export interface RecentRecyclingActivityResponse {
+  id: number;
+  created_at: string;
+  recycling_point_name: string;
+  material: string;
+  quantity: number;
+  eco_points_awarded: number;
+}
+
+export interface RecyclingAnalyticsResponse {
+  total_recycling_actions: number;
+  total_eco_points_earned: number;
+  materials: RecyclingMaterialStatsResponse[];
+  recent_activity: RecentRecyclingActivityResponse[];
+}
+
 export interface ProfileResponse {
-  user_id: number;
+  id: number;
   full_name: string;
   email: string;
   city: string;
@@ -37,7 +58,8 @@ export interface ProfileResponse {
   level: number;
   streak: number;
   total_scans: number;
-  achievements: string[];
+  achievements?: string[];
+  analytics: RecyclingAnalyticsResponse;
 }
 
 export interface ApiError {
@@ -55,7 +77,7 @@ const ERROR_CODE_MAP: Record<string, string> = {
 // ─── Register ──────────────────────────────────────────────────────────────────
 
 export async function registerUser(
-  data: RegisterRequest
+  data: RegisterRequest,
 ): Promise<RegisterResponse> {
   const response = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
@@ -68,7 +90,9 @@ export async function registerUser(
   if (!response.ok) {
     const error: ApiError = await response.json();
     const errorCode = error.detail;
-    throw new Error(ERROR_CODE_MAP[errorCode] || errorCode || "Registration failed");
+    throw new Error(
+      ERROR_CODE_MAP[errorCode] || errorCode || "Registration failed",
+    );
   }
 
   return response.json();
@@ -76,9 +100,7 @@ export async function registerUser(
 
 // ─── Login ─────────────────────────────────────────────────────────────────────
 
-export async function loginUser(
-  data: LoginRequest
-): Promise<LoginResponse> {
+export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: {
@@ -98,11 +120,9 @@ export async function loginUser(
 
 // ─── Get Profile ───────────────────────────────────────────────────────────────
 
-export async function getProfile(
-  userId: string
-): Promise<ProfileResponse> {
-const response = await fetch(`${API_URL}/auth/profile/${userId}`, {
-  method: "GET",
+export async function getProfile(userId: string): Promise<ProfileResponse> {
+  const response = await fetch(`${API_URL}/profile/${userId}`, {
+    method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
@@ -111,7 +131,9 @@ const response = await fetch(`${API_URL}/auth/profile/${userId}`, {
   if (!response.ok) {
     const error: ApiError = await response.json();
     const errorCode = error.detail;
-    throw new Error(ERROR_CODE_MAP[errorCode] || errorCode || "Failed to fetch profile");
+    throw new Error(
+      ERROR_CODE_MAP[errorCode] || errorCode || "Failed to fetch profile",
+    );
   }
 
   return response.json();
