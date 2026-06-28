@@ -1,269 +1,102 @@
 import logging
-import smtplib
-import socket
-import traceback
-from email.message import EmailMessage
 from typing import Protocol
 
+import requests
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+BREVO_SEND_EMAIL_URL = "https://api.brevo.com/v3/smtp/email"
 
 
 class EmailProvider(Protocol):
     def send_email(self, to_email: str, subject: str, text_body: str) -> None: ...
 
 
-class LoggingEmailProvider:
-    def send_email(self, to_email: str, subject: str, text_body: str) -> None:
-        missing = get_missing_smtp_settings()
-        logger.error(
-            "[forgot-password] LOGGING FALLBACK MODE selected. SMTP email will NOT be sent. missing=%s to=%s subject=%s",
-            missing,
-            to_email,
-            subject,
-        )
-        raise RuntimeError(
-            f"Logging fallback mode reached instead of SMTP mode. Missing SMTP settings: {', '.join(missing)}"
-        )
-
-
-def get_missing_smtp_settings() -> list[str]:
-    missing: list[str] = []
-    if not settings.smtp_host:
-        missing.append("SMTP_HOST")
-    if not settings.smtp_username:
-        missing.append("SMTP_USERNAME")
-    if not settings.smtp_password:
-        missing.append("SMTP_PASSWORD")
-    if not settings.smtp_from_email:
-        missing.append("SMTP_FROM_EMAIL")
-    return missing
-
-
-class SmtpEmailProvider:
-    host: str | None
-    port: int
-    username: str | None
-    password: str | None
-    from_email: str | None
+class BrevoEmailProvider:
+    api_key: str
+    from_email: str
     from_name: str
-    use_tls: bool
-    use_ssl: bool
     timeout: int
 
     def __init__(self) -> None:
-        self.host = settings.smtp_host
-        self.port = settings.smtp_port
-        self.username = settings.smtp_username
-        self.password = settings.smtp_password
-        self.from_email = settings.smtp_from_email
-        self.from_name = settings.smtp_from_name
-        self.use_tls = settings.smtp_use_tls
-        self.use_ssl = settings.smtp_use_ssl
-        self.timeout = settings.smtp_timeout
+        if not settings.brevo_api_key:
+            raise RuntimeError("BREVO_API_KEY is not configured")
+
+        self.api_key = settings.brevo_api_key
+        self.from_email = settings.brevo_from_email
+        self.from_name = settings.brevo_from_name
+        self.timeout = settings.brevo_timeout
 
     def send_email(self, to_email: str, subject: str, text_body: str) -> None:
-        missing = get_missing_smtp_settings()
-        if missing:
-            logger.error(
-                "[forgot-password] SMTP considered not configured. missing=%s",
-                missing,
-            )
-            raise RuntimeError(
-                f"SMTP is not fully configured. Missing: {', '.join(missing)}"
-            )
-
-        smtp_host = str(self.host or "")
-        smtp_username = str(self.username or "")
-        smtp_password = str(self.password or "")
-        smtp_from_email = str(self.from_email or "")
-
-        logger.info(
-            "[forgot-password] SMTP configuration detected. host=%s port=%s username=%s tls=%s ssl=%s from_email=%s username_present=%s password_present=%s",
-            smtp_host,
-            self.port,
-            smtp_username,
-            self.use_tls,
-            self.use_ssl,
-            smtp_from_email,
-            bool(self.username),
-            bool(self.password),
-        )
-
-        message = EmailMessage()
-        message["Subject"] = subject
-        message["From"] = f"{self.from_name} <{smtp_from_email}>"
-        message["To"] = to_email
-        message.set_content(text_body)
+        payload = {
+            "sender": {
+                "name": self.from_name,
+                "email": self.from_email,
+            },
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "textContent": text_body,
+        }
+        headers = {
+            "accept": "application/json",
+            "api-key": self.api_key,
+            "content-type": "application/json",
+        }
 
         logger.info(
-            "[forgot-password] SMTP initialization: implementation=%s host=%s port=%s timeout=%s tls=%s ssl=%s",
-            "smtplib.SMTP_SSL" if self.use_ssl else "smtplib.SMTP",
-            smtp_host,
-            self.port,
+            "[forgot-password] Brevo API request sent. url=%s to=%s from_email=%s from_name=%s timeout=%s",
+            BREVO_SEND_EMAIL_URL,
+            to_email,
+            self.from_email,
+            self.from_name,
             self.timeout,
-            self.use_tls,
-            self.use_ssl,
         )
 
-        if self.port == 587 and self.use_ssl:
-            raise RuntimeError(
-                "Invalid SMTP configuration: SMTP_SSL must not be used with port 587"
-            )
-
         try:
-            resolved_addresses = socket.getaddrinfo(
-                smtp_host,
-                self.port,
-                type=socket.SOCK_STREAM,
+            response = requests.post(
+                BREVO_SEND_EMAIL_URL,
+                json=payload,
+                headers=headers,
+                timeout=self.timeout,
             )
-            logger.info(
-                "[forgot-password] SMTP DNS resolved. host=%s port=%s socket_addresses=%s",
-                smtp_host,
-                self.port,
-                [entry[4] for entry in resolved_addresses],
-            )
-        except socket.gaierror as exc:
-            logger.error(
-                "[forgot-password] SMTP DNS failure. host=%s port=%s exception=%s\n%s",
-                smtp_host,
-                self.port,
-                str(exc),
-                traceback.format_exc(),
+        except Exception:
+            logger.exception(
+                "[forgot-password] Brevo API request failed before response. url=%s to=%s",
+                BREVO_SEND_EMAIL_URL,
+                to_email,
             )
             raise
 
-        try:
-            logger.info(
-                "[forgot-password] Connecting... host=%s port=%s socket_address_candidates=%s timeout=%s",
-                smtp_host,
-                self.port,
-                [entry[4] for entry in resolved_addresses],
-                self.timeout,
-            )
-            with smtplib.SMTP(smtp_host, self.port, timeout=self.timeout) as server:
-                logger.info("[forgot-password] Connected")
+        logger.info(
+            "[forgot-password] Brevo response status=%s",
+            response.status_code,
+        )
 
-                logger.info("[forgot-password] EHLO")
-                _ = server.ehlo()
-
-                if self.port == 587:
-                    logger.info("[forgot-password] STARTTLS")
-                    _ = server.starttls()
-                    logger.info("[forgot-password] EHLO")
-                    _ = server.ehlo()
-                elif self.use_tls:
-                    logger.info("[forgot-password] STARTTLS")
-                    _ = server.starttls()
-                    logger.info("[forgot-password] EHLO")
-                    _ = server.ehlo()
-
-                logger.info("[forgot-password] LOGIN username=%s", smtp_username)
-                _ = server.login(smtp_username, smtp_password)
-                logger.info("[forgot-password] SMTP authentication successful")
-
-                logger.info(
-                    "[forgot-password] SEND to=%s subject=%s",
-                    to_email,
-                    subject,
-                )
-                _ = server.send_message(message)
-                logger.info("[forgot-password] Email successfully sent")
-
-                logger.info("[forgot-password] QUIT")
-                _ = server.quit()
-        except TimeoutError as exc:
+        if not response.ok:
             logger.error(
-                "[forgot-password] SMTP connection timed out. host=%s port=%s socket_address_candidates=%s timeout=%s possible_render_egress_block=true exception=%s\n%s",
-                smtp_host,
-                self.port,
-                [entry[4] for entry in resolved_addresses],
-                self.timeout,
-                str(exc),
-                traceback.format_exc(),
+                "[forgot-password] Brevo API error response. status=%s body=%s",
+                response.status_code,
+                response.text,
             )
-            raise
+            response.raise_for_status()
 
-        except smtplib.SMTPAuthenticationError as exc:
-            logger.error(
-                "[forgot-password] SMTP authentication failed. host=%s port=%s username=%s tls=%s ssl=%s smtp_code=%s smtp_error=%s exception=%s\n%s",
-                self.host,
-                self.port,
-                self.username,
-                self.use_tls,
-                self.use_ssl,
-                getattr(exc, "smtp_code", None),
-                getattr(exc, "smtp_error", b"").decode(errors="ignore")
-                if getattr(exc, "smtp_error", None)
-                else None,
-                str(exc),
-                traceback.format_exc(),
-            )
-            raise
-        except smtplib.SMTPResponseException as exc:
-            logger.error(
-                "[forgot-password] SMTP response error. host=%s port=%s username=%s tls=%s ssl=%s smtp_code=%s smtp_error=%s exception=%s\n%s",
-                self.host,
-                self.port,
-                self.username,
-                self.use_tls,
-                self.use_ssl,
-                getattr(exc, "smtp_code", None),
-                getattr(exc, "smtp_error", b"").decode(errors="ignore")
-                if getattr(exc, "smtp_error", None)
-                else None,
-                str(exc),
-                traceback.format_exc(),
-            )
-            raise
-        except smtplib.SMTPException as exc:
-            logger.error(
-                "[forgot-password] General SMTP exception. host=%s port=%s username=%s tls=%s ssl=%s exception=%s\n%s",
-                self.host,
-                self.port,
-                self.username,
-                self.use_tls,
-                self.use_ssl,
-                str(exc),
-                traceback.format_exc(),
-            )
-            raise
-        except Exception as exc:
-            logger.error(
-                "[forgot-password] Non-SMTP email send failure. host=%s port=%s username=%s tls=%s ssl=%s exception=%s\n%s",
-                self.host,
-                self.port,
-                self.username,
-                self.use_tls,
-                self.use_ssl,
-                str(exc),
-                traceback.format_exc(),
-            )
-            raise
+        logger.info("[forgot-password] Email successfully sent via Brevo API")
 
 
 def get_email_provider() -> EmailProvider:
-    missing = get_missing_smtp_settings()
     logger.info(
-        "[forgot-password] Email mode decision. smtp_host=%s smtp_port=%s smtp_username=%s smtp_from_email=%s smtp_use_tls=%s smtp_use_ssl=%s missing=%s",
-        settings.smtp_host,
-        settings.smtp_port,
-        settings.smtp_username,
-        settings.smtp_from_email,
-        settings.smtp_use_tls,
-        settings.smtp_use_ssl,
-        missing,
+        "[forgot-password] Email mode decision. provider=brevo_api brevo_api_key_present=%s from_email=%s from_name=%s timeout=%s",
+        bool(settings.brevo_api_key),
+        settings.brevo_from_email,
+        settings.brevo_from_name,
+        settings.brevo_timeout,
     )
-    if missing:
-        logger.error(
-            "[forgot-password] LOGGING FALLBACK MODE would be used because SMTP config is incomplete. missing=%s",
-            missing,
-        )
-        return LoggingEmailProvider()
 
-    logger.info("[forgot-password] SMTP MODE selected")
-    return SmtpEmailProvider()
+    if not settings.brevo_api_key:
+        raise RuntimeError("BREVO_API_KEY is not configured")
+
+    logger.info("[forgot-password] BREVO API MODE selected")
+    return BrevoEmailProvider()
 
 
 def send_password_reset_code(to_email: str, code: str) -> None:

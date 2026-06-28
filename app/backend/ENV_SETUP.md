@@ -5,46 +5,36 @@
 Add these variables in Render for the backend service:
 
 - `DATABASE_URL`
+- `BREVO_API_KEY`
 - `GEMINI_API_KEY` (if your deployment uses Gemini features)
 
-## Password reset email via SMTP
+## Password reset email via Brevo Transactional Email API
 
-The password reset flow is already implemented. To send real emails, configure SMTP using environment variables only.
+The password reset flow is already implemented. Email delivery now uses the official Brevo Transactional Email REST API over HTTPS.
 
-### Required SMTP variables
+### Required Brevo variable
 
-- `SMTP_HOST`
-- `SMTP_PORT`
-- `SMTP_USERNAME`
-- `SMTP_PASSWORD`
-- `SMTP_FROM_EMAIL`
+- `BREVO_API_KEY`
 
-### Optional SMTP variables
+### Optional Brevo variables
 
-- `SMTP_FROM_NAME` — default: `QaitaJanaru`
-- `SMTP_USE_TLS` — default: `true`
-- `SMTP_USE_SSL` — default: `false`
-- `SMTP_TIMEOUT` — default: `20`
+- `BREVO_FROM_EMAIL` — default: `noreply@qaitajanaru.kz`
+- `BREVO_FROM_NAME` — default: `QaitaJanaru`
+- `BREVO_TIMEOUT` — default: `20`
 
-## Recommended Brevo SMTP configuration
+## Recommended Render configuration
 
-For Brevo SMTP, set the following in Render:
+Set the following in Render:
 
-- `SMTP_HOST=smtp-relay.brevo.com`
-- `SMTP_PORT=587`
-- `SMTP_USERNAME=<your-brevo-smtp-login>`
-- `SMTP_PASSWORD=<your-brevo-smtp-key>`
-- `SMTP_FROM_EMAIL=<verified-sender@your-domain.com>`
-- `SMTP_FROM_NAME=QaitaJanaru`
-- `SMTP_USE_TLS=true`
-- `SMTP_USE_SSL=false`
-- `SMTP_TIMEOUT=20`
+- `BREVO_API_KEY=<your-brevo-api-key>`
+- `BREVO_FROM_EMAIL=<verified-sender@your-domain.com>`
+- `BREVO_FROM_NAME=QaitaJanaru`
+- `BREVO_TIMEOUT=20`
 
 ## Notes
 
 - Do not hardcode credentials in the codebase.
-- `SMTP_FROM_EMAIL` must be a sender verified in your SMTP provider.
-- If SMTP is not configured, the app falls back to a logging provider for local/dev use.
+- `BREVO_FROM_EMAIL` must be a sender email verified in Brevo.
 - After changing environment variables in Render, redeploy the backend service.
 
 ## Deployment verification checklist
@@ -52,7 +42,9 @@ For Brevo SMTP, set the following in Render:
 After redeploying:
 
 1. Open the backend service logs in Render.
-2. Confirm the service starts without `ImportError: email-validator is not installed`.
+2. Confirm the service starts successfully.
 3. Trigger `Forgot Password` from the app.
-4. Confirm a verification email arrives in the target inbox.
-5. Confirm the code can be used to complete password reset.
+4. Confirm the backend logs show the Brevo API request being sent.
+5. Confirm Brevo returns a successful response status.
+6. Confirm the verification email arrives in the target inbox.
+7. Confirm the code can be used to complete password reset.

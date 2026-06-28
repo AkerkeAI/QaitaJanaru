@@ -1,8 +1,5 @@
 import logging
-import socket
-import traceback
 
-from app.core.config import settings
 from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.models.user import User
@@ -104,84 +101,6 @@ def request_password_reset(
         payload.email,
     )
     return {"message": message}
-
-
-@router.get("/debug/smtp")
-def debug_smtp_connectivity():
-    host = settings.smtp_host or "smtp-relay.brevo.com"
-    port = settings.smtp_port or 587
-    timeout = settings.smtp_timeout or 20
-
-    logger.info(
-        "[debug-smtp] Connectivity check started. host=%s port=%s timeout=%s",
-        host,
-        port,
-        timeout,
-    )
-
-    try:
-        resolved = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
-        addresses = [entry[4] for entry in resolved]
-        logger.info(
-            "[debug-smtp] DNS resolved. host=%s port=%s addresses=%s",
-            host,
-            port,
-            addresses,
-        )
-    except socket.gaierror as exc:
-        logger.error(
-            "[debug-smtp] DNS failure. host=%s port=%s exception=%s\n%s",
-            host,
-            port,
-            str(exc),
-            traceback.format_exc(),
-        )
-        return {"status": "DNS failure", "host": host, "port": port}
-
-    try:
-        logger.info(
-            "[debug-smtp] Connecting... host=%s port=%s addresses=%s timeout=%s",
-            host,
-            port,
-            addresses,
-            timeout,
-        )
-        connection = socket.create_connection((host, port), timeout=timeout)
-        connection.close()
-        logger.info("[debug-smtp] Connected. host=%s port=%s", host, port)
-        return {"status": "Connected", "host": host, "port": port}
-    except TimeoutError as exc:
-        logger.error(
-            "[debug-smtp] Timeout. host=%s port=%s addresses=%s timeout=%s possible_render_egress_block=true exception=%s\n%s",
-            host,
-            port,
-            addresses,
-            timeout,
-            str(exc),
-            traceback.format_exc(),
-        )
-        return {"status": "Timeout", "host": host, "port": port}
-    except socket.timeout as exc:
-        logger.error(
-            "[debug-smtp] Socket timeout. host=%s port=%s addresses=%s timeout=%s possible_render_egress_block=true exception=%s\n%s",
-            host,
-            port,
-            addresses,
-            timeout,
-            str(exc),
-            traceback.format_exc(),
-        )
-        return {"status": "Timeout", "host": host, "port": port}
-    except OSError as exc:
-        logger.error(
-            "[debug-smtp] OS error during connect. host=%s port=%s addresses=%s exception=%s\n%s",
-            host,
-            port,
-            addresses,
-            str(exc),
-            traceback.format_exc(),
-        )
-        return {"status": str(exc), "host": host, "port": port}
 
 
 @router.post("/forgot-password/verify")
