@@ -106,13 +106,22 @@ def create_password_reset_request(
         bool(user),
         getattr(user, "id", None),
     )
+
+    logger.info(
+        "[forgot-password] invalidating previous reset codes. email=%s",
+        normalized_email,
+    )
     invalidate_latest_codes(db, normalized_email)
     logger.info(
         "[forgot-password] previous reset codes invalidated. email=%s", normalized_email
     )
 
     code = generate_verification_code()
-    logger.info("[forgot-password] reset code generated. email=%s", normalized_email)
+    logger.info(
+        "[forgot-password] reset code generated. email=%s code_length=%s",
+        normalized_email,
+        len(code),
+    )
     reset_code = PasswordResetCode(
         user_id=user.id if user else None,
         email=normalized_email,
@@ -120,21 +129,39 @@ def create_password_reset_request(
         expires_at=now + timedelta(minutes=RESET_CODE_EXPIRATION_MINUTES),
         request_ip=request_ip,
     )
+    logger.info(
+        "[forgot-password] saving password reset record. email=%s", normalized_email
+    )
     db.add(reset_code)
     db.commit()
-    logger.info("[forgot-password] reset code persisted. email=%s", normalized_email)
+    logger.info(
+        "[forgot-password] password reset record saved. email=%s reset_record_id=%s user_id=%s",
+        normalized_email,
+        getattr(reset_code, "id", None),
+        getattr(user, "id", None),
+    )
 
     if user:
         logger.info(
-            "[forgot-password] email service called. email=%s", normalized_email
+            "[forgot-password] email_service.send_password_reset_code() will be called. email=%s user_id=%s",
+            normalized_email,
+            getattr(user, "id", None),
         )
         send_password_reset_code(normalized_email, code)
-    else:
         logger.info(
-            "[forgot-password] skipping email send because user was not found for normalized email. email=%s",
+            "[forgot-password] email_service.send_password_reset_code() completed without exception. email=%s",
+            normalized_email,
+        )
+    else:
+        logger.warning(
+            "[forgot-password] early stop before sending because no user matched normalized email. email=%s",
             normalized_email,
         )
 
+    logger.info(
+        "[forgot-password] create_password_reset_request returning generic response. email=%s",
+        normalized_email,
+    )
     return GENERIC_RESET_RESPONSE
 
 

@@ -16,13 +16,14 @@ class EmailProvider(Protocol):
 class LoggingEmailProvider:
     def send_email(self, to_email: str, subject: str, text_body: str) -> None:
         missing = get_missing_smtp_settings()
-        logger.warning(
-            "[forgot-password] SMTP not configured; using logging provider. "
-            "missing=%s to=%s subject=%s body=%s",
+        logger.error(
+            "[forgot-password] LOGGING FALLBACK MODE selected. SMTP email will NOT be sent. missing=%s to=%s subject=%s",
             missing,
             to_email,
             subject,
-            text_body,
+        )
+        raise RuntimeError(
+            f"Logging fallback mode reached instead of SMTP mode. Missing SMTP settings: {', '.join(missing)}"
         )
 
 
@@ -184,21 +185,32 @@ class SmtpEmailProvider:
 
 def get_email_provider() -> EmailProvider:
     missing = get_missing_smtp_settings()
+    logger.info(
+        "[forgot-password] Email mode decision. smtp_host=%s smtp_port=%s smtp_username=%s smtp_from_email=%s smtp_use_tls=%s smtp_use_ssl=%s missing=%s",
+        settings.smtp_host,
+        settings.smtp_port,
+        settings.smtp_username,
+        settings.smtp_from_email,
+        settings.smtp_use_tls,
+        settings.smtp_use_ssl,
+        missing,
+    )
     if missing:
-        logger.warning(
-            "[forgot-password] Email provider fallback selected because SMTP config is incomplete. missing=%s",
+        logger.error(
+            "[forgot-password] LOGGING FALLBACK MODE would be used because SMTP config is incomplete. missing=%s",
             missing,
         )
         return LoggingEmailProvider()
 
-    logger.info("[forgot-password] SMTP email provider selected")
+    logger.info("[forgot-password] SMTP MODE selected")
     return SmtpEmailProvider()
 
 
 def send_password_reset_code(to_email: str, code: str) -> None:
     logger.info(
-        "[forgot-password] email_service.send_password_reset_code called. to=%s",
+        "[forgot-password] email_service.send_password_reset_code called. to=%s code_length=%s",
         to_email,
+        len(code),
     )
     provider = get_email_provider()
     logger.info(
