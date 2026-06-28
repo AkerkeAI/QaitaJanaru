@@ -423,6 +423,9 @@ export const messages: Messages = {
     dailyTaskRewards: "Daily Task Rewards",
     weeklyTaskRewards: "Weekly Task Rewards",
     autoBonuses: "Auto-claimed bonuses",
+    qrReminderTitle: "Helpful reminder",
+    qrReminderDescription:
+      "After you bring these materials to a recycling point, don’t forget to scan the QR code located there to receive Eco Points.",
   },
   tasks: {
     title: "Tasks",

@@ -426,6 +426,9 @@ export const messages: Messages = {
     dailyTaskRewards: "Күндік тапсырма сыйлықтары",
     weeklyTaskRewards: "Апталық тапсырма сыйлықтары",
     autoBonuses: "Автоматты түрде алынған бонустар",
+    qrReminderTitle: "Пайдалы еске салу",
+    qrReminderDescription:
+      "Бұл материалдарды қайта өңдеу нүктесіне апарғаннан кейін, Эко-ұпай алу үшін сол жердегі QR кодты сканерлеуді ұмытпаңыз.",
   },
   tasks: {
     title: "Тапсырмалар",

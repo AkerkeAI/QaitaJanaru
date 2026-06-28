@@ -103,6 +103,11 @@ export default function QrPointPage() {
     }));
   };
 
+  const handleReturnHome = () => {
+    const userId = localStorage.getItem("qaitaJanaru_user_id");
+    router.push(userId ? "/profile" : "/");
+  };
+
   const handleConfirm = async () => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
     if (!userId) {
@@ -188,7 +193,7 @@ export default function QrPointPage() {
           </p>
           <button
             type="button"
-            onClick={() => router.push("/")}
+            onClick={handleReturnHome}
             className="px-6 py-3 rounded-2xl font-semibold"
             style={{
               background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
@@ -276,7 +281,7 @@ export default function QrPointPage() {
 
           <button
             type="button"
-            onClick={() => router.push("/")}
+            onClick={handleReturnHome}
             className="w-full px-6 py-4 rounded-2xl font-semibold"
             style={{
               background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,

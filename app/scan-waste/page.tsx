@@ -729,6 +729,41 @@ export default function ScanWastePage() {
                 </div>
               </div>
 
+              <div
+                className="relative rounded-3xl overflow-hidden backdrop-blur-xl p-5"
+                style={{
+                  borderColor: `${colors.primary}30`,
+                  borderWidth: 1,
+                  background: `linear-gradient(to bottom right, ${colors.primary}12, ${colors.accent}10, ${colors.primary}08)`,
+                }}
+              >
+                <div className="relative z-10 flex items-start gap-3">
+                  <div
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+                    style={{
+                      background: `${colors.primary}20`,
+                      color: colors.primary,
+                    }}
+                  >
+                    <span className="text-xl">💡</span>
+                  </div>
+                  <div>
+                    <p
+                      className="text-xs uppercase tracking-wider mb-1"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {messages.scanWaste.qrReminderTitle}
+                    </p>
+                    <p
+                      className="text-sm md:text-base leading-relaxed"
+                      style={{ color: colors.text }}
+                    >
+                      {messages.scanWaste.qrReminderDescription}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex gap-4">
                 <button
                   onClick={handleReset}

@@ -410,6 +410,8 @@ export interface Messages {
     dailyTaskRewards: string;
     weeklyTaskRewards: string;
     autoBonuses: string;
+    qrReminderTitle: string;
+    qrReminderDescription: string;
   };
   tasks: {
     title: string;
