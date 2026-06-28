@@ -766,7 +766,6 @@ export default function RegisterPage() {
                       theme="filled_black"
                       text="signup_with"
                       shape="pill"
-                      locale={language}
                     />
                   </div>
                 )}

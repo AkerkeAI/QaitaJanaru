@@ -550,7 +550,6 @@ export default function LoginPage() {
                       theme="filled_black"
                       text="signin_with"
                       shape="pill"
-                      locale={language}
                     />
                   </div>
                 )}

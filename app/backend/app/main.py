@@ -20,6 +20,7 @@ from app.routers import (
 from app.services.recycling_points_seed import seed_recycling_points
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import inspect, text
 
 app = FastAPI()
 
@@ -29,9 +30,41 @@ def ensure_database_tables() -> None:
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
+        # Automatic migration for phone authentication fields
+        migrate_phone_fields(db)
         seed_recycling_points(db)
     finally:
         db.close()
+
+
+def migrate_phone_fields(db) -> None:
+    """
+    Automatically add phone and phone_verified columns if they don't exist.
+    This is idempotent and safe for both PostgreSQL and SQLite.
+    """
+    try:
+        inspector = inspect(engine)
+        columns = [col['name'] for col in inspector.get_columns('users')]
+
+        # Add phone column if it doesn't exist
+        if 'phone' not in columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN phone VARCHAR"))
+            db.commit()
+            print("✓ Added phone column to users table")
+
+        # Refresh inspector after first change
+        inspector = inspect(engine)
+        columns = [col['name'] for col in inspector.get_columns('users')]
+
+        # Add phone_verified column if it doesn't exist
+        if 'phone_verified' not in columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN phone_verified BOOLEAN DEFAULT FALSE"))
+            db.commit()
+            print("✓ Added phone_verified column to users table")
+
+    except Exception as e:
+        print(f"Error during phone fields migration: {e}")
+        db.rollback()
 
 
 app.add_middleware(
