@@ -1,8 +1,12 @@
+import logging
 import smtplib
+import traceback
 from email.message import EmailMessage
 from typing import Protocol
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class EmailProvider(Protocol):
@@ -11,10 +15,28 @@ class EmailProvider(Protocol):
 
 class LoggingEmailProvider:
     def send_email(self, to_email: str, subject: str, text_body: str) -> None:
-        print(
-            f"[email] Password reset email not sent because SMTP is not configured. "
-            f"to={to_email} subject={subject} body={text_body}"
+        missing = get_missing_smtp_settings()
+        logger.warning(
+            "[forgot-password] SMTP not configured; using logging provider. "
+            "missing=%s to=%s subject=%s body=%s",
+            missing,
+            to_email,
+            subject,
+            text_body,
         )
+
+
+def get_missing_smtp_settings() -> list[str]:
+    missing: list[str] = []
+    if not settings.smtp_host:
+        missing.append("SMTP_HOST")
+    if not settings.smtp_username:
+        missing.append("SMTP_USERNAME")
+    if not settings.smtp_password:
+        missing.append("SMTP_PASSWORD")
+    if not settings.smtp_from_email:
+        missing.append("SMTP_FROM_EMAIL")
+    return missing
 
 
 class SmtpEmailProvider:
@@ -40,13 +62,26 @@ class SmtpEmailProvider:
         self.timeout = settings.smtp_timeout
 
     def send_email(self, to_email: str, subject: str, text_body: str) -> None:
-        if (
-            not self.host
-            or not self.from_email
-            or not self.username
-            or not self.password
-        ):
-            raise RuntimeError("SMTP is not fully configured")
+        missing = get_missing_smtp_settings()
+        if missing:
+            logger.error(
+                "[forgot-password] SMTP considered not configured. missing=%s",
+                missing,
+            )
+            raise RuntimeError(
+                f"SMTP is not fully configured. Missing: {', '.join(missing)}"
+            )
+
+        logger.info(
+            "[forgot-password] SMTP configuration detected. host=%s port=%s tls=%s ssl=%s from_email=%s username_present=%s password_present=%s",
+            self.host,
+            self.port,
+            self.use_tls,
+            self.use_ssl,
+            self.from_email,
+            bool(self.username),
+            bool(self.password),
+        )
 
         message = EmailMessage()
         message["Subject"] = subject
@@ -55,21 +90,62 @@ class SmtpEmailProvider:
         message.set_content(text_body)
 
         smtp_client = smtplib.SMTP_SSL if self.use_ssl else smtplib.SMTP
-        with smtp_client(self.host, self.port, timeout=self.timeout) as server:
-            if not self.use_ssl and self.use_tls:
-                _ = server.starttls()
-            _ = server.login(self.username, self.password)
-            _ = server.send_message(message)
+        try:
+            logger.info(
+                "[forgot-password] SMTP connection started. host=%s port=%s",
+                self.host,
+                self.port,
+            )
+            with smtp_client(self.host, self.port, timeout=self.timeout) as server:
+                if not self.use_ssl and self.use_tls:
+                    logger.info("[forgot-password] Starting SMTP TLS handshake")
+                    _ = server.starttls()
+                logger.info(
+                    "[forgot-password] Attempting SMTP authentication. username=%s",
+                    self.username,
+                )
+                _ = server.login(self.username, self.password)
+                logger.info("[forgot-password] SMTP authentication succeeded")
+                _ = server.send_message(message)
+                logger.info(
+                    "[forgot-password] Email successfully sent. to=%s subject=%s",
+                    to_email,
+                    subject,
+                )
+        except Exception as exc:
+            logger.exception(
+                "[forgot-password] SMTP send failed. to=%s subject=%s error=%s\n%s",
+                to_email,
+                subject,
+                str(exc),
+                traceback.format_exc(),
+            )
+            raise
 
 
 def get_email_provider() -> EmailProvider:
-    if settings.smtp_host and settings.smtp_from_email:
-        return SmtpEmailProvider()
-    return LoggingEmailProvider()
+    missing = get_missing_smtp_settings()
+    if missing:
+        logger.warning(
+            "[forgot-password] Email provider fallback selected because SMTP config is incomplete. missing=%s",
+            missing,
+        )
+        return LoggingEmailProvider()
+
+    logger.info("[forgot-password] SMTP email provider selected")
+    return SmtpEmailProvider()
 
 
 def send_password_reset_code(to_email: str, code: str) -> None:
+    logger.info(
+        "[forgot-password] email_service.send_password_reset_code called. to=%s",
+        to_email,
+    )
     provider = get_email_provider()
+    logger.info(
+        "[forgot-password] Email provider instantiated. provider=%s",
+        provider.__class__.__name__,
+    )
     provider.send_email(
         to_email=to_email,
         subject="QaitaJanaru password reset code",

@@ -1,3 +1,5 @@
+import logging
+
 from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.models.user import User
@@ -19,6 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+logger = logging.getLogger(__name__)
 
 
 def get_db():
@@ -83,10 +86,19 @@ def request_password_reset(
     request: Request,
     db: Session = Depends(get_db),
 ):
+    logger.info(
+        "[forgot-password] /auth/forgot-password/request endpoint invoked. email=%s request_ip=%s",
+        payload.email,
+        request.client.host if request.client else None,
+    )
     message = create_password_reset_request(
         db,
         payload.email,
         request.client.host if request.client else None,
+    )
+    logger.info(
+        "[forgot-password] /auth/forgot-password/request completed. email=%s",
+        payload.email,
     )
     return {"message": message}
 

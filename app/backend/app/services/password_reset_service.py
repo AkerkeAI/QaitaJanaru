@@ -1,3 +1,4 @@
+import logging
 import random
 from datetime import datetime, timedelta
 
@@ -11,6 +12,8 @@ from app.models.password_reset_code import PasswordResetCode
 from app.models.user import User
 from app.services.email_service import send_password_reset_code
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 RESET_CODE_EXPIRATION_MINUTES = 10
 REQUEST_COOLDOWN_SECONDS = 60
@@ -45,6 +48,11 @@ def create_password_reset_request(
     db: Session, email: str, request_ip: str | None = None
 ) -> str:
     normalized_email = normalize_email(email)
+    logger.info(
+        "[forgot-password] forgot password request received. email=%s request_ip=%s",
+        normalized_email,
+        request_ip,
+    )
     now = datetime.now()
     window_start = now - timedelta(minutes=REQUEST_WINDOW_MINUTES)
     recent_requests = (
@@ -56,7 +64,19 @@ def create_password_reset_request(
         .count()
     )
 
+    logger.info(
+        "[forgot-password] recent reset request count computed. email=%s count=%s window_minutes=%s",
+        normalized_email,
+        recent_requests,
+        REQUEST_WINDOW_MINUTES,
+    )
+
     if recent_requests >= MAX_REQUESTS_PER_WINDOW:
+        logger.warning(
+            "[forgot-password] request throttled by max requests window. email=%s count=%s",
+            normalized_email,
+            recent_requests,
+        )
         return GENERIC_RESET_RESPONSE
 
     latest_request = (
@@ -72,12 +92,27 @@ def create_password_reset_request(
         latest_request_created_at is not None
         and (now - latest_request_created_at).total_seconds() < REQUEST_COOLDOWN_SECONDS
     ):
+        logger.warning(
+            "[forgot-password] request throttled by cooldown. email=%s cooldown_seconds=%s",
+            normalized_email,
+            REQUEST_COOLDOWN_SECONDS,
+        )
         return GENERIC_RESET_RESPONSE
 
     user = db.query(User).filter(User.email == normalized_email).first()
+    logger.info(
+        "[forgot-password] user lookup completed. email=%s user_found=%s user_id=%s",
+        normalized_email,
+        bool(user),
+        getattr(user, "id", None),
+    )
     invalidate_latest_codes(db, normalized_email)
+    logger.info(
+        "[forgot-password] previous reset codes invalidated. email=%s", normalized_email
+    )
 
     code = generate_verification_code()
+    logger.info("[forgot-password] reset code generated. email=%s", normalized_email)
     reset_code = PasswordResetCode(
         user_id=user.id if user else None,
         email=normalized_email,
@@ -87,9 +122,18 @@ def create_password_reset_request(
     )
     db.add(reset_code)
     db.commit()
+    logger.info("[forgot-password] reset code persisted. email=%s", normalized_email)
 
     if user:
+        logger.info(
+            "[forgot-password] email service called. email=%s", normalized_email
+        )
         send_password_reset_code(normalized_email, code)
+    else:
+        logger.info(
+            "[forgot-password] skipping email send because user was not found for normalized email. email=%s",
+            normalized_email,
+        )
 
     return GENERIC_RESET_RESPONSE
 
