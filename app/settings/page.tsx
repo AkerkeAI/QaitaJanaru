@@ -67,6 +67,9 @@ export default function SettingsPage() {
       router.push("/login");
       return;
     }
+
+    // Load profile immediately on mount to ensure header shows correct values
+    fetchProfile();
   }, [router]);
 
   const handleLanguageSelect = (selectedLanguage: Language) => {
@@ -74,7 +77,7 @@ export default function SettingsPage() {
     setShowLanguageModal(false);
   };
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (showModal = false) => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
     if (!userId) return;
     try {
@@ -84,7 +87,9 @@ export default function SettingsPage() {
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
-        setShowAccountModal(true);
+        if (showModal) {
+          setShowAccountModal(true);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch profile:", error);
@@ -287,7 +292,7 @@ export default function SettingsPage() {
                 }}
               >
                 <button
-                  onClick={fetchProfile}
+                  onClick={() => fetchProfile(true)}
                   className="w-full px-4 py-3.5 flex items-center justify-between hover:opacity-80 transition-colors h-16"
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">

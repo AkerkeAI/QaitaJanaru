@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { registerUser } from "../lib/api";
+import { registerUser, googleAuth, getProfile } from "../lib/api";
 import { languageNames, Language } from "../lib/language";
 import { useLanguage } from "../contexts/LanguageContext";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -280,7 +281,7 @@ export default function RegisterPage() {
       // Save user data to localStorage
       localStorage.setItem("qaitaJanaru_user_id", response.user_id.toString());
       localStorage.setItem("qaitaJanaru_email", email.trim());
-      
+
       // Store additional profile data for Eco Assistant
       localStorage.setItem("qaitaJanaru_name", name.trim() || "Unknown");
       localStorage.setItem("qaitaJanaru_city", city || "Unknown");
@@ -301,7 +302,7 @@ export default function RegisterPage() {
       router.push("/profile");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : messages.register.registrationError;
-      
+
       // Map error codes to translated messages
       let translatedError = errorMessage;
       if (errorMessage === "EMAIL_ALREADY_EXISTS") {
@@ -313,8 +314,57 @@ export default function RegisterPage() {
       } else {
         translatedError = messages.register.registrationError;
       }
-      
+
       setError(translatedError);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await googleAuth({
+        id_token: credentialResponse.credential,
+      });
+      const profile = await getProfile(response.user_id.toString());
+
+      // Save user data to localStorage
+      localStorage.setItem("qaitaJanaru_user_id", response.user_id.toString());
+      localStorage.setItem("qaitaJanaru_email", profile.email);
+      localStorage.setItem(
+        "qaitaJanaru_eco_points",
+        response.eco_points.toString(),
+      );
+      localStorage.setItem(
+        "qaitaJanaru_streak",
+        response.streak?.toString() || "0",
+      );
+
+      // Store additional profile data for Eco Assistant
+      localStorage.setItem("qaitaJanaru_name", profile.full_name || "Unknown");
+      localStorage.setItem("qaitaJanaru_city", profile.city || "Unknown");
+      localStorage.setItem(
+        "qaitaJanaru_achievements_count",
+        (profile.achievements?.length || 0).toString(),
+      );
+      const computedLevel = Math.max(
+        1,
+        Math.floor((profile.eco_points || 0) / 100) + 1,
+      );
+      localStorage.setItem("qaitaJanaru_level", computedLevel.toString());
+      localStorage.setItem(
+        "qaitaJanaru_total_scans",
+        profile.total_scans.toString(),
+      );
+
+      router.push("/profile");
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Google authentication failed";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -322,8 +372,11 @@ export default function RegisterPage() {
 
   // ─────────────────────────────────────────────────────────────────────────────
 
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+
   return (
-    <>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <>
       {/*
         ── Viewport meta is handled by Next.js layout, but we add a global style
            to prevent iOS auto-zoom on input focus (font-size ≥ 16px on inputs).
@@ -685,6 +738,53 @@ export default function RegisterPage() {
                   {isLoading ? messages.register.registering : messages.register.signUpButton}
                 </button>
 
+                {/* Divider */}
+                <div className="flex items-center gap-3 my-4">
+                  <div
+                    className="flex-1 h-px"
+                    style={{ background: "rgba(52,211,153,0.18)" }}
+                  />
+                  <span
+                    className="text-[10px] font-bold uppercase tracking-wider"
+                    style={{ color: "#34d399" }}
+                  >
+                    {messages.login.or}
+                  </span>
+                  <div
+                    className="flex-1 h-px"
+                    style={{ background: "rgba(52,211,153,0.18)" }}
+                  />
+                </div>
+
+                {/* Google Sign-In Button */}
+                {googleClientId && (
+                  <div className="flex justify-center">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={() => setError(messages.register.registrationError)}
+                      useOneTap
+                      theme="filled_black"
+                      text="signup_with"
+                      shape="pill"
+                      locale={language}
+                    />
+                  </div>
+                )}
+
+                {/* Phone Sign-In Button (Coming Soon) */}
+                <button
+                  type="button"
+                  disabled
+                  className="w-full py-3 rounded-xl font-semibold text-sm transition-all opacity-50 cursor-not-allowed"
+                  style={{
+                    background: "rgba(52,211,153,0.1)",
+                    border: "1px solid rgba(52,211,153,0.3)",
+                    color: "#6ee7b7",
+                  }}
+                >
+                  📱 {messages.login.phoneSignIn} (Coming Soon)
+                </button>
+
                 {/* ── Sign-in link ── */}
                 <p className="text-center text-xs pt-1" style={{ color: "#6ee7b7" }}>
                   {messages.register.hasAccount}{" "}
@@ -710,6 +810,7 @@ export default function RegisterPage() {
           </div>{/* /card */}
         </div>{/* /card wrapper */}
       </main>
-    </>
+      </>
+    </GoogleOAuthProvider>
   );
 }

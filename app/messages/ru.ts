@@ -159,6 +159,8 @@ export const messages: Messages = {
     resetGenericSuccess:
       "Если аккаунт с таким email существует, код подтверждения уже отправлен.",
     tagline: "Экология. Действие. Будущее.",
+    or: "ИЛИ",
+    phoneSignIn: "Продолжить по телефону",
   },
   forgotPassword: {
     title: "Восстановление пароля",

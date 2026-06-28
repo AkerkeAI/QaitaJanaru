@@ -18,3 +18,17 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class GoogleAuthRequest(BaseModel):
+    id_token: str
+
+
+# Phone authentication schemas (for future implementation)
+class PhoneAuthRequest(BaseModel):
+    phone: str
+    verification_code: str
+
+
+class PhoneSendCodeRequest(BaseModel):
+    phone: str

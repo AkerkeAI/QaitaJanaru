@@ -159,6 +159,8 @@ export const messages: Messages = {
     forgotPassword: "Құпия сөзді ұмыттыңыз ба?",
     resetGenericSuccess: "Егер мұндай email бар болса, растау коды жіберілді.",
     tagline: "Экология. Әрекет. Болашақ.",
+    or: "НЕМЕСЕ",
+    phoneSignIn: "Телефон арқылы жалғастыру",
   },
   forgotPassword: {
     title: "Құпия сөзді қалпына келтіру",

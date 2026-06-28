@@ -160,6 +160,8 @@ export const messages: Messages = {
     resetGenericSuccess:
       "If an account with this email exists, a verification code has been sent.",
     tagline: "Ecology. Action. Future.",
+    or: "OR",
+    phoneSignIn: "Continue with Phone",
   },
   forgotPassword: {
     title: "Forgot Password",

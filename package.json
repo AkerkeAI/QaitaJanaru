@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@libsql/client": "^0.17.3",
+    "@react-oauth/google": "^0.13.5",
     "jsqr": "^1.4.0",
     "leaflet": "^1.9.4",
     "next": "16.2.6",

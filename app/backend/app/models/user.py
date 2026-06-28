@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, JSON, DateTime
+from sqlalchemy import Column, Integer, String, Date, JSON, DateTime, Boolean
 from datetime import datetime
 
 from app.db.session import Base
@@ -12,6 +12,8 @@ class User(Base):
     full_name = Column(String)
     email = Column(String, unique=True, index=True)
     password = Column(String)
+    phone = Column(String, unique=True, index=True, nullable=True)
+    phone_verified = Column(Boolean, default=False)
 
     age = Column(Integer)
 

@@ -148,6 +148,8 @@ export interface Messages {
     forgotPassword: string;
     resetGenericSuccess: string;
     tagline: string;
+    or: string;
+    phoneSignIn: string;
   };
   forgotPassword: {
     title: string;

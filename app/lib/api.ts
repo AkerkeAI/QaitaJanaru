@@ -26,6 +26,17 @@ export interface LoginResponse {
   streak: number;
 }
 
+export interface GoogleAuthRequest {
+  id_token: string;
+}
+
+export interface GoogleAuthResponse {
+  message: string;
+  user_id: number;
+  eco_points: number;
+  streak: number;
+}
+
 export interface RecyclingMaterialStatsResponse {
   key: string;
   quantity: number;
@@ -222,6 +233,30 @@ export async function getProfile(userId: string): Promise<ProfileResponse> {
     const errorCode = error.detail;
     throw new Error(
       ERROR_CODE_MAP[errorCode] || errorCode || "Failed to fetch profile",
+    );
+  }
+
+  return response.json();
+}
+
+// ─── Google Auth ───────────────────────────────────────────────────────────────
+
+export async function googleAuth(
+  data: GoogleAuthRequest,
+): Promise<GoogleAuthResponse> {
+  const response = await fetch(`${API_URL}/auth/google`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error: ApiError = await response.json();
+    const errorCode = error.detail;
+    throw new Error(
+      ERROR_CODE_MAP[errorCode] || errorCode || "Google authentication failed",
     );
   }
 

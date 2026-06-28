@@ -1,4 +1,5 @@
 import logging
+import os
 
 from app.core.security import hash_password
 from app.db.session import SessionLocal
@@ -8,7 +9,7 @@ from app.schemas.password_reset import (
     PasswordResetRequest,
     PasswordResetVerifyRequest,
 )
-from app.schemas.user import UserCreate, UserLogin
+from app.schemas.user import GoogleAuthRequest, UserCreate, UserLogin
 from app.services.password_reset_service import (
     create_password_reset_request,
     reset_password_with_code,
@@ -18,6 +19,8 @@ from app.services.password_reset_service import (
 from app.services.task_service import record_login
 from app.services.user_service import update_streak
 from fastapi import APIRouter, Depends, HTTPException, Request
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -150,3 +153,80 @@ def get_profile(user_id: int, db: Session = Depends(get_db)):
         "streak": user.streak,
         "total_scans": user.total_scans,
     }
+
+
+@router.post("/google")
+def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
+    try:
+        # Verify the Google ID token
+        google_client_id = os.getenv("GOOGLE_CLIENT_ID")
+        if not google_client_id:
+            logger.error("GOOGLE_CLIENT_ID not configured")
+            raise HTTPException(status_code=500, detail="Google auth not configured")
+
+        idinfo = id_token.verify_oauth2_token(
+            payload.id_token,
+            google_requests.Request(),
+            google_client_id
+        )
+
+        # Get user info from Google token
+        email = idinfo.get("email")
+        if not email:
+            raise HTTPException(status_code=400, detail="Invalid Google token: no email")
+
+        email = email.strip().lower()
+        name = idinfo.get("name", "")
+        google_id = idinfo.get("sub")
+
+        # Check if user exists by email
+        db_user = db.query(User).filter(User.email == email).first()
+
+        if db_user:
+            # User exists - login
+            # Update streak logic
+            db_user = update_streak(db, db_user)
+            record_login(db_user)
+            db.add(db_user)
+            db.commit()
+            db.refresh(db_user)
+
+            return {
+                "message": "Login successful",
+                "user_id": db_user.id,
+                "eco_points": db_user.eco_points,
+                "streak": db_user.streak,
+            }
+        else:
+            # New user - create account
+            # For Google auth, we need a city. We'll use a default or ask later.
+            # For now, use "Unknown" as default city
+            new_user = User(
+                full_name=name or "Google User",
+                email=email,
+                password="",  # No password for Google auth
+                city="Unknown",  # Default city, user can update later
+            )
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+
+            # Record initial login
+            record_login(new_user)
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+
+            return {
+                "message": "User registered successfully",
+                "user_id": new_user.id,
+                "eco_points": new_user.eco_points,
+                "streak": new_user.streak,
+            }
+
+    except ValueError as e:
+        logger.error(f"Google token verification failed: {e}")
+        raise HTTPException(status_code=400, detail="Invalid Google token")
+    except Exception as e:
+        logger.error(f"Google auth error: {e}")
+        raise HTTPException(status_code=500, detail="Google authentication failed")
