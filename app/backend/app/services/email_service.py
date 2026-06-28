@@ -72,51 +72,110 @@ class SmtpEmailProvider:
                 f"SMTP is not fully configured. Missing: {', '.join(missing)}"
             )
 
+        smtp_host = str(self.host or "")
+        smtp_username = str(self.username or "")
+        smtp_password = str(self.password or "")
+        smtp_from_email = str(self.from_email or "")
+
         logger.info(
-            "[forgot-password] SMTP configuration detected. host=%s port=%s tls=%s ssl=%s from_email=%s username_present=%s password_present=%s",
-            self.host,
+            "[forgot-password] SMTP configuration detected. host=%s port=%s username=%s tls=%s ssl=%s from_email=%s username_present=%s password_present=%s",
+            smtp_host,
             self.port,
+            smtp_username,
             self.use_tls,
             self.use_ssl,
-            self.from_email,
+            smtp_from_email,
             bool(self.username),
             bool(self.password),
         )
 
         message = EmailMessage()
         message["Subject"] = subject
-        message["From"] = f"{self.from_name} <{self.from_email}>"
+        message["From"] = f"{self.from_name} <{smtp_from_email}>"
         message["To"] = to_email
         message.set_content(text_body)
 
         smtp_client = smtplib.SMTP_SSL if self.use_ssl else smtplib.SMTP
         try:
             logger.info(
-                "[forgot-password] SMTP connection started. host=%s port=%s",
-                self.host,
+                "[forgot-password] Connecting to SMTP... host=%s port=%s username=%s tls=%s ssl=%s",
+                smtp_host,
                 self.port,
+                smtp_username,
+                self.use_tls,
+                self.use_ssl,
             )
-            with smtp_client(self.host, self.port, timeout=self.timeout) as server:
+            with smtp_client(smtp_host, self.port, timeout=self.timeout) as server:
                 if not self.use_ssl and self.use_tls:
                     logger.info("[forgot-password] Starting SMTP TLS handshake")
                     _ = server.starttls()
+
                 logger.info(
                     "[forgot-password] Attempting SMTP authentication. username=%s",
-                    self.username,
+                    smtp_username,
                 )
-                _ = server.login(self.username, self.password)
-                logger.info("[forgot-password] SMTP authentication succeeded")
-                _ = server.send_message(message)
+                _ = server.login(smtp_username, smtp_password)
+                logger.info("[forgot-password] SMTP authentication successful")
+
                 logger.info(
-                    "[forgot-password] Email successfully sent. to=%s subject=%s",
+                    "[forgot-password] Sending email message. to=%s subject=%s",
                     to_email,
                     subject,
                 )
+                _ = server.send_message(message)
+                logger.info("[forgot-password] Email successfully sent")
+        except smtplib.SMTPAuthenticationError as exc:
+            logger.error(
+                "[forgot-password] SMTP authentication failed. host=%s port=%s username=%s tls=%s ssl=%s smtp_code=%s smtp_error=%s exception=%s\n%s",
+                self.host,
+                self.port,
+                self.username,
+                self.use_tls,
+                self.use_ssl,
+                getattr(exc, "smtp_code", None),
+                getattr(exc, "smtp_error", b"").decode(errors="ignore")
+                if getattr(exc, "smtp_error", None)
+                else None,
+                str(exc),
+                traceback.format_exc(),
+            )
+            raise
+        except smtplib.SMTPResponseException as exc:
+            logger.error(
+                "[forgot-password] SMTP response error. host=%s port=%s username=%s tls=%s ssl=%s smtp_code=%s smtp_error=%s exception=%s\n%s",
+                self.host,
+                self.port,
+                self.username,
+                self.use_tls,
+                self.use_ssl,
+                getattr(exc, "smtp_code", None),
+                getattr(exc, "smtp_error", b"").decode(errors="ignore")
+                if getattr(exc, "smtp_error", None)
+                else None,
+                str(exc),
+                traceback.format_exc(),
+            )
+            raise
+        except smtplib.SMTPException as exc:
+            logger.error(
+                "[forgot-password] General SMTP exception. host=%s port=%s username=%s tls=%s ssl=%s exception=%s\n%s",
+                self.host,
+                self.port,
+                self.username,
+                self.use_tls,
+                self.use_ssl,
+                str(exc),
+                traceback.format_exc(),
+            )
+            raise
         except Exception as exc:
-            logger.exception(
-                "[forgot-password] SMTP send failed. to=%s subject=%s error=%s\n%s",
-                to_email,
-                subject,
+            logger.error(
+                "[forgot-password] Non-SMTP email send failure. host=%s port=%s username=%s tls=%s ssl=%s exception=%s\n%s",
+                self.host,
+                self.port,
+                self.username,
+                self.use_tls,
+                self.use_ssl,
                 str(exc),
                 traceback.format_exc(),
             )
