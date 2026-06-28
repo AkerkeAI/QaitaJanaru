@@ -7,7 +7,6 @@ import { loginUser, getProfile } from "../lib/api";
 import { languageNames, Language } from "../lib/language";
 import { useLanguage } from "../contexts/LanguageContext";
 
-
 export default function LoginPage() {
   const router = useRouter();
 
@@ -35,7 +34,9 @@ export default function LoginPage() {
 
   const validateForm = (): boolean => {
     if (!email.trim()) {
-      setError(`${messages.login.pleaseEnter} ${messages.login.email.toLowerCase()}`);
+      setError(
+        `${messages.login.pleaseEnter} ${messages.login.email.toLowerCase()}`,
+      );
       return false;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -44,7 +45,9 @@ export default function LoginPage() {
       return false;
     }
     if (!password.trim()) {
-      setError(`${messages.login.pleaseEnter} ${messages.login.password.toLowerCase()}`);
+      setError(
+        `${messages.login.pleaseEnter} ${messages.login.password.toLowerCase()}`,
+      );
       return false;
     }
     return true;
@@ -64,57 +67,73 @@ export default function LoginPage() {
         email: email.trim(),
         password: password,
       });
-      const profile = await getProfile(
-  response.user_id.toString()
-);
+      const profile = await getProfile(response.user_id.toString());
 
-      
-        // Save user data to localStorage
+      // Save user data to localStorage
       localStorage.setItem("qaitaJanaru_user_id", response.user_id.toString());
       localStorage.setItem("qaitaJanaru_email", email.trim());
-      localStorage.setItem("qaitaJanaru_eco_points", response.eco_points.toString());
-      localStorage.setItem("qaitaJanaru_streak", response.streak?.toString() || "0");
-      
+      localStorage.setItem(
+        "qaitaJanaru_eco_points",
+        response.eco_points.toString(),
+      );
+      localStorage.setItem(
+        "qaitaJanaru_streak",
+        response.streak?.toString() || "0",
+      );
+
       // Store additional profile data for Eco Assistant
       localStorage.setItem("qaitaJanaru_name", profile.full_name || "Unknown");
-localStorage.setItem("qaitaJanaru_city", profile.city || "Unknown");
-localStorage.setItem(
-  "qaitaJanaru_achievements_count",
-  (profile.achievements?.length || 0).toString()
-);
+      localStorage.setItem("qaitaJanaru_city", profile.city || "Unknown");
+      localStorage.setItem(
+        "qaitaJanaru_achievements_count",
+        (profile.achievements?.length || 0).toString(),
+      );
       // store computed level from profile.eco_points if available
       try {
-        const computedLevel = Math.max(1, Math.floor((profile.eco_points || 0) / 100) + 1);
+        const computedLevel = Math.max(
+          1,
+          Math.floor((profile.eco_points || 0) / 100) + 1,
+        );
         localStorage.setItem("qaitaJanaru_level", computedLevel.toString());
       } catch (e) {
         localStorage.setItem("qaitaJanaru_level", profile.level.toString());
       }
-localStorage.setItem("qaitaJanaru_total_scans", profile.total_scans.toString());
-localStorage.setItem("qaitaJanaru_name", profile.full_name || "Unknown");
-localStorage.setItem("qaitaJanaru_city", profile.city || "Unknown");
-localStorage.setItem(
-  "qaitaJanaru_achievements_count",
-  (profile.achievements?.length || 0).toString()
-);
+      localStorage.setItem(
+        "qaitaJanaru_total_scans",
+        profile.total_scans.toString(),
+      );
+      localStorage.setItem("qaitaJanaru_name", profile.full_name || "Unknown");
+      localStorage.setItem("qaitaJanaru_city", profile.city || "Unknown");
+      localStorage.setItem(
+        "qaitaJanaru_achievements_count",
+        (profile.achievements?.length || 0).toString(),
+      );
       try {
-        const computedLevel = Math.max(1, Math.floor((profile.eco_points || 0) / 100) + 1);
+        const computedLevel = Math.max(
+          1,
+          Math.floor((profile.eco_points || 0) / 100) + 1,
+        );
         localStorage.setItem("qaitaJanaru_level", computedLevel.toString());
       } catch (e) {
         localStorage.setItem("qaitaJanaru_level", profile.level.toString());
       }
-localStorage.setItem("qaitaJanaru_total_scans", profile.total_scans.toString());
+      localStorage.setItem(
+        "qaitaJanaru_total_scans",
+        profile.total_scans.toString(),
+      );
 
       console.log("=== LOGIN PAGE LOCALSTORAGE DEBUG ===");
       console.log("Stored profile data in localStorage after login:");
       console.log("qaitaJanaru_name:", profile.full_name);
-console.log("qaitaJanaru_city:", profile.city);
-console.log("qaitaJanaru_level:", profile.level);
+      console.log("qaitaJanaru_city:", profile.city);
+      console.log("qaitaJanaru_level:", profile.level);
       console.log("=====================================");
 
       router.push("/profile");
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : messages.login.invalidCredentials;
-      
+      const errorMessage =
+        err instanceof Error ? err.message : messages.login.invalidCredentials;
+
       // Map error codes to translated messages
       let translatedError = errorMessage;
       if (errorMessage === "USER_NOT_FOUND") {
@@ -126,7 +145,7 @@ console.log("qaitaJanaru_level:", profile.level);
       } else {
         translatedError = messages.login.invalidCredentials;
       }
-      
+
       setError(translatedError);
     } finally {
       setIsLoading(false);
@@ -155,7 +174,8 @@ console.log("qaitaJanaru_level:", profile.level);
       <main
         className="relative w-full min-h-screen overflow-x-hidden flex flex-col items-center justify-start"
         style={{
-          background: "linear-gradient(to bottom right, #064e3b, #166534, #0f766e)",
+          background:
+            "linear-gradient(to bottom right, #064e3b, #166534, #0f766e)",
           paddingTop: "env(safe-area-inset-top, 0px)",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
@@ -168,15 +188,23 @@ console.log("qaitaJanaru_level:", profile.level);
         >
           <div
             className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full blur-[130px]"
-            style={{ background: "#10b981", opacity: 0.38, animation: "glowPulse 6s ease-in-out infinite" }}
+            style={{
+              background: "#10b981",
+              opacity: 0.38,
+              animation: "glowPulse 6s ease-in-out infinite",
+            }}
           />
           <div
             className="absolute -bottom-32 -right-32 w-[420px] h-[420px] rounded-full blur-[110px]"
-            style={{ background: "#0d9488", opacity: 0.28, animation: "glowPulse 8s ease-in-out infinite 2s" }}
+            style={{
+              background: "#0d9488",
+              opacity: 0.28,
+              animation: "glowPulse 8s ease-in-out infinite 2s",
+            }}
           />
           <div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[160px]"
-            style={{ background: "#34d399", opacity: 0.10 }}
+            style={{ background: "#34d399", opacity: 0.1 }}
           />
         </div>
 
@@ -207,8 +235,17 @@ console.log("qaitaJanaru_level:", profile.level);
               color: "#a7f3d0",
             }}
           >
-            <svg className="w-3 h-3 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd"/>
+            <svg
+              className="w-3 h-3 shrink-0"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fillRule="evenodd"
+                d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z"
+                clipRule="evenodd"
+              />
             </svg>
             {messages.common.back}
           </Link>
@@ -229,7 +266,8 @@ console.log("qaitaJanaru_level:", profile.level);
             </button>
 
             {showLanguageMenu && (
-              <div className="absolute top-full right-0 mt-2 rounded-xl border overflow-hidden z-50 shadow-xl"
+              <div
+                className="absolute top-full right-0 mt-2 rounded-xl border overflow-hidden z-50 shadow-xl"
                 style={{
                   background: "rgba(5, 46, 35, 0.95)",
                   backdropFilter: "blur(16px)",
@@ -256,9 +294,7 @@ console.log("qaitaJanaru_level:", profile.level);
         </div>
 
         {/* Login card */}
-        <div
-          className="relative z-10 w-full max-w-lg mx-auto px-4 mt-4 mb-8"
-        >
+        <div className="relative z-10 w-full max-w-lg mx-auto px-4 mt-4 mb-8">
           <div
             className="relative w-full rounded-3xl border shadow-2xl overflow-visible"
             style={{
@@ -266,25 +302,32 @@ console.log("qaitaJanaru_level:", profile.level);
               backdropFilter: "blur(24px)",
               WebkitBackdropFilter: "blur(24px)",
               borderColor: "rgba(52, 211, 153, 0.22)",
-              boxShadow: "0 0 0 1px rgba(52,211,153,0.08), 0 24px 60px rgba(0,0,0,0.40), 0 0 60px rgba(16,185,129,0.07)",
+              boxShadow:
+                "0 0 0 1px rgba(52,211,153,0.08), 0 24px 60px rgba(0,0,0,0.40), 0 0 60px rgba(16,185,129,0.07)",
             }}
           >
             {/* Top shimmer accent */}
             <div
               aria-hidden="true"
               className="absolute top-0 left-8 right-8 h-px rounded-full"
-              style={{ background: "linear-gradient(90deg, transparent, #34d399 50%, transparent)" }}
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, #34d399 50%, transparent)",
+              }}
             />
 
             <div className="px-6 sm:px-8 pt-8 pb-8">
-
               {/* Brand header */}
               <div className="text-center mb-7">
                 <div
                   className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 shadow-lg"
-                  style={{ background: "linear-gradient(135deg, #10b981, #0d9488)" }}
+                  style={{
+                    background: "linear-gradient(135deg, #10b981, #0d9488)",
+                  }}
                 >
-                  <span className="text-2xl" role="img" aria-label="seedling">🌱</span>
+                  <span className="text-2xl" role="img" aria-label="seedling">
+                    🌱
+                  </span>
                 </div>
 
                 <h1
@@ -306,17 +349,35 @@ console.log("qaitaJanaru_level:", profile.level);
 
               {/* Section divider */}
               <div className="flex items-center gap-3 mb-5">
-                <div className="flex-1 h-px" style={{ background: "rgba(52,211,153,0.18)" }} />
-                <span className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "#34d399" }}>
+                <div
+                  className="flex-1 h-px"
+                  style={{ background: "rgba(52,211,153,0.18)" }}
+                />
+                <span
+                  className="text-[10px] font-bold uppercase tracking-[0.18em]"
+                  style={{ color: "#34d399" }}
+                >
                   {messages.login.signInToAccount}
                 </span>
-                <div className="flex-1 h-px" style={{ background: "rgba(52,211,153,0.18)" }} />
+                <div
+                  className="flex-1 h-px"
+                  style={{ background: "rgba(52,211,153,0.18)" }}
+                />
               </div>
 
               {/* Error display */}
               {error && (
-                <div className="rounded-xl px-4 py-3 mb-4" style={{ background: "rgba(239, 68, 68, 0.15)", border: "1px solid rgba(239, 68, 68, 0.3)" }}>
-                  <p className="text-xs font-medium" style={{ color: "#fca5a5" }}>
+                <div
+                  className="rounded-xl px-4 py-3 mb-4"
+                  style={{
+                    background: "rgba(239, 68, 68, 0.15)",
+                    border: "1px solid rgba(239, 68, 68, 0.3)",
+                  }}
+                >
+                  <p
+                    className="text-xs font-medium"
+                    style={{ color: "#fca5a5" }}
+                  >
                     {error}
                   </p>
                 </div>
@@ -324,10 +385,12 @@ console.log("qaitaJanaru_level:", profile.level);
 
               {/* Form fields */}
               <div className="space-y-3.5">
-
                 {/* Email */}
                 <div>
-                  <label className="block text-[10px] font-bold mb-1.5 uppercase tracking-widest" style={{ color: "#6ee7b7" }}>
+                  <label
+                    className="block text-[10px] font-bold mb-1.5 uppercase tracking-widest"
+                    style={{ color: "#6ee7b7" }}
+                  >
                     {messages.login.email}
                   </label>
                   <input
@@ -344,7 +407,10 @@ console.log("qaitaJanaru_level:", profile.level);
 
                 {/* Password */}
                 <div>
-                  <label className="block text-[10px] font-bold mb-1.5 uppercase tracking-widest" style={{ color: "#6ee7b7" }}>
+                  <label
+                    className="block text-[10px] font-bold mb-1.5 uppercase tracking-widest"
+                    style={{ color: "#6ee7b7" }}
+                  >
                     {messages.login.password}
                   </label>
                   <div className="relative">
@@ -361,11 +427,27 @@ console.log("qaitaJanaru_level:", profile.level);
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold px-2 py-1 rounded-lg transition-colors whitespace-nowrap touch-manipulation"
-                      style={{ color: "#34d399", background: "rgba(0,0,0,0.22)" }}
+                      style={{
+                        color: "#34d399",
+                        background: "rgba(0,0,0,0.22)",
+                      }}
                     >
-                      {showPassword ? messages.login.hidePassword : messages.login.showPassword}
+                      {showPassword
+                        ? messages.login.hidePassword
+                        : messages.login.showPassword}
                     </button>
                   </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Link
+                    href="/forgot-password"
+                    prefetch={false}
+                    className="text-xs font-semibold underline underline-offset-2 hover:text-white transition-colors touch-manipulation"
+                    style={{ color: "#6ee7b7" }}
+                  >
+                    {messages.login.forgotPassword}
+                  </Link>
                 </div>
 
                 {/* Submit button */}
@@ -375,17 +457,24 @@ console.log("qaitaJanaru_level:", profile.level);
                   disabled={isLoading}
                   className="w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all duration-200 hover:scale-[1.02] hover:brightness-110 active:scale-[0.97] shadow-lg mt-1 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                   style={{
-                    background: "linear-gradient(135deg, #10b981 0%, #059669 55%, #0d9488 100%)",
+                    background:
+                      "linear-gradient(135deg, #10b981 0%, #059669 55%, #0d9488 100%)",
                     color: "#ffffff",
                     letterSpacing: "0.10em",
-                    boxShadow: "0 4px 28px rgba(16,185,129,0.45), 0 1px 0 rgba(255,255,255,0.10) inset",
+                    boxShadow:
+                      "0 4px 28px rgba(16,185,129,0.45), 0 1px 0 rgba(255,255,255,0.10) inset",
                   }}
                 >
-                  {isLoading ? messages.login.signingIn : messages.login.signInButton}
+                  {isLoading
+                    ? messages.login.signingIn
+                    : messages.login.signInButton}
                 </button>
 
                 {/* Register link */}
-                <p className="text-center text-xs pt-1" style={{ color: "#6ee7b7" }}>
+                <p
+                  className="text-center text-xs pt-1"
+                  style={{ color: "#6ee7b7" }}
+                >
                   {messages.login.noAccount}{" "}
                   <Link
                     href="/register"
@@ -396,7 +485,6 @@ console.log("qaitaJanaru_level:", profile.level);
                     {messages.login.signUp}
                   </Link>
                 </p>
-
               </div>
             </div>
 
@@ -404,7 +492,10 @@ console.log("qaitaJanaru_level:", profile.level);
             <div
               aria-hidden="true"
               className="absolute bottom-0 left-8 right-8 h-px rounded-full"
-              style={{ background: "linear-gradient(90deg, transparent, rgba(52,211,153,0.25), transparent)" }}
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent, rgba(52,211,153,0.25), transparent)",
+              }}
             />
           </div>
         </div>

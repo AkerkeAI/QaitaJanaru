@@ -1,5 +1,6 @@
 from app.db.session import Base, SessionLocal, engine
 from app.models.chat_message import ChatMessage  # noqa: F401
+from app.models.password_reset_code import PasswordResetCode  # noqa: F401
 from app.models.qr_claim import QrClaim  # noqa: F401
 from app.models.recycling_point import RecyclingPoint  # noqa: F401
 from app.models.recycling_submission import RecyclingSubmission  # noqa: F401

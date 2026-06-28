@@ -66,12 +66,33 @@ export interface ApiError {
   detail: string;
 }
 
+export interface GenericMessageResponse {
+  message: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordVerifyRequest {
+  email: string;
+  code: string;
+}
+
+export interface ForgotPasswordResetRequest {
+  email: string;
+  code: string;
+  new_password: string;
+}
+
 // ─── Error Code Mapping ─────────────────────────────────────────────────────────
 
 const ERROR_CODE_MAP: Record<string, string> = {
   EMAIL_ALREADY_EXISTS: "EMAIL_ALREADY_EXISTS",
   USER_NOT_FOUND: "USER_NOT_FOUND",
   INCORRECT_PASSWORD: "INCORRECT_PASSWORD",
+  PASSWORD_TOO_SHORT: "PASSWORD_TOO_SHORT",
+  INVALID_OR_EXPIRED_RESET_CODE: "INVALID_OR_EXPIRED_RESET_CODE",
 };
 
 // ─── Register ──────────────────────────────────────────────────────────────────
@@ -119,6 +140,74 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponse> {
 }
 
 // ─── Get Profile ───────────────────────────────────────────────────────────────
+
+export async function requestPasswordReset(
+  data: ForgotPasswordRequest,
+): Promise<GenericMessageResponse> {
+  const response = await fetch(`${API_URL}/auth/forgot-password/request`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error: ApiError = await response.json();
+    const errorCode = error.detail;
+    throw new Error(
+      ERROR_CODE_MAP[errorCode] || errorCode || "Password reset request failed",
+    );
+  }
+
+  return response.json();
+}
+
+export async function verifyPasswordResetCode(
+  data: ForgotPasswordVerifyRequest,
+): Promise<GenericMessageResponse> {
+  const response = await fetch(`${API_URL}/auth/forgot-password/verify`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error: ApiError = await response.json();
+    const errorCode = error.detail;
+    throw new Error(
+      ERROR_CODE_MAP[errorCode] ||
+        errorCode ||
+        "Password reset verification failed",
+    );
+  }
+
+  return response.json();
+}
+
+export async function resetPassword(
+  data: ForgotPasswordResetRequest,
+): Promise<GenericMessageResponse> {
+  const response = await fetch(`${API_URL}/auth/forgot-password/reset`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error: ApiError = await response.json();
+    const errorCode = error.detail;
+    throw new Error(
+      ERROR_CODE_MAP[errorCode] || errorCode || "Password reset failed",
+    );
+  }
+
+  return response.json();
+}
 
 export async function getProfile(userId: string): Promise<ProfileResponse> {
   const response = await fetch(`${API_URL}/profile/${userId}`, {

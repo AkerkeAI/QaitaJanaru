@@ -145,7 +145,37 @@ export interface Messages {
     invalidCredentials: string;
     incorrectPassword: string;
     userNotFound: string;
+    forgotPassword: string;
+    resetGenericSuccess: string;
     tagline: string;
+  };
+  forgotPassword: {
+    title: string;
+    subtitle: string;
+    email: string;
+    emailPlaceholder: string;
+    sendCode: string;
+    sendingCode: string;
+    code: string;
+    codePlaceholder: string;
+    verifyCode: string;
+    verifyingCode: string;
+    newPassword: string;
+    newPasswordPlaceholder: string;
+    confirmPassword: string;
+    confirmPasswordPlaceholder: string;
+    resetPassword: string;
+    resettingPassword: string;
+    invalidCode: string;
+    expiredCode: string;
+    passwordMismatch: string;
+    codeSentTitle: string;
+    codeSentDescription: string;
+    verifyInstructions: string;
+    resetSuccessTitle: string;
+    resetSuccessDescription: string;
+    requestAnotherCode: string;
+    backToLogin: string;
   };
   register: {
     title: string;
