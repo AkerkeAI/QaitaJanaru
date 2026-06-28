@@ -634,9 +634,39 @@ export default function EcoAssistantPage() {
           </svg>
         </button>
 
-        <div className="flex-1"></div>
+        <div className="ml-auto flex items-center gap-3">
+          <button
+            onClick={handleClearChat}
+            className="px-4 py-2.5 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg text-sm flex items-center gap-2"
+            style={{
+              background: colors.cardBg,
+              borderColor: colors.border,
+              borderWidth: 1,
+              color: colors.textSecondary,
+            }}
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M3 6h18" />
+              <path d="M8 6V4h8v2" />
+              <path d="M19 6l-1 14H6L5 6" />
+              <path d="M10 11v6" />
+              <path d="M14 11v6" />
+            </svg>
+            <span className="hidden sm:inline">
+              {translations.ecoAssistant.clearChat}
+            </span>
+          </button>
 
-        <QrHeaderAction />
+          <QrHeaderAction />
+        </div>
       </header>
 
       {/* Scrollable Chat Area */}
@@ -660,21 +690,6 @@ export default function EcoAssistantPage() {
           >
             {translations.ecoAssistant.subtitle}
           </p>
-        </div>
-
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={handleClearChat}
-            className="px-4 py-2 rounded-2xl backdrop-blur-xl hover:scale-105 transition-all duration-300 shadow-lg text-sm"
-            style={{
-              background: colors.cardBg,
-              borderColor: colors.border,
-              borderWidth: 1,
-              color: colors.textSecondary,
-            }}
-          >
-            {translations.ecoAssistant.clearChat}
-          </button>
         </div>
 
         {/* Welcome Card */}

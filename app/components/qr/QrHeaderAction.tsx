@@ -145,9 +145,10 @@ export function QrHeaderAction() {
         onClick={() => setOpen(true)}
         className="w-14 h-14 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 flex-shrink-0"
         style={{
-          background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})`,
-          color: colors.buttonText,
-          border: `1px solid ${colors.primary}55`,
+          backgroundColor: colors.cardBg,
+          color: colors.primary,
+          border: `1px solid ${colors.border}`,
+          boxShadow: `0 12px 32px ${colors.primary}22`,
         }}
         aria-label={messages.tasks.openQrScanner}
       >
