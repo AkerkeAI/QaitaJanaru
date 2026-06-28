@@ -3,7 +3,10 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from app.models.user import User
-from app.services.task_service import auto_claim_completed_tasks, record_scan
+from app.services.task_service import (
+    auto_claim_completed_tasks,
+    record_recycling_submission,
+)
 from app.services.user_service import add_eco_points, update_streak
 from sqlalchemy.orm import Session
 
@@ -22,7 +25,7 @@ def apply_recycling_action_progression(
 
     user = add_eco_points(db, user, earned_points)
     user = update_streak(db, user)
-    record_scan(user, earned_points)
+    record_recycling_submission(user, earned_points)
 
     reward_summary = auto_claim_completed_tasks(user)
     total_reward = int(earned_points) + int(reward_summary["task_rewards"])

@@ -21,23 +21,23 @@ DAILY_TASKS: List[Dict[str, Any]] = [
     },
     {
         "id": "daily-scan-1",
-        "title": "Отсканировать 1 продукт",
-        "description": "Сделайте 1 сканирование сегодня",
+        "title": "Посетить пункт переработки",
+        "description": "Подтвердите одно посещение пункта переработки сегодня",
         "reward": 5,
         "target": 1,
         "type": "daily",
-        "category": "scan",
-        "icon": "📸",
+        "category": "recycling_submission",
+        "icon": "📍",
     },
     {
         "id": "daily-scan-3",
-        "title": "Отсканировать 3 продукта",
-        "description": "Сделайте 3 сканирования сегодня",
+        "title": "Сдать материалы на переработку",
+        "description": "Подтвердите 3 отправки на переработку сегодня",
         "reward": 10,
         "target": 3,
         "type": "daily",
-        "category": "scan",
-        "icon": "📷",
+        "category": "recycling_submission",
+        "icon": "♻️",
     },
     {
         "id": "daily-chat-1",
@@ -84,23 +84,23 @@ DAILY_TASKS: List[Dict[str, Any]] = [
 WEEKLY_TASKS: List[Dict[str, Any]] = [
     {
         "id": "weekly-scan-15",
-        "title": "Отсканировать 15 продуктов",
-        "description": "Сделайте 15 сканирований за неделю",
+        "title": "Сделать 15 отправок на переработку",
+        "description": "Подтвердите 15 отправок перерабатываемых материалов за неделю",
         "reward": 40,
         "target": 15,
         "type": "weekly",
-        "category": "scan",
-        "icon": "📸",
+        "category": "recycling_submission",
+        "icon": "📍",
     },
     {
         "id": "weekly-scan-30",
-        "title": "Отсканировать 30 продуктов",
-        "description": "Сделайте 30 сканирований за неделю",
+        "title": "Сделать 30 отправок на переработку",
+        "description": "Подтвердите 30 отправок перерабатываемых материалов за неделю",
         "reward": 70,
         "target": 30,
         "type": "weekly",
-        "category": "scan",
-        "icon": "📷",
+        "category": "recycling_submission",
+        "icon": "♻️",
     },
     {
         "id": "weekly-earn-300",
@@ -269,15 +269,19 @@ def recompute_all_task_progress(user: User, db: Session | None = None) -> None:
     weekly_meta = _get_meta_bucket(user, "weekly")
 
     _set_progress(user, "daily-login", 1 if daily_meta.get("logged_in_today") else 0)
-    _set_progress(user, "daily-scan-1", int(daily_meta.get("scans", 0)))
-    _set_progress(user, "daily-scan-3", int(daily_meta.get("scans", 0)))
+    _set_progress(user, "daily-scan-1", int(daily_meta.get("recycling_submissions", 0)))
+    _set_progress(user, "daily-scan-3", int(daily_meta.get("recycling_submissions", 0)))
     _set_progress(user, "daily-chat-1", int(daily_meta.get("chat_messages", 0)))
     _set_progress(user, "daily-earn-20", int(daily_meta.get("earned_points", 0)))
     _set_progress(user, "daily-route-1", int(daily_meta.get("routes", 0)))
     _set_progress(user, "daily-map-1", int(daily_meta.get("map_visits", 0)))
 
-    _set_progress(user, "weekly-scan-15", int(weekly_meta.get("scans", 0)))
-    _set_progress(user, "weekly-scan-30", int(weekly_meta.get("scans", 0)))
+    _set_progress(
+        user, "weekly-scan-15", int(weekly_meta.get("recycling_submissions", 0))
+    )
+    _set_progress(
+        user, "weekly-scan-30", int(weekly_meta.get("recycling_submissions", 0))
+    )
     _set_progress(user, "weekly-earn-300", int(weekly_meta.get("earned_points", 0)))
     _set_progress(user, "weekly-streak-5", int(user.streak or 0))
     _set_progress(user, "weekly-chat-10", int(weekly_meta.get("chat_messages", 0)))
@@ -338,6 +342,16 @@ def record_scan(user: User, earned_points: int) -> None:
     sync_task_state(user)
     _increment_meta_counter(user, "daily", "scans", 1)
     _increment_meta_counter(user, "weekly", "scans", 1)
+    _increment_meta_counter(user, "daily", "earned_points", earned_points)
+    _increment_meta_counter(user, "weekly", "earned_points", earned_points)
+    recompute_all_task_progress(user)
+
+
+def record_recycling_submission(user: User, earned_points: int) -> None:
+    _ensure_meta(user)
+    sync_task_state(user)
+    _increment_meta_counter(user, "daily", "recycling_submissions", 1)
+    _increment_meta_counter(user, "weekly", "recycling_submissions", 1)
     _increment_meta_counter(user, "daily", "earned_points", earned_points)
     _increment_meta_counter(user, "weekly", "earned_points", earned_points)
     recompute_all_task_progress(user)

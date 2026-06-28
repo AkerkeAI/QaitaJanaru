@@ -6,8 +6,6 @@ from app.models.scan_history import ScanHistory
 from app.models.user import User
 from app.schemas.scan import ScanResponse
 from app.services.ai_waste_detector import AIProviderError, analyze_waste_image
-from app.services.progression_service import apply_recycling_action_progression
-from app.services.reward_service import points_for_waste
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
@@ -79,15 +77,6 @@ async def scan_waste(
             detail="Service temporarily unavailable. Please try again.",
         ) from exc
 
-    earned_points = points_for_waste(result["waste_type"])
-    progression = apply_recycling_action_progression(
-        db,
-        user,
-        earned_points=earned_points,
-        scan_increment=1,
-    )
-    user = progression["user"]
-
     scan_record = ScanHistory(
         user_id=user.id,
         waste_type=result["waste_type"],
@@ -95,7 +84,7 @@ async def scan_waste(
         confidence=result["confidence"],
         eco_tip=result["eco_tip"],
         recycling_advice=result["recycling_advice"],
-        earned_points=earned_points,
+        earned_points=0,
         timestamp=datetime.utcnow(),
     )
     try:
@@ -119,12 +108,12 @@ async def scan_waste(
         "recycling_advice": result["recycling_advice"],
         "preparation_steps": result["preparation_steps"],
         "recyclable": result["recyclable"],
-        "earned_points": earned_points,
-        "scan_reward": earned_points,
-        "task_rewards": int(progression["task_rewards"]),
-        "daily_task_rewards": int(progression["daily_task_rewards"]),
-        "weekly_task_rewards": int(progression["weekly_task_rewards"]),
-        "auto_claimed_task_ids": list(progression["auto_claimed_task_ids"]),
-        "total_reward": int(progression["total_reward"]),
-        "new_total_points": user.eco_points,
+        "earned_points": 0,
+        "scan_reward": 0,
+        "task_rewards": 0,
+        "daily_task_rewards": 0,
+        "weekly_task_rewards": 0,
+        "auto_claimed_task_ids": [],
+        "total_reward": 0,
+        "new_total_points": int(user.eco_points or 0),
     }

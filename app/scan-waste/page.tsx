@@ -197,18 +197,6 @@ export default function ScanWastePage() {
         ),
       );
 
-      localStorage.setItem(
-        "qaitaJanaru_eco_points",
-        data.new_total_points.toString(),
-      );
-      localStorage.setItem(
-        "qaitaJanaru_total_scans",
-        (
-          parseInt(localStorage.getItem("qaitaJanaru_total_scans") || "0", 10) +
-          1
-        ).toString(),
-      );
-
       setLoadingState("complete");
     } catch (err) {
       setError(
