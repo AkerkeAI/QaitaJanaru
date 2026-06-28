@@ -2,6 +2,7 @@ from app.db.session import Base, SessionLocal, engine
 from app.models.chat_message import ChatMessage  # noqa: F401
 from app.models.qr_claim import QrClaim  # noqa: F401
 from app.models.recycling_point import RecyclingPoint  # noqa: F401
+from app.models.recycling_submission import RecyclingSubmission  # noqa: F401
 from app.models.scan_history import ScanHistory  # noqa: F401
 from app.models.user import User  # noqa: F401
 from app.routers import (

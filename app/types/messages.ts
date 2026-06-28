@@ -233,6 +233,38 @@ export interface Messages {
     recyclingPlant: string;
     hazardousDisposal: string;
   };
+  qr: {
+    title: string;
+    loading: string;
+    pointNotFound: string;
+    processingError: string;
+    thankYouTitle: string;
+    thankYouMessage: string;
+    pointInformation: string;
+    whatDidYouRecycle: string;
+    confirmRecycling: string;
+    submitting: string;
+    returnHome: string;
+    address: string;
+    city: string;
+    plasticBottles: string;
+    glass: string;
+    paper: string;
+    metalCans: string;
+    batteries: string;
+    electronics: string;
+    cardboard: string;
+    otherRecyclable: string;
+    addAtLeastOneItem: string;
+    alreadySubmittedToday: string;
+    successTitle: string;
+    youEarned: string;
+    ecoPointsSuffix: string;
+    tasksUpdated: string;
+    achievementsUpdated: string;
+    chaptersProgressUpdated: string;
+    statsUpdated: string;
+  };
   ecoAssistant: {
     title: string;
     subtitle: string;

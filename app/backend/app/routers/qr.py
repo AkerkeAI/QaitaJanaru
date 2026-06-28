@@ -1,10 +1,13 @@
+from typing import Any, cast
+
 from app.db.session import SessionLocal
-from app.models.recycling_point import RecyclingPoint
 from app.schemas.qr import (
     QrClaimRequest,
     QrClaimResponse,
     RecyclingPointQrListResponse,
     RecyclingPointQrResponse,
+    SubmitQrRecyclingRequest,
+    SubmitQrRecyclingResponse,
 )
 from app.services.qr_service import (
     build_all_qr_zip,
@@ -13,6 +16,7 @@ from app.services.qr_service import (
     claim_qr_reward,
     get_point_by_id,
     list_qr_points,
+    submit_recycling_confirmation,
 )
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
@@ -31,15 +35,29 @@ def get_db():
 
 @router.get("/points", response_model=RecyclingPointQrListResponse)
 async def get_qr_points(db: Session = Depends(get_db)):
-    return RecyclingPointQrListResponse(
-        items=[RecyclingPointQrResponse(**item) for item in list_qr_points(db)]
-    )
+    items = [
+        RecyclingPointQrResponse.model_validate(item) for item in list_qr_points(db)
+    ]
+    return RecyclingPointQrListResponse(items=items)
 
 
 @router.post("/claim", response_model=QrClaimResponse)
 async def claim_qr(request: QrClaimRequest, db: Session = Depends(get_db)):
     result = claim_qr_reward(db, request.user_id, request.qr_identifier)
-    return QrClaimResponse(**result)
+    return QrClaimResponse.model_validate(cast(dict[str, Any], result))
+
+
+@router.post("/submit", response_model=SubmitQrRecyclingResponse)
+async def submit_qr_recycling(
+    request: SubmitQrRecyclingRequest, db: Session = Depends(get_db)
+):
+    result = submit_recycling_confirmation(
+        db,
+        request.user_id,
+        request.qr_identifier,
+        request.quantities,
+    )
+    return SubmitQrRecyclingResponse.model_validate(cast(dict[str, Any], result))
 
 
 @router.get("/download/{point_id}.svg")
