@@ -1,5 +1,6 @@
 import logging
 import smtplib
+import socket
 import traceback
 from email.message import EmailMessage
 from typing import Protocol
@@ -96,35 +97,94 @@ class SmtpEmailProvider:
         message["To"] = to_email
         message.set_content(text_body)
 
-        smtp_client = smtplib.SMTP_SSL if self.use_ssl else smtplib.SMTP
+        logger.info(
+            "[forgot-password] SMTP initialization: implementation=%s host=%s port=%s timeout=%s tls=%s ssl=%s",
+            "smtplib.SMTP_SSL" if self.use_ssl else "smtplib.SMTP",
+            smtp_host,
+            self.port,
+            self.timeout,
+            self.use_tls,
+            self.use_ssl,
+        )
+
+        if self.port == 587 and self.use_ssl:
+            raise RuntimeError(
+                "Invalid SMTP configuration: SMTP_SSL must not be used with port 587"
+            )
+
         try:
-            logger.info(
-                "[forgot-password] Connecting to SMTP... host=%s port=%s username=%s tls=%s ssl=%s",
+            resolved_addresses = socket.getaddrinfo(
                 smtp_host,
                 self.port,
-                smtp_username,
-                self.use_tls,
-                self.use_ssl,
+                type=socket.SOCK_STREAM,
             )
-            with smtp_client(smtp_host, self.port, timeout=self.timeout) as server:
-                if not self.use_ssl and self.use_tls:
-                    logger.info("[forgot-password] Starting SMTP TLS handshake")
-                    _ = server.starttls()
+            logger.info(
+                "[forgot-password] SMTP DNS resolved. host=%s port=%s socket_addresses=%s",
+                smtp_host,
+                self.port,
+                [entry[4] for entry in resolved_addresses],
+            )
+        except socket.gaierror as exc:
+            logger.error(
+                "[forgot-password] SMTP DNS failure. host=%s port=%s exception=%s\n%s",
+                smtp_host,
+                self.port,
+                str(exc),
+                traceback.format_exc(),
+            )
+            raise
 
-                logger.info(
-                    "[forgot-password] Attempting SMTP authentication. username=%s",
-                    smtp_username,
-                )
+        try:
+            logger.info(
+                "[forgot-password] Connecting... host=%s port=%s socket_address_candidates=%s timeout=%s",
+                smtp_host,
+                self.port,
+                [entry[4] for entry in resolved_addresses],
+                self.timeout,
+            )
+            with smtplib.SMTP(smtp_host, self.port, timeout=self.timeout) as server:
+                logger.info("[forgot-password] Connected")
+
+                logger.info("[forgot-password] EHLO")
+                _ = server.ehlo()
+
+                if self.port == 587:
+                    logger.info("[forgot-password] STARTTLS")
+                    _ = server.starttls()
+                    logger.info("[forgot-password] EHLO")
+                    _ = server.ehlo()
+                elif self.use_tls:
+                    logger.info("[forgot-password] STARTTLS")
+                    _ = server.starttls()
+                    logger.info("[forgot-password] EHLO")
+                    _ = server.ehlo()
+
+                logger.info("[forgot-password] LOGIN username=%s", smtp_username)
                 _ = server.login(smtp_username, smtp_password)
                 logger.info("[forgot-password] SMTP authentication successful")
 
                 logger.info(
-                    "[forgot-password] Sending email message. to=%s subject=%s",
+                    "[forgot-password] SEND to=%s subject=%s",
                     to_email,
                     subject,
                 )
                 _ = server.send_message(message)
                 logger.info("[forgot-password] Email successfully sent")
+
+                logger.info("[forgot-password] QUIT")
+                _ = server.quit()
+        except TimeoutError as exc:
+            logger.error(
+                "[forgot-password] SMTP connection timed out. host=%s port=%s socket_address_candidates=%s timeout=%s possible_render_egress_block=true exception=%s\n%s",
+                smtp_host,
+                self.port,
+                [entry[4] for entry in resolved_addresses],
+                self.timeout,
+                str(exc),
+                traceback.format_exc(),
+            )
+            raise
+
         except smtplib.SMTPAuthenticationError as exc:
             logger.error(
                 "[forgot-password] SMTP authentication failed. host=%s port=%s username=%s tls=%s ssl=%s smtp_code=%s smtp_error=%s exception=%s\n%s",
