@@ -278,7 +278,7 @@ export default function ProfilePage() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="relative z-10 min-h-screen flex flex-col">
-        <header className="flex items-center justify-between gap-3 p-4 md:p-6 lg:p-8">
+        <header className="flex items-center justify-between gap-3 p-4 md:p-6 lg:p-8 flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group"

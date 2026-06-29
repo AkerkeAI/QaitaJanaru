@@ -21,13 +21,13 @@ export function UserStatusHeader({
       aria-label="user status"
     >
       <div
-        className="rounded-2xl border backdrop-blur-xl px-3 py-2 md:px-4 md:py-3"
+        className="rounded-2xl border backdrop-blur-xl px-4 py-3 md:px-5 md:py-4"
         style={{
           backgroundColor: colors.cardBg,
           borderColor: colors.border,
         }}
       >
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 md:gap-x-4 text-xs md:text-sm lg:text-base font-semibold">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 md:gap-x-5 text-sm md:text-base lg:text-lg font-semibold">
           <span style={{ color: colors.text }}>🌱 {ecoPoints}</span>
           <span style={{ color: colors.textSecondary }}>🔥 {streak}</span>
           <span style={{ color: colors.textSecondary }}>
