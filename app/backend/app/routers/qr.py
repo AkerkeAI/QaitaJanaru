@@ -11,6 +11,7 @@ from app.schemas.qr import (
 )
 from app.services.qr_service import (
     build_all_qr_zip,
+    build_poster_svg,
     build_qr_png_bytes,
     build_qr_svg,
     claim_qr_reward,
@@ -83,6 +84,23 @@ async def download_qr_png(point_id: int, db: Session = Depends(get_db)):
         content=png_bytes,
         media_type="image/png",
         headers={"Content-Disposition": f"attachment; filename=qr-{point.id}.png"},
+    )
+
+
+@router.get("/download/{point_id}/poster.svg")
+async def download_qr_poster(point_id: int, db: Session = Depends(get_db)):
+    point = get_point_by_id(db, point_id)
+    if not point:
+        raise HTTPException(status_code=404, detail="QR point not found")
+    poster_svg = build_poster_svg(point)
+    poster_bytes = poster_svg.encode("utf-8")
+    return Response(
+        content=poster_bytes,
+        media_type="image/svg+xml; charset=utf-8",
+        headers={
+            "Content-Disposition": f"attachment; filename=\"poster-{point.id}.svg\"",
+            "Cache-Control": "no-store",
+        },
     )
 
 

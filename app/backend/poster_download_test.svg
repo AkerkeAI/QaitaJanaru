@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2480" height="3508" viewBox="0 0 2480 3508">
+  <rect width="2480" height="3508" fill="#0d4a2f" />
+  <rect x="120" y="120" width="2240" height="3268" rx="48" fill="#ffffff" stroke="#d9f99d" stroke-width="8" />
+  <rect x="160" y="160" width="2160" height="250" rx="32" fill="#0f766e" />
+  <text x="220" y="250" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="90" font-weight="700">Qaita Janaru</text>
+  <text x="220" y="320" fill="#d1fae5" font-family="Arial, Helvetica, sans-serif" font-size="36">Каждый QR ведёт к пункту переработки</text>
+
+  <g>
+    <rect x="220" y="520" width="2040" height="2300" rx="42" fill="#f9fafb" stroke="#e7f5db" stroke-width="5" />
+    <text x="300" y="630" fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="800">Тестовый пункт</text>
+    <text x="300" y="705" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="36">Алматы</text>
+    <text x="300" y="760" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="36">ул. Тестовая, 1</text>
+
+    <rect x="280" y="860" width="1920" height="1420" rx="36" fill="#facc15" />
+    <rect x="360" y="940" width="1760" height="1260" rx="34" fill="#ffffff" stroke="#f59e0b" stroke-width="6" />
+    <text x="420" y="1020" fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-size="46" font-weight="700">Отсканируйте QR-код</text>
+    <text x="420" y="1088" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="30">Откройте страницу подтверждения и продолжите переработку</text>
+    <text x="420" y="1138" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="30">без повторного сканирования</text>
+
+    <rect x="770.0" y="1180" width="940" height="940" rx="36" fill="#ffffff" opacity="0.85" />
+    <image href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNjQiIGhlaWdodD0iMjY0IiBjbGFzcz0ic2Vnbm8iPjxnIHRyYW5zZm9ybT0ic2NhbGUoOCkiPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0wIDBoMzN2MzNoLTMzeiIvPjxwYXRoIGNsYXNzPSJxcmxpbmUiIHN0cm9rZT0iIzAwMCIgZD0iTTIgMi41aDdtMSAwaDJtMyAwaDJtMyAwaDFtMyAwaDdtLTI5IDFoMW01IDBoMW0yIDBoMm0xIDBoM20xIDBoMW0yIDBoMm0xIDBoMW01IDBoMW0tMjkgMWgxbTEgMGgzbTEgMGgxbTQgMGgybTIgMGg2bTEgMGgxbTEgMGgzbTEgMGgxbS0yOSAxaDFtMSAwaDNtMSAwaDFtMSAwaDFtNiAwaDFtMiAwaDFtMSAwaDFtMSAwaDFtMSAwaDNtMSAwaDFtLTI5IDFoMW0xIDBoM20xIDBoMW0xIDBoMW0yIDBoMm0xIDBoMm02IDBoMW0xIDBoM20xIDBoMW0tMjkgMWgxbTUgMGgxbTEgMGgxbTIgMGgybTMgMGg1bTEgMGgxbTUgMGgxbS0yOSAxaDdtMSAwaDFtMSAwaDFtMSAwaDFtMSAwaDFtMSAwaDFtMSAwaDFtMSAwaDFtMSAwaDdtLTIxIDFoM20xIDBoMm0zIDBoMW0xIDBoMm0tMjEgMWgxbTMgMGgxbTEgMGg0bTEgMGgzbTEgMGgxbTEgMGgxbTIgMGg2bTIgMGgxbS0yOSAxaDFtMSAwaDNtMiAwaDFtMSAwaDNtMSAwaDNtMiAwaDFtMSAwaDFtMSAwaDdtLTI5IDFoNW0xIDBoMm0yIDBoMm0zIDBoMm0zIDBoNG00IDBoMW0tMjkgMWgxbTEgMGgybTEgMGgxbTMgMGgxbTEgMGgxbTIgMGgxbTEgMGgzbTEgMGgxbTEgMGgxbTIgMGgxbTEgMGgybS0yNyAxaDNtMSAwaDFtMiAwaDJtMSAwaDNtMSAwaDJtMSAwaDFtMyAwaDFtMyAwaDFtLTI4IDFoMm0xIDBoMW0xIDBoMW0xIDBoMm0xIDBoMW00IDBoMm0xIDBoMW0zIDBoN20tMjkgMWgzbTEgMGg0bTMgMGg1bTEgMGgybTYgMGgybTEgMGgxbS0yOSAxaDRtMSAwaDFtMSAwaDJtNCAwaDFtMSAwaDVtMiAwaDNtMiAwaDJtLTI5IDFoMm0yIDBoMW0xIDBoMm0xIDBoM20xIDBoMW0yIDBoMm0xIDBoMW0xIDBoMW01IDBoMW0tMjggMWgybTEgMGgxbTQgMGgzbTEgMGg3bTMgMGg0bTEgMGgybS0yNyAxaDFtMSAwaDRtMyAwaDJtMiAwaDFtMSAwaDJtMSAwaDJtNCAwaDFtMSAwaDFtLTI0IDFoMW0xIDBoMm0xIDBoMW0xIDBoMW0xIDBoMW0yIDBoMW0zIDBoMW0xIDBoMW0zIDBoMm0tMjkgMWg0bTIgMGgxbTIgMGgzbTEgMGgzbTEgMGg5bTIgMGgxbS0yMSAxaDFtMSAwaDJtMyAwaDFtMSAwaDRtMyAwaDFtMyAwaDFtLTI5IDFoN20xIDBoMm0xIDBoNm0xIDBoM20xIDBoMW0xIDBoM20xIDBoMW0tMjkgMWgxbTUgMGgxbTQgMGgxbTEgMGgxbTEgMGgzbTEgMGgybTMgMGgxbTIgMGgybS0yOSAxaDFtMSAwaDNtMSAwaDFtMSAwaDNtMSAwaDJtMiAwaDJtMSAwaDdtMSAwaDFtLTI4IDFoMW0xIDBoM20xIDBoMW0zIDBoMW0xIDBoNW0xIDBoMm0xIDBoMW02IDBoMW0tMjkgMWgxbTEgMGgzbTEgMGgxbTIgMGgybTQgMGgzbTEgMGgzbTMgMGg0bS0yOSAxaDFtNSAwaDFtNiAwaDFtMSAwaDRtMSAwaDNtMiAwaDFtMSAwaDJtLTI5IDFoN20xIDBoNW0zIDBoMm0yIDBoMm0yIDBoMW0yIDBoMSIvPjwvZz48L3N2Zz4K" x="790.0" y="1200" width="900" height="900" preserveAspectRatio="xMidYMid meet" />
+  </g>
+
+  <rect x="300" y="2980" width="1880" height="340" rx="30" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="6" />
+  <text x="360" y="3060" fill="#065f46" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700">Спасибо за участие в QaitaJanaru</text>
+  <text x="360" y="3135" fill="#047857" font-family="Arial, Helvetica, sans-serif" font-size="30">Пожалуйста, покажите этот постер на пункте переработки</text>
+</svg>

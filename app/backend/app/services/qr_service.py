@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import io
 import zipfile
 from datetime import datetime, timedelta
@@ -49,6 +50,67 @@ def build_qr_png_bytes(point: RecyclingPoint) -> bytes:
     buffer = io.BytesIO()
     qr.save(buffer, kind="png", scale=8, border=2, dark="#000000", light="#ffffff")
     return buffer.getvalue()
+
+
+def _escape_xml(value: str | None) -> str:
+    if not value:
+        return ""
+    return (
+        str(value)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&apos;")
+    )
+
+
+def build_poster_svg(point: RecyclingPoint) -> str:
+    qr_svg = build_qr_svg(point)
+    qr_data_uri = (
+        "data:image/svg+xml;base64,"
+        + base64.b64encode(qr_svg.encode("utf-8")).decode("ascii")
+    )
+
+    width = 2480
+    height = 3508
+    qr_size = 900
+    qr_x = (width - qr_size) / 2
+    qr_y = 1200
+
+    title = _escape_xml("QaitaJanaru")
+    point_name = _escape_xml(point.name or "Recycling Point")
+    city = _escape_xml(point.city or "")
+    address = _escape_xml(point.address or "")
+
+    return f'''<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">
+  <rect width="{width}" height="{height}" fill="#0d4a2f" />
+  <rect x="120" y="120" width="{width - 240}" height="{height - 240}" rx="48" fill="#ffffff" stroke="#d9f99d" stroke-width="8" />
+  <rect x="160" y="160" width="{width - 320}" height="250" rx="32" fill="#0f766e" />
+  <text x="220" y="250" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="90" font-weight="700">Qaita Janaru</text>
+  <text x="220" y="320" fill="#d1fae5" font-family="Arial, Helvetica, sans-serif" font-size="36">Каждый QR ведёт к пункту переработки</text>
+
+  <g>
+    <rect x="220" y="520" width="{width - 440}" height="2300" rx="42" fill="#f9fafb" stroke="#e7f5db" stroke-width="5" />
+    <text x="300" y="630" fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="800">{point_name}</text>
+    <text x="300" y="705" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="36">{city}</text>
+    <text x="300" y="760" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="36">{address}</text>
+
+    <rect x="280" y="860" width="{width - 560}" height="1420" rx="36" fill="#facc15" />
+    <rect x="360" y="940" width="{width - 720}" height="1260" rx="34" fill="#ffffff" stroke="#f59e0b" stroke-width="6" />
+    <text x="420" y="1020" fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-size="46" font-weight="700">Отсканируйте QR-код</text>
+    <text x="420" y="1088" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="30">Откройте страницу подтверждения и продолжите переработку</text>
+    <text x="420" y="1138" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="30">без повторного сканирования</text>
+
+    <rect x="{qr_x - 20}" y="{qr_y - 20}" width="{qr_size + 40}" height="{qr_size + 40}" rx="36" fill="#ffffff" opacity="0.85" />
+    <image href="{qr_data_uri}" x="{qr_x}" y="{qr_y}" width="{qr_size}" height="{qr_size}" preserveAspectRatio="xMidYMid meet" />
+  </g>
+
+  <rect x="300" y="2980" width="{width - 600}" height="340" rx="30" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="6" />
+  <text x="360" y="3060" fill="#065f46" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700">Спасибо за участие в QaitaJanaru</text>
+  <text x="360" y="3135" fill="#047857" font-family="Arial, Helvetica, sans-serif" font-size="30">Пожалуйста, покажите этот постер на пункте переработки</text>
+</svg>'''
 
 
 def serialize_point(point: RecyclingPoint) -> Dict[str, str | int]:
