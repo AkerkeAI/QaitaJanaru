@@ -213,7 +213,7 @@ export default function RewardsPage() {
             </svg>
           </button>
 
-          {profile && <UserStatusHeader {...{ ecoPoints: profile.ecoPoints, streak: profile.streak, level: profile.level }} />}
+          {profile && <UserStatusHeader {...{ ecoPoints: profile.eco_points, streak: profile.streak, level: profile.level }} />}
         </header>
 
         <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
