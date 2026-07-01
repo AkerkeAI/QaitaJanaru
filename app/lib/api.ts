@@ -241,6 +241,29 @@ export async function getProfile(userId: string): Promise<ProfileResponse> {
 
 // ─── Google Auth ───────────────────────────────────────────────────────────────
 
+export async function updateProfile(
+  userId: string,
+  data: Partial<{ city: string; full_name: string; institution: string; user_type: string }>,
+): Promise<ProfileResponse> {
+  const response = await fetch(`${API_URL}/profile/${userId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error: ApiError = await response.json();
+    const errorCode = error.detail;
+    throw new Error(
+      ERROR_CODE_MAP[errorCode] || errorCode || "Failed to update profile",
+    );
+  }
+
+  return response.json();
+}
+
 export async function googleAuth(
   data: GoogleAuthRequest,
 ): Promise<GoogleAuthResponse> {

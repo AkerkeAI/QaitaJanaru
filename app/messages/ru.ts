@@ -298,6 +298,13 @@ export const messages: Messages = {
     viewDetails: "Подробнее",
     whereToRedeem: "Где получить",
   },
+  selectCity: {
+    title: "Выберите ваш город",
+    subtitle: "Выберите город, чтобы начать",
+    selectCity: "Выберите город",
+    continue: "Продолжить",
+    loading: "Сохранение...",
+  },
   recyclingMap: {
     title: "Карта переработки",
     subtitle: "Найдите центры переработки рядом с вами",

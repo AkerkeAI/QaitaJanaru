@@ -194,7 +194,12 @@ export default function LoginPage() {
         profile.total_scans.toString(),
       );
 
-      router.push(nextPath || "/profile");
+      // Check if city is missing or "unknown"
+      if (!profile.city || profile.city.toLowerCase() === "unknown") {
+        router.push(`/select-city?next=${encodeURIComponent(nextPath || "/profile")}`);
+      } else {
+        router.push(nextPath || "/profile");
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Google authentication failed";

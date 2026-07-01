@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/app/components/Sidebar";
 import { UserStatusHeader } from "@/app/components/UserStatusHeader";
+import { QrHeaderAction } from "@/app/components/qr/QrHeaderAction";
 import { useLanguage } from "@/app/contexts/LanguageContext";
 import { useTheme } from "@/app/contexts/ThemeContext";
 import { getProfile, ProfileResponse } from "@/app/lib/api";
@@ -182,7 +183,7 @@ export default function RewardsPage() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="relative z-10 min-h-screen flex flex-col">
-        <header className="flex items-center gap-3 p-4 md:p-6 lg:p-8 flex-shrink-0">
+        <header className="flex items-center justify-between gap-3 p-4 md:p-6 lg:p-8 flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group"
@@ -206,6 +207,8 @@ export default function RewardsPage() {
           </button>
 
           {profile && <UserStatusHeader {...{ ecoPoints: profile.eco_points, streak: profile.streak, level: profile.level }} />}
+
+          <QrHeaderAction />
         </header>
 
         <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">

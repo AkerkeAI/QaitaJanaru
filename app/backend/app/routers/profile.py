@@ -4,7 +4,7 @@ from app.models.recycling_point import RecyclingPoint
 from app.models.recycling_submission import RecyclingSubmission
 from app.models.scan_history import ScanHistory
 from app.models.user import User
-from app.schemas.profile import ProfileResponse
+from app.schemas.profile import ProfileResponse, UpdateProfileRequest
 from app.services.user_service import sync_user_level
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -121,6 +121,26 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "User deleted successfully"}
+
+
+@router.patch("/{user_id}", response_model=ProfileResponse)
+def update_profile(user_id: int, update_data: UpdateProfileRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Update only allowed fields
+    update_dict = update_data.model_dump(exclude_unset=True)
+    allowed_fields = ["city", "full_name", "institution", "user_type"]
+    for field, value in update_dict.items():
+        if field in allowed_fields:
+            setattr(user, field, value)
+
+    db.commit()
+    db.refresh(user)
+
+    return _serialize_profile(user, db)
 
 
 @router.get("/public/{user_id}")

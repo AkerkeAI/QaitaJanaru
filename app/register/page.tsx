@@ -51,10 +51,20 @@ function InlineDropdown({
 }: InlineDropdownProps) {
   const wrapperRef   = useRef<HTMLDivElement>(null);
   const selectedLabel = options.find((o) => o.value === selected)?.label ?? "";
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Close when clicking/tapping outside the wrapper
   useEffect(() => {
-    if (!isOpen) return;
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Close when clicking/tapping outside the wrapper (for desktop only)
+  useEffect(() => {
+    if (!isOpen || isMobile) return;
     const handler = (e: MouseEvent | TouchEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         onClose();
@@ -66,7 +76,12 @@ function InlineDropdown({
       document.removeEventListener("mousedown", handler);
       document.removeEventListener("touchstart", handler);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isMobile]);
+
+  const handleSelect = (value: string) => {
+    onSelect(value);
+    onClose();
+  };
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -104,15 +119,14 @@ function InlineDropdown({
         </svg>
       </button>
 
-      {/* ── Option list ── */}
-      {isOpen && (
+      {/* ── Desktop dropdown ── */}
+      {isOpen && !isMobile && (
         <ul
           role="listbox"
           className="absolute left-0 right-0 mt-1 rounded-xl shadow-2xl border border-emerald-600/50 overflow-hidden"
           style={{
             background: "#0a3d24",
             zIndex:      200,
-            // Constrain max-height so long lists don't overflow on small screens
             maxHeight:   "220px",
             overflowY:   "auto",
           }}
@@ -122,18 +136,13 @@ function InlineDropdown({
               key={opt.value}
               role="option"
               aria-selected={selected === opt.value}
-              // onMouseDown + preventDefault stops the trigger from blurring
-              // before selection registers — fixes the "click doesn't land" bug
               onMouseDown={(e) => {
                 e.preventDefault();
-                onSelect(opt.value);
-                onClose();
+                handleSelect(opt.value);
               }}
-              // onTouchEnd handles iOS Safari where mousedown may not fire
               onTouchEnd={(e) => {
                 e.preventDefault();
-                onSelect(opt.value);
-                onClose();
+                handleSelect(opt.value);
               }}
               className="px-3.5 py-2.5 text-xs cursor-pointer select-none transition-colors font-medium touch-manipulation"
               style={{
@@ -153,6 +162,44 @@ function InlineDropdown({
             </li>
           ))}
         </ul>
+      )}
+
+      {/* ── Mobile modal ── */}
+      {isOpen && isMobile && (
+        <div className="fixed inset-0 z-[1000] flex flex-col bg-black/80">
+          <div className="flex-1" onClick={onClose} />
+          <div className="bg-[#0a3d24] rounded-t-3xl p-4 max-h-[70vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-white">{placeholder}</h3>
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-2 rounded-full text-white/70 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-2">
+              {options.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => handleSelect(opt.value)}
+                  className="w-full px-4 py-4 rounded-xl border text-left font-medium transition-all"
+                  style={{
+                    background: selected === opt.value ? "rgba(16, 185, 129, 0.2)" : "rgba(6, 78, 59, 0.7)",
+                    borderColor: selected === opt.value ? "#10b981" : "rgba(52, 211, 153, 0.35)",
+                    color: "#ffffff",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -362,7 +409,12 @@ export default function RegisterPage() {
         profile.total_scans.toString(),
       );
 
-      router.push(nextPath || "/profile");
+      // Check if city is missing or "unknown"
+      if (!profile.city || profile.city.toLowerCase() === "unknown") {
+        router.push(`/select-city?next=${encodeURIComponent(nextPath || "/profile")}`);
+      } else {
+        router.push(nextPath || "/profile");
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Google authentication failed";

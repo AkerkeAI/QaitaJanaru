@@ -609,4 +609,11 @@ export interface Messages {
     viewDetails: string;
     whereToRedeem: string;
   };
+  selectCity: {
+    title: string;
+    subtitle: string;
+    selectCity: string;
+    continue: string;
+    loading: string;
+  };
 }
