@@ -181,7 +181,7 @@ export default function SelectCityPage() {
                   color: "#ffffff",
                 }}
               >
-                {isSaving ? "Saving..." : messages.profile.save || "Save"}
+                {isSaving ? "Saving..." : "Сохранить"}
               </button>
             </div>
           </div>
