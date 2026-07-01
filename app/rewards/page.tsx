@@ -10,6 +10,8 @@ import { useTheme } from "@/app/contexts/ThemeContext";
 import { getProfile, ProfileResponse } from "@/app/lib/api";
 import { Reward, Partner } from "@/app/types/rewards";
 
+const normalizeCity = (value?: string | null) => value?.trim().toLowerCase() || "";
+
 const SAMPLE_PARTNERS: Partner[] = [
   {
     id: "partner-1",
@@ -60,6 +62,28 @@ const SAMPLE_PARTNERS: Partner[] = [
       profileViews: 432,
     },
   },
+  {
+    id: "partner-nagi",
+    name: "Nagi Coffee & Nagimoko Ice",
+    logo: "☕",
+    level: "Gold",
+    description:
+      "This partner supports environmental initiatives and rewards users for recycling through Qaita Janaru.",
+    locations: [
+      {
+        id: "loc-nagi-1",
+        address: "Nagi Coffee Bar, 33-181, Inside Dina Hypermarket, Aktau",
+        city: "aktau",
+        distance: 0.6,
+      },
+      {
+        id: "loc-nagi-2",
+        address: "Nagimoko Ice, Shopping Center Astana, 14th Microdistrict, Kiosk, Aktau",
+        city: "aktau",
+        distance: 1.1,
+      },
+    ],
+  },
 ];
 
 const SAMPLE_REWARDS: Reward[] = [
@@ -94,6 +118,22 @@ const SAMPLE_REWARDS: Reward[] = [
     ecoPointsRequired: 400,
     image: "🥐",
     partnerIds: ["partner-1"],
+  },
+  {
+    id: "reward-nagi-coffee",
+    title: "10% discount on coffee and lemonade",
+    description: "Get 10% off coffee and lemonade at Nagi Coffee Bar",
+    ecoPointsRequired: 300,
+    image: "☕",
+    partnerIds: ["partner-nagi"],
+  },
+  {
+    id: "reward-nagi-ice",
+    title: "10% discount on bubble tea, cocktails, lemonade and ice cream",
+    description: "Get 10% off bubble tea, cocktails, lemonade and ice cream at Nagimoko Ice",
+    ecoPointsRequired: 300,
+    image: "🧊",
+    partnerIds: ["partner-nagi"],
   },
 ];
 
@@ -134,14 +174,14 @@ export default function RewardsPage() {
           reward.partnerIds.includes(p.id)
         );
         return rewardPartners.some((p) =>
-          p.locations.some((loc) => loc.city === profile.city)
+          p.locations.some((loc) => normalizeCity(loc.city) === normalizeCity(profile.city))
         );
       })
     : SAMPLE_REWARDS;
 
   const filteredPartners = profile?.city
     ? SAMPLE_PARTNERS.filter((partner) =>
-        partner.locations.some((loc) => loc.city === profile.city)
+        partner.locations.some((loc) => normalizeCity(loc.city) === normalizeCity(profile.city))
       )
     : SAMPLE_PARTNERS;
 

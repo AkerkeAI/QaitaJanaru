@@ -9,6 +9,8 @@ import { useTheme } from "@/app/contexts/ThemeContext";
 import { getProfile, ProfileResponse } from "@/app/lib/api";
 import { Reward, Partner } from "@/app/types/rewards";
 
+const normalizeCity = (value?: string | null) => value?.trim().toLowerCase() || "";
+
 const SAMPLE_PARTNERS: Partner[] = [
   {
     id: "partner-1",
@@ -59,6 +61,28 @@ const SAMPLE_PARTNERS: Partner[] = [
       profileViews: 432,
     },
   },
+  {
+    id: "partner-nagi",
+    name: "Nagi Coffee & Nagimoko Ice",
+    logo: "☕",
+    level: "Gold",
+    description:
+      "This partner supports environmental initiatives and rewards users for recycling through Qaita Janaru.",
+    locations: [
+      {
+        id: "loc-nagi-1",
+        address: "Nagi Coffee Bar, 33-181, Inside Dina Hypermarket, Aktau",
+        city: "aktau",
+        distance: 0.6,
+      },
+      {
+        id: "loc-nagi-2",
+        address: "Nagimoko Ice, Shopping Center Astana, 14th Microdistrict, Kiosk, Aktau",
+        city: "aktau",
+        distance: 1.1,
+      },
+    ],
+  },
 ];
 
 const SAMPLE_REWARDS: Reward[] = [
@@ -93,6 +117,22 @@ const SAMPLE_REWARDS: Reward[] = [
     ecoPointsRequired: 400,
     image: "🥐",
     partnerIds: ["partner-1"],
+  },
+  {
+    id: "reward-nagi-coffee",
+    title: "10% discount on coffee and lemonade",
+    description: "Get 10% off coffee and lemonade at Nagi Coffee Bar",
+    ecoPointsRequired: 300,
+    image: "☕",
+    partnerIds: ["partner-nagi"],
+  },
+  {
+    id: "reward-nagi-ice",
+    title: "10% discount on bubble tea, cocktails, lemonade and ice cream",
+    description: "Get 10% off bubble tea, cocktails, lemonade and ice cream at Nagimoko Ice",
+    ecoPointsRequired: 300,
+    image: "🧊",
+    partnerIds: ["partner-nagi"],
   },
 ];
 
@@ -179,11 +219,17 @@ export default function RewardDetailsPage() {
   }
 
   const rewardPartners = getRewardPartners(reward);
-  const partnerLocations = rewardPartners.flatMap(p => 
-    profile?.city 
-      ? p.locations.filter(loc => loc.city === profile.city) 
+  const partnerLocations = rewardPartners.flatMap((p) =>
+    profile?.city
+      ? p.locations.filter((loc) => normalizeCity(loc.city) === normalizeCity(profile.city))
       : p.locations
   );
+
+  const handleOpenRoute = (location: { address: string; city: string }) => {
+    const query = `${location.address}, ${location.city}, Kazakhstan`;
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <main
@@ -278,13 +324,14 @@ export default function RewardDetailsPage() {
                             </p>
                           )}
                           <button
+                            onClick={() => handleOpenRoute(location)}
                             className="px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95"
                             style={{
                               background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
                               color: colors.buttonText,
                             }}
                           >
-                            {messages.rewards.route}
+                            Build Route
                           </button>
                         </div>
                       </div>
