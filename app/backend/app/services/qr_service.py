@@ -47,8 +47,8 @@ def build_qr_svg(point: RecyclingPoint) -> str:
 
 
 POSTER_IMAGE_PATH = Path(__file__).resolve().parents[4] / "public" / "posters" / "poster.png"
-POSTER_QR_POSITION = (340, 910)
-POSTER_QR_SIZE = 220
+POSTER_QR_POSITION = (329, 952)
+POSTER_QR_SIZE = 248
 
 
 def build_qr_png_bytes(point: RecyclingPoint) -> bytes:
