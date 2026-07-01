@@ -297,17 +297,17 @@ export default function QrPointPage() {
 
   return (
     <main
-      className="min-h-screen px-6 py-8"
+      className="min-h-screen px-4 py-4 md:py-8"
       style={{ background: colors.bg, color: colors.text }}
     >
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="max-w-3xl mx-auto space-y-4">
         <div
-          className="rounded-3xl p-8 border shadow-2xl space-y-6"
+          className="rounded-3xl p-5 border shadow-2xl space-y-4"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-3">
             <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 text-3xl"
+              className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 text-2xl"
               style={{
                 background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`,
                 color: colors.buttonText,
@@ -315,33 +315,33 @@ export default function QrPointPage() {
             >
               ♻️
             </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold">
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold">
                 {messages.qr.thankYouTitle}
               </h1>
-              <p style={{ color: colors.textSecondary }}>
+              <p className="text-sm" style={{ color: colors.textSecondary }}>
                 {messages.qr.thankYouMessage}
               </p>
             </div>
           </div>
 
           <div
-            className="rounded-3xl p-5 border space-y-4"
+            className="rounded-3xl p-4 border space-y-3"
             style={{
               backgroundColor: colors.cardBg,
               borderColor: colors.border,
             }}
           >
             <div
-              className="text-sm font-medium uppercase tracking-wide"
+              className="text-xs font-medium uppercase tracking-wide"
               style={{ color: colors.textSecondary }}
             >
               {messages.qr.pointInformation}
             </div>
-            <div className="text-2xl font-semibold">{point.name}</div>
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="text-xl font-semibold">{point.name}</div>
+            <div className="grid gap-2 md:grid-cols-2">
               <div
-                className="flex items-start gap-3 rounded-2xl p-4 border"
+                className="flex items-start gap-2 rounded-2xl p-3 border"
                 style={{ borderColor: colors.border }}
               >
                 <span
@@ -352,16 +352,16 @@ export default function QrPointPage() {
                 </span>
                 <div>
                   <div
-                    className="text-sm"
+                    className="text-xs"
                     style={{ color: colors.textSecondary }}
                   >
                     {messages.qr.address}
                   </div>
-                  <div>{point.address}</div>
+                  <div className="text-sm">{point.address}</div>
                 </div>
               </div>
               <div
-                className="flex items-start gap-3 rounded-2xl p-4 border"
+                className="flex items-start gap-2 rounded-2xl p-3 border"
                 style={{ borderColor: colors.border }}
               >
                 <span
@@ -372,12 +372,12 @@ export default function QrPointPage() {
                 </span>
                 <div>
                   <div
-                    className="text-sm"
+                    className="text-xs"
                     style={{ color: colors.textSecondary }}
                   >
                     {messages.qr.city}
                   </div>
-                  <div>{point.city}</div>
+                  <div className="text-sm">{point.city}</div>
                 </div>
               </div>
             </div>
@@ -385,43 +385,43 @@ export default function QrPointPage() {
         </div>
 
         <div
-          className="rounded-3xl p-8 border shadow-2xl space-y-6"
+          className="rounded-3xl p-5 border shadow-2xl space-y-4"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
           <div>
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-xl font-bold">
               {messages.qr.whatDidYouRecycle}
             </h2>
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {quantityItems.map((item) => (
               <div
                 key={item.key}
-                className="rounded-2xl border px-4 py-4 flex items-center justify-between gap-4"
+                className="rounded-2xl border px-3 py-3 flex items-center justify-between gap-3"
                 style={{
                   backgroundColor: colors.cardBg,
                   borderColor: colors.border,
                 }}
               >
-                <span className="font-medium">{item.label}</span>
-                <div className="flex items-center gap-3">
+                <span className="font-medium text-sm">{item.label}</span>
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => updateQuantity(item.key, -1)}
-                    className="w-10 h-10 rounded-full flex items-center justify-center border"
+                    className="w-9 h-9 rounded-full flex items-center justify-center border text-lg"
                     style={{ borderColor: colors.border, color: colors.text }}
                     aria-label={`Decrease ${item.label}`}
                   >
                     −
                   </button>
-                  <div className="min-w-10 text-center text-xl font-bold">
+                  <div className="min-w-9 text-center text-lg font-bold">
                     {quantities[item.key]}
                   </div>
                   <button
                     type="button"
                     onClick={() => updateQuantity(item.key, 1)}
-                    className="w-10 h-10 rounded-full flex items-center justify-center border"
+                    className="w-9 h-9 rounded-full flex items-center justify-center border text-lg"
                     style={{ borderColor: colors.border, color: colors.text }}
                     aria-label={`Increase ${item.label}`}
                   >
@@ -433,30 +433,45 @@ export default function QrPointPage() {
           </div>
 
           {errorMessage ? (
-            <div
-              className="rounded-2xl px-4 py-3 border"
+            <div className="space-y-3">
+              <div
+                className="rounded-2xl px-4 py-3 border"
+                style={{
+                  backgroundColor: colors.cardBg,
+                  borderColor: "rgba(239,68,68,0.35)",
+                  color: "#f87171",
+                }}
+              >
+                {errorMessage}
+              </div>
+              {errorMessage === messages.qr.alreadySubmittedToday && (
+                <button
+                  type="button"
+                  onClick={handleReturnHome}
+                  className="w-full px-6 py-4 rounded-2xl font-semibold"
+                  style={{
+                    background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
+                    color: colors.buttonText,
+                  }}
+                >
+                  {messages.qr.returnHome}
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={submitting}
+              className="w-full px-6 py-4 rounded-2xl font-semibold disabled:opacity-70"
               style={{
-                backgroundColor: colors.cardBg,
-                borderColor: "rgba(239,68,68,0.35)",
-                color: "#f87171",
+                background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
+                color: colors.buttonText,
               }}
             >
-              {errorMessage}
-            </div>
-          ) : null}
-
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={submitting}
-            className="w-full px-6 py-4 rounded-2xl font-semibold disabled:opacity-70"
-            style={{
-              background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
-              color: colors.buttonText,
-            }}
-          >
-            {submitting ? messages.qr.submitting : messages.qr.confirmRecycling}
-          </button>
+              {submitting ? messages.qr.submitting : messages.qr.confirmRecycling}
+            </button>
+          )}
         </div>
       </div>
     </main>
