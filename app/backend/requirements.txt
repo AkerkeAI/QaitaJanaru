@@ -12,3 +12,4 @@ requests
 segno
 google-auth
 google-auth-oauthlib
+Pillow

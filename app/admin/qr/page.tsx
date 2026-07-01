@@ -187,10 +187,9 @@ export default function AdminQrPage() {
                           if (!response.ok) {
                             throw new Error("Failed to download poster");
                           }
-                          const contentType = response.headers.get("content-type") || "image/svg+xml";
-                          const filenameHeader = response.headers.get("content-disposition") || "attachment; filename=poster.svg";
+                          const filenameHeader = response.headers.get("content-disposition") || "attachment; filename=poster.png";
                           const match = /filename\*=UTF-8''(.+)|filename="?([^";]+)"?/.exec(filenameHeader);
-                          const filename = match ? decodeURIComponent(match[1] || match[2] || "poster.svg") : "poster.svg";
+                          const filename = match ? decodeURIComponent(match[1] || match[2] || "poster.png") : "poster.png";
                           const blob = await response.blob();
                           const url = URL.createObjectURL(blob);
                           const a = document.createElement("a");
@@ -211,7 +210,7 @@ export default function AdminQrPage() {
                         color: colors.primary,
                       }}
                     >
-                      Poster (A4 SVG)
+                      Poster (PNG)
                     </button>
                   </div>
                 </div>

@@ -11,7 +11,7 @@ from app.schemas.qr import (
 )
 from app.services.qr_service import (
     build_all_qr_zip,
-    build_poster_svg,
+    build_poster_png_bytes,
     build_qr_png_bytes,
     build_qr_svg,
     claim_qr_reward,
@@ -20,7 +20,7 @@ from app.services.qr_service import (
     submit_recycling_confirmation,
 )
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import Response
+from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/api/qr", tags=["qr"])
@@ -87,21 +87,25 @@ async def download_qr_png(point_id: int, db: Session = Depends(get_db)):
     )
 
 
-@router.get("/download/{point_id}/poster.svg")
-async def download_qr_poster(point_id: int, db: Session = Depends(get_db)):
+@router.get("/download/{point_id}/poster.png")
+async def download_qr_poster_png(point_id: int, db: Session = Depends(get_db)):
     point = get_point_by_id(db, point_id)
     if not point:
         raise HTTPException(status_code=404, detail="QR point not found")
-    poster_svg = build_poster_svg(point)
-    poster_bytes = poster_svg.encode("utf-8")
+    poster_png = build_poster_png_bytes(point)
     return Response(
-        content=poster_bytes,
-        media_type="image/svg+xml; charset=utf-8",
+        content=poster_png,
+        media_type="image/png",
         headers={
-            "Content-Disposition": f"attachment; filename=\"poster-{point.id}.svg\"",
+            "Content-Disposition": f"attachment; filename=\"poster-{point.id}.png\"",
             "Cache-Control": "no-store",
         },
     )
+
+
+@router.get("/download/{point_id}/poster.svg")
+async def redirect_qr_poster_svg(point_id: int):
+    return RedirectResponse(url=f"/api/qr/download/{point_id}/poster.png")
 
 
 @router.get("/download/all.zip")

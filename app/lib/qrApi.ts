@@ -117,7 +117,7 @@ export function getQrSvgDownloadUrl(pointId: number): string {
 }
 
 export function getQrPosterDownloadUrl(pointId: number): string {
-  return `${API_BASE_URL}/api/qr/download/${pointId}/poster.svg`;
+  return `${API_BASE_URL}/api/qr/download/${pointId}/poster.png`;
 }
 
 export function getQrPngDownloadUrl(pointId: number): string {
