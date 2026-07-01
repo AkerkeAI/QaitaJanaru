@@ -13,48 +13,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/profile`,
-      lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/leaderboard`,
-      lastModified,
-      changeFrequency: 'daily',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/recycling-map`,
-      lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/eco-assistant`,
-      lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/tasks`,
-      lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/rewards`,
-      lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/scan-waste`,
-      lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
       url: `${baseUrl}/register`,
       lastModified,
       changeFrequency: 'weekly',
