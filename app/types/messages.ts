@@ -249,7 +249,6 @@ export interface Messages {
     "ust-kamenogorsk": string;
     zhezkazgan: string;
   };
-
   recyclingMap: {
     title: string;
     subtitle: string;
@@ -586,5 +585,28 @@ export interface Messages {
     recyclingMap: string;
     ecoAssistant: string;
     tasks: string;
+    rewards: string;
+  };
+  rewards: {
+    title: string;
+    tabRewards: string;
+    tabPartners: string;
+    noRewardsAvailable: string;
+    noPartnersAvailable: string;
+    viewReward: string;
+    ecoPointsRequired: string;
+    partnerLocationsAvailable: string;
+    officialPartner: string;
+    availableRewards: string;
+    branches: string;
+    partnerProfile: string;
+    phone: string;
+    website: string;
+    monthlyVisitors: string;
+    rewardsRedeemedThisMonth: string;
+    profileViews: string;
+    route: string;
+    viewDetails: string;
+    whereToRedeem: string;
   };
 }
