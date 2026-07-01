@@ -110,7 +110,8 @@ async def scan_waste(
         "recyclable": result["recyclable"],
         "earned_points": 0,
         "scan_reward": 0,
-        "task_rewards": 0,
+        "task_"
+        "": 0,
         "daily_task_rewards": 0,
         "weekly_task_rewards": 0,
         "auto_claimed_task_ids": [],
