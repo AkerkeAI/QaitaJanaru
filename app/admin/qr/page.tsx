@@ -176,6 +176,48 @@ export default function AdminQrPage() {
                     >
                       SVG
                     </a>
+                    <button
+                      onClick={() => {
+                        // Generate an A4 SVG poster with embedded QR and download it
+                        try {
+                          const svgWidth = 2480; // A4 300dpi width
+                          const svgHeight = 3508; // A4 300dpi height
+                          const qrSize = 900; // size of QR to fit into yellow area
+                          const qrX = Math.round((svgWidth - qrSize) / 2);
+                          const qrY = Math.round((svgHeight - qrSize) / 2 + 40);
+
+                          const posterSvg = `<?xml version="1.0" encoding="utf-8"?>\n` +
+                            `<svg xmlns='http://www.w3.org/2000/svg' width='${svgWidth}' height='${svgHeight}' viewBox='0 0 ${svgWidth} ${svgHeight}'>` +
+                            `<defs><style>text{font-family:Arial, Helvetica, sans-serif;}</style></defs>` +
+                            // Background poster image — place your provided poster at public/poster_base.png
+                            `<image href='/poster_base.png' x='0' y='0' width='${svgWidth}' height='${svgHeight}' preserveAspectRatio='xMidYMid slice'/>` +
+                            `<g transform='translate(${qrX}, ${qrY})'>` +
+                            `${item.qr_svg}` +
+                            `</g>` +
+                            `</svg>`;
+
+                          const blob = new Blob([posterSvg], { type: "image/svg+xml" });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = `${item.name.replace(/\s+/g, "_")}_poster.svg`;
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          URL.revokeObjectURL(url);
+                        } catch (e) {
+                          // fallback: open new tab with QR svg
+                          window.open(getQrSvgDownloadUrl(item.id), "_blank");
+                        }
+                      }}
+                      className="flex-1 px-4 py-2 rounded-xl text-center font-semibold"
+                      style={{
+                        backgroundColor: `${colors.primary}15`,
+                        color: colors.primary,
+                      }}
+                    >
+                      Poster (A4 SVG)
+                    </button>
                   </div>
                 </div>
               ))}

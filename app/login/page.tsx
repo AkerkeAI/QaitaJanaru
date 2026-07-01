@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { loginUser, getProfile, googleAuth } from "../lib/api";
 import { languageNames, Language } from "../lib/language";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -10,6 +10,8 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams?.get("next");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -130,7 +132,7 @@ export default function LoginPage() {
       console.log("qaitaJanaru_level:", profile.level);
       console.log("=====================================");
 
-      router.push("/profile");
+      router.push(nextPath || "/profile");
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : messages.login.invalidCredentials;
@@ -192,7 +194,7 @@ export default function LoginPage() {
         profile.total_scans.toString(),
       );
 
-      router.push("/profile");
+      router.push(nextPath || "/profile");
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Google authentication failed";

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { registerUser, googleAuth, getProfile } from "../lib/api";
 import { languageNames, Language } from "../lib/language";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -173,6 +173,8 @@ const INPUT_STYLE: React.CSSProperties = {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams?.get("next");
 
   // ── Form state ──
   const [name,         setName]         = useState("");
@@ -299,7 +301,7 @@ export default function RegisterPage() {
       console.log("qaitaJanaru_city:", city);
       console.log("=====================================");
 
-      router.push("/profile");
+      router.push(nextPath || "/profile");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : messages.register.registrationError;
 
@@ -360,7 +362,7 @@ export default function RegisterPage() {
         profile.total_scans.toString(),
       );
 
-      router.push("/profile");
+      router.push(nextPath || "/profile");
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Google authentication failed";

@@ -587,4 +587,37 @@ export interface Messages {
     weeklyRoute5Title: string;
     weeklyRoute5Desc: string;
   };
+  sidebar: {
+    home: string;
+    profile: string;
+    scan: string;
+    leaderboard: string;
+    settings: string;
+    logout: string;
+    recyclingMap: string;
+    ecoAssistant: string;
+    tasks: string;
+    rewards: string;
+  };
+  rewards: {
+    title: string;
+    tabRewards: string;
+    tabPartners: string;
+    noRewardsAvailable: string;
+    noPartnersAvailable: string;
+    viewReward: string;
+    ecoPointsRequired: string;
+    partnerLocationsAvailable: string;
+    officialPartner: string;
+    availableRewards: string;
+    branches: string;
+    partnerProfile: string;
+    phone: string;
+    website: string;
+    monthlyVisitors: string;
+    rewardsRedeemedThisMonth: string;
+    profileViews: string;
+    route: string;
+    viewDetails: string;
+  };
 }
