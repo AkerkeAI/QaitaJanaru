@@ -298,6 +298,12 @@ export const messages: Messages = {
     viewDetails: "View Details",
     whereToRedeem: "Where to Redeem",
   },
+  selectCity: {
+    title: "Select your city",
+    subtitle: "Please select your city to continue",
+    save: "Save",
+    saving: "Saving...",
+  },
 
   recyclingMap: {
     title: "Recycling Map",
