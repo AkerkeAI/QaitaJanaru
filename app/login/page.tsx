@@ -577,7 +577,7 @@ export default function LoginPage() {
                 >
                   {messages.login.noAccount}{" "}
                   <Link
-                    href="/register"
+                    href={nextPath ? `/register?next=${encodeURIComponent(nextPath)}` : "/register"}
                     prefetch={false}
                     className="font-bold underline underline-offset-2 hover:text-white transition-colors touch-manipulation"
                     style={{ color: "#34d399" }}

@@ -41,7 +41,7 @@ export default function QrPointPage() {
     const run = async () => {
       const userId = localStorage.getItem("qaitaJanaru_user_id");
       if (!userId) {
-        router.push(`/login?next=/qr/${params.pointId}`);
+        router.push(`/register?next=/qr/${params.pointId}`);
         return;
       }
 

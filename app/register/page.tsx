@@ -790,7 +790,7 @@ export default function RegisterPage() {
                 <p className="text-center text-xs pt-1" style={{ color: "#6ee7b7" }}>
                   {messages.register.hasAccount}{" "}
                   <Link
-                    href="/login"
+                    href={nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : "/login"}
                     prefetch={false}
                     className="font-bold underline underline-offset-2 hover:text-white transition-colors touch-manipulation"
                     style={{ color: "#34d399" }}
