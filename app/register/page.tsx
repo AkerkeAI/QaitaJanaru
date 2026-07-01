@@ -26,9 +26,7 @@ interface DropdownOption {
 
 
 // ─── Inline Dropdown Component ────────────────────────────────────────────────
-// Absolute-positioned within its own wrapper; avoids portal stacking bugs.
-// Uses onMouseDown + preventDefault to prevent the blur-before-click race on
-// both desktop and mobile (touch events bubble to mousedown on iOS/Android).
+// Absolute-positioned within its own wrapper for desktop, full-screen modal for mobile.
 
 interface InlineDropdownProps {
   placeholder:  string;
@@ -38,6 +36,7 @@ interface InlineDropdownProps {
   isOpen:       boolean;
   onToggle:     () => void;
   onClose:      () => void;
+  cancelText:   string;
 }
 
 function InlineDropdown({
@@ -48,21 +47,23 @@ function InlineDropdown({
   isOpen,
   onToggle,
   onClose,
+  cancelText,
 }: InlineDropdownProps) {
   const wrapperRef   = useRef<HTMLDivElement>(null);
-  const selectedLabel = options.find((o) => o.value === selected)?.label ?? "";
   const [isMobile, setIsMobile] = useState(false);
+  const selectedLabel = options.find((o) => o.value === selected)?.label ?? "";
 
+  // Check if mobile
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < 640);
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Close when clicking/tapping outside the wrapper (for desktop only)
+  // Close when clicking outside (only for desktop)
   useEffect(() => {
     if (!isOpen || isMobile) return;
     const handler = (e: MouseEvent | TouchEvent) => {
@@ -78,130 +79,174 @@ function InlineDropdown({
     };
   }, [isOpen, onClose, isMobile]);
 
+  // Prevent body scroll when mobile modal is open
+  useEffect(() => {
+    if (isOpen && isMobile) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen, isMobile]);
+
   const handleSelect = (value: string) => {
     onSelect(value);
     onClose();
   };
 
   return (
-    <div ref={wrapperRef} className="relative">
-      {/* ── Trigger ── */}
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-        className="w-full px-3.5 py-2.5 rounded-xl border text-left text-xs flex items-center justify-between transition-all hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 touch-manipulation"
-        style={{
-          background:   "#0d4a2f",
-          borderColor:  "#16a34a",
-          minHeight:    "42px",
-        }}
-      >
-        <span
-          className="font-medium truncate leading-tight"
-          style={{ color: selectedLabel ? "#ffffff" : "#6ee7b7" }}
-        >
-          {selectedLabel || placeholder}
-        </span>
-        <svg
-          className={`w-3.5 h-3.5 shrink-0 ml-2 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-          style={{ color: "#34d399" }}
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            fillRule="evenodd"
-            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-            clipRule="evenodd"
-          />
-        </svg>
-      </button>
-
-      {/* ── Desktop dropdown ── */}
-      {isOpen && !isMobile && (
-        <ul
-          role="listbox"
-          className="absolute left-0 right-0 mt-1 rounded-xl shadow-2xl border border-emerald-600/50 overflow-hidden"
+    <>
+      <div ref={wrapperRef} className="relative">
+        {/* ── Trigger ── */}
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          className="w-full px-3.5 py-2.5 rounded-xl border text-left text-xs flex items-center justify-between transition-all hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 touch-manipulation"
           style={{
-            background: "#0a3d24",
-            zIndex:      200,
-            maxHeight:   "220px",
-            overflowY:   "auto",
+            background:   "#0d4a2f",
+            borderColor:  "#16a34a",
+            minHeight:    "42px",
           }}
         >
-          {options.map((opt) => (
-            <li
-              key={opt.value}
-              role="option"
-              aria-selected={selected === opt.value}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleSelect(opt.value);
-              }}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                handleSelect(opt.value);
-              }}
-              className="px-3.5 py-2.5 text-xs cursor-pointer select-none transition-colors font-medium touch-manipulation"
+          <span
+            className="font-medium truncate leading-tight"
+            style={{ color: selectedLabel ? "#ffffff" : "#6ee7b7" }}
+          >
+            {selectedLabel || placeholder}
+          </span>
+          <svg
+            className={`w-3.5 h-3.5 shrink-0 ml-2 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            style={{ color: "#34d399" }}
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fillRule="evenodd"
+              d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </button>
+
+        {/* ── Desktop Option list ── */}
+        {isOpen && !isMobile && (
+          <ul
+            role="listbox"
+            className="absolute left-0 right-0 mt-1 rounded-xl shadow-2xl border border-emerald-600/50 overflow-hidden"
+            style={{
+              background: "#0a3d24",
+              zIndex:      200,
+              maxHeight:   "220px",
+              overflowY:   "auto",
+            }}
+          >
+            {options.map((opt) => (
+              <li
+                key={opt.value}
+                role="option"
+                aria-selected={selected === opt.value}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSelect(opt.value);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  handleSelect(opt.value);
+                }}
+                className="px-3.5 py-2.5 text-xs cursor-pointer select-none transition-colors font-medium touch-manipulation"
+                style={{
+                  background: selected === opt.value ? "#166534" : undefined,
+                  color:       "#ffffff",
+                }}
+                onMouseEnter={(e) => {
+                  if (selected !== opt.value)
+                    (e.currentTarget as HTMLLIElement).style.background = "#14532d";
+                }}
+                onMouseLeave={(e) => {
+                  if (selected !== opt.value)
+                    (e.currentTarget as HTMLLIElement).style.background = "";
+                }}
+              >
+                {opt.label}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* ── Mobile Full-Screen Modal ── */}
+      {isOpen && isMobile && (
+        <div
+          className="fixed inset-0 z-[1000] flex flex-col"
+          style={{
+            background: "linear-gradient(to bottom right, #064e3b, #166534, #0f766e)",
+          }}
+        >
+          {/* Header */}
+          <div
+            className="flex items-center justify-between px-4 py-4 border-b"
+            style={{ borderColor: "rgba(52, 211, 153, 0.2)" }}
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-full text-sm font-semibold transition-all hover:brightness-110 touch-manipulation"
               style={{
-                background: selected === opt.value ? "#166534" : undefined,
-                color:       "#ffffff",
-              }}
-              onMouseEnter={(e) => {
-                if (selected !== opt.value)
-                  (e.currentTarget as HTMLLIElement).style.background = "#14532d";
-              }}
-              onMouseLeave={(e) => {
-                if (selected !== opt.value)
-                  (e.currentTarget as HTMLLIElement).style.background = "";
+                background: "rgba(6, 78, 59, 0.70)",
+                border: "1px solid rgba(52, 211, 153, 0.35)",
+                color: "#a7f3d0",
               }}
             >
-              {opt.label}
-            </li>
-          ))}
-        </ul>
-      )}
+              {cancelText}
+            </button>
+            <h2 className="text-lg font-bold" style={{ color: "#ffffff" }}>
+              {placeholder}
+            </h2>
+            <div className="w-20" />
+          </div>
 
-      {/* ── Mobile modal ── */}
-      {isOpen && isMobile && (
-        <div className="fixed inset-0 z-[1000] flex flex-col bg-black/80">
-          <div className="flex-1" onClick={onClose} />
-          <div className="bg-[#0a3d24] rounded-t-3xl p-4 max-h-[70vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">{placeholder}</h3>
+          {/* Options List */}
+          <div className="flex-1 overflow-y-auto">
+            {options.map((opt) => (
               <button
+                key={opt.value}
                 type="button"
-                onClick={onClose}
-                className="p-2 rounded-full text-white/70 hover:text-white"
+                onClick={() => handleSelect(opt.value)}
+                className="w-full px-6 py-4 text-left text-lg font-medium transition-all border-b touch-manipulation"
+                style={{
+                  background: selected === opt.value ? "rgba(52, 211, 153, 0.15)" : "transparent",
+                  color: "#ffffff",
+                  borderColor: "rgba(52, 211, 153, 0.1)",
+                }}
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <div className="flex items-center justify-between">
+                  <span>{opt.label}</span>
+                  {selected === opt.value && (
+                    <svg
+                      className="w-6 h-6"
+                      style={{ color: "#34d399" }}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </div>
               </button>
-            </div>
-            <div className="space-y-2">
-              {options.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => handleSelect(opt.value)}
-                  className="w-full px-4 py-4 rounded-xl border text-left font-medium transition-all"
-                  style={{
-                    background: selected === opt.value ? "rgba(16, 185, 129, 0.2)" : "rgba(6, 78, 59, 0.7)",
-                    borderColor: selected === opt.value ? "#10b981" : "rgba(52, 211, 153, 0.35)",
-                    color: "#ffffff",
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -410,7 +455,7 @@ export default function RegisterPage() {
       );
 
       // Check if city is missing or "unknown"
-      if (!profile.city || profile.city.toLowerCase() === "unknown") {
+      if (!profile.city || profile.city === "unknown") {
         router.push(`/select-city?next=${encodeURIComponent(nextPath || "/profile")}`);
       } else {
         router.push(nextPath || "/profile");
@@ -741,14 +786,15 @@ export default function RegisterPage() {
                     {messages.register.city}
                   </label>
                   <InlineDropdown
-                    placeholder={messages.register.selectCity}
-                    options={CITIES}
-                    selected={city}
-                    onSelect={setCity}
-                    isOpen={openDropdown === "city"}
-                    onToggle={() => toggle("city")}
-                    onClose={closeAll}
-                  />
+                  placeholder={messages.register.selectCity}
+                  options={CITIES}
+                  selected={city}
+                  onSelect={setCity}
+                  isOpen={openDropdown === "city"}
+                  onToggle={() => toggle("city")}
+                  onClose={closeAll}
+                  cancelText={messages.common.back}
+                />
                 </div>
 
 

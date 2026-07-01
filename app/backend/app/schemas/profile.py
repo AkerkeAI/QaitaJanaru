@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel
 
@@ -37,10 +37,3 @@ class ProfileResponse(BaseModel):
     streak: int
     total_scans: int
     analytics: RecyclingAnalyticsResponse
-
-
-class UpdateProfileRequest(BaseModel):
-    city: Optional[str] = None
-    full_name: Optional[str] = None
-    institution: Optional[str] = None
-    user_type: Optional[str] = None

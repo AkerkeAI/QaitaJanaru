@@ -298,13 +298,6 @@ export const messages: Messages = {
     viewDetails: "Толығырақ",
     whereToRedeem: "Қайдан алуға болады",
   },
-  selectCity: {
-    title: "Қалаңызды таңдаңыз",
-    subtitle: "Бастау үшін қаланы таңдаңыз",
-    selectCity: "Қаланы таңдаңыз",
-    continue: "Жалғастыру",
-    loading: "Сақталуды...",
-  },
   recyclingMap: {
     title: "Қайта өңдеу картасы",
     subtitle: "Сіздің жаныңыздағы қайта өңдеу орталықтарын табыңыз",

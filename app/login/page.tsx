@@ -195,7 +195,7 @@ export default function LoginPage() {
       );
 
       // Check if city is missing or "unknown"
-      if (!profile.city || profile.city.toLowerCase() === "unknown") {
+      if (!profile.city || profile.city === "unknown") {
         router.push(`/select-city?next=${encodeURIComponent(nextPath || "/profile")}`);
       } else {
         router.push(nextPath || "/profile");
