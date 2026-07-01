@@ -3,9 +3,9 @@
     "id": 1,
     "name": "ТОО Taza.Likee",
     "city": "Aktau",
-    "address": "Микрорайон 15, дом 56, офис 11",
-    "latitude": 43.6543,
-    "longitude": 51.1648,
+    "address": "Промзона 6. Участок 63.",
+    "latitude": 43.630708,
+    "longitude": 51.253320,
     "description": "Официальное экологическое предприятие. Занимается сбором, сортировкой и подготовкой ТБО к вторичному циклу. Имеет прессы для ПЭТ-бутылок, ПНД-флаконов и гофрокартона.",
     "waste_type": "Plastic, Paper, Cardboard",
     "facility_type": "Sorting Station"
