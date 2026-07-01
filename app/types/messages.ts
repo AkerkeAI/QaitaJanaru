@@ -249,17 +249,6 @@ export interface Messages {
     "ust-kamenogorsk": string;
     zhezkazgan: string;
   };
-  sidebar: {
-    home: string;
-    profile: string;
-    scan: string;
-    leaderboard: string;
-    settings: string;
-    logout: string;
-    recyclingMap: string;
-    ecoAssistant: string;
-    tasks: string;
-  };
 
   recyclingMap: {
     title: string;
