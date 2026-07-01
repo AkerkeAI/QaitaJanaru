@@ -46,6 +46,12 @@ export default function SelectCityPage() {
     { value: "zhezkazgan", label: messages.cities.zhezkazgan },
   ];
 
+  const isValidCity = (cityValue?: string | null) => {
+    if (!cityValue) return false;
+    const normalizedCity = cityValue.trim().toLowerCase();
+    return normalizedCity !== "" && normalizedCity !== "unknown";
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       const storedUserId = localStorage.getItem("qaitaJanaru_user_id");
@@ -56,7 +62,7 @@ export default function SelectCityPage() {
       setUserId(storedUserId);
       try {
         const profile = await getProfile(storedUserId);
-        if (profile.city && profile.city !== "unknown") {
+        if (isValidCity(profile.city)) {
           router.push(nextPath);
           return;
         }
@@ -70,12 +76,13 @@ export default function SelectCityPage() {
   }, [router, nextPath]);
 
   const handleSave = async () => {
-    if (!city || !userId) return;
+    const selectedCity = city.trim();
+    if (!selectedCity || !userId) return;
     setIsSaving(true);
     setError("");
     try {
-      await updateProfile(userId, { city });
-      localStorage.setItem("qaitaJanaru_city", city);
+      await updateProfile(userId, { city: selectedCity });
+      localStorage.setItem("qaitaJanaru_city", selectedCity);
       router.push(nextPath);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save city");
@@ -154,7 +161,10 @@ export default function SelectCityPage() {
             )}
 
             <div className="space-y-4">
-              <div className="max-h-80 overflow-y-auto rounded-xl border" style={{ borderColor: colors.border }}>
+              <div
+                className="max-h-[60vh] sm:max-h-80 overflow-y-auto overscroll-contain touch-pan-y rounded-xl border [scrollbar-width:none] [-webkit-overflow-scrolling:touch]"
+                style={{ borderColor: colors.border }}
+              >
                 {CITIES.map((opt) => (
                   <button
                     key={opt.value}

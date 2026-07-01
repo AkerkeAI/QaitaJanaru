@@ -11,12 +11,12 @@ const messagesMap = {
 };
 
 export const getLanguage = (): Language => {
-  if (typeof window === "undefined") return "en";
-  const savedLanguage = localStorage.getItem("language") as Language;
+  if (typeof window === "undefined") return "ru";
+  const savedLanguage = localStorage.getItem("language") as Language | null;
   if (savedLanguage && (savedLanguage === "en" || savedLanguage === "ru" || savedLanguage === "kz")) {
     return savedLanguage;
   }
-  return "en";
+  return "ru";
 };
 
 export const setLanguage = (language: Language) => {

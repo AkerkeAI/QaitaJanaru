@@ -155,6 +155,12 @@ export default function LoginPage() {
     }
   };
 
+  const isCityMissing = (cityValue?: string | null) => {
+    if (!cityValue) return true;
+    const normalizedCity = cityValue.trim().toLowerCase();
+    return normalizedCity === "" || normalizedCity === "unknown";
+  };
+
   const handleGoogleSuccess = async (credentialResponse: any) => {
     setIsLoading(true);
     setError("");
@@ -194,8 +200,7 @@ export default function LoginPage() {
         profile.total_scans.toString(),
       );
 
-      // Check if city is missing or "unknown"
-      if (!profile.city || profile.city === "unknown") {
+      if (isCityMissing(profile.city)) {
         router.push(`/select-city?next=${encodeURIComponent(nextPath || "/profile")}`);
       } else {
         router.push(nextPath || "/profile");
