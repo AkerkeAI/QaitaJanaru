@@ -8,95 +8,144 @@ import { QrHeaderAction } from "@/app/components/qr/QrHeaderAction";
 import { useLanguage } from "@/app/contexts/LanguageContext";
 import { useTheme } from "@/app/contexts/ThemeContext";
 import { getProfile, ProfileResponse } from "@/app/lib/api";
-import {
-  Reward,
-  Partner,
-  PartnerLocation,
-  RewardCategory,
-} from "@/app/types/rewards";
+import { Reward, Partner, RewardCategory } from "@/app/types/rewards";
 
-// Sample data
+const normalizeCity = (value?: string | null) => value?.trim().toLowerCase() || "";
+
 const SAMPLE_CATEGORIES: RewardCategory[] = [
   { id: "drinks", icon: "☕", name: "Drinks" },
   { id: "desserts", icon: "🍦", name: "Desserts" },
+  { id: "other", icon: "🎁", name: "Other" },
 ];
 
 const SAMPLE_PARTNERS: Partner[] = [
   {
     id: "partner-1",
-    name: "Nagi Coffee Bar",
+    name: "GreenCafé",
     logo: "☕",
     level: "Gold",
     locations: [
-      {
-        id: "loc-1",
-        address: "33-181\nInside Dina Hypermarket",
-        city: "Aktau",
-      },
+      { id: "loc-1", address: "123 Green St, Almaty", city: "almaty", distance: 1.2 },
+      { id: "loc-2", address: "45 Eco Ave, Astana", city: "astana", distance: 0.8 },
     ],
-    instagram: "@nagicoffee",
+    phone: "+7 (701) 123-4567",
+    website: "https://greencafe.kz",
+    stats: {
+      monthlyVisitors: 1240,
+      rewardsRedeemedThisMonth: 342,
+      profileViews: 892,
+    },
   },
   {
     id: "partner-2",
-    name: "Nagimoko Ice",
-    logo: "🍦",
+    name: "EcoShop",
+    logo: "🛒",
     level: "Silver",
     locations: [
+      { id: "loc-3", address: "789 Zero Waste Rd, Shymkent", city: "shymkent", distance: 2.1 },
+    ],
+    phone: "+7 (725) 987-6543",
+    website: "https://ecoshop.kz",
+    stats: {
+      monthlyVisitors: 856,
+      rewardsRedeemedThisMonth: 210,
+      profileViews: 543,
+    },
+  },
+  {
+    id: "partner-3",
+    name: "NatureGym",
+    logo: "🏋️",
+    level: "Eco",
+    locations: [
+      { id: "loc-4", address: "56 Workout Blvd, Almaty", city: "almaty", distance: 1.5 },
+    ],
+    phone: "+7 (701) 555-1234",
+    website: "https://naturegym.kz",
+    stats: {
+      monthlyVisitors: 678,
+      rewardsRedeemedThisMonth: 156,
+      profileViews: 432,
+    },
+  },
+  {
+    id: "partner-nagi",
+    name: "Nagi Coffee & Nagimoko Ice",
+    logo: "☕",
+    level: "Gold",
+    description:
+      "This partner supports environmental initiatives and rewards users for recycling through Qaita Janaru.",
+    locations: [
       {
-        id: "loc-2",
-        address: "Shopping Center Astana\n14th Microdistrict\nKiosk",
-        city: "Aktau",
+        id: "loc-nagi-1",
+        address: "Nagi Coffee Bar, 33-181, Inside Dina Hypermarket, Aktau",
+        city: "aktau",
+        distance: 0.6,
+      },
+      {
+        id: "loc-nagi-2",
+        address: "Nagimoko Ice, Shopping Center Astana, 14th Microdistrict, Kiosk, Aktau",
+        city: "aktau",
+        distance: 1.1,
       },
     ],
-    instagram: "@nagimokoice",
   },
 ];
 
 const SAMPLE_REWARDS: Reward[] = [
   {
-    id: "reward-coffee",
-    title: "10% off Coffee",
-    description: "Get 10% off your coffee purchase",
-    ecoPointsRequired: 300,
+    id: "reward-1",
+    title: "Free Americano",
+    description: "Get a free americano at any GreenCafé location",
+    ecoPointsRequired: 700,
     image: "☕",
     categoryId: "drinks",
     partnerIds: ["partner-1"],
   },
   {
-    id: "reward-lemonade",
-    title: "10% off Lemonade",
-    description: "Get 10% off your lemonade purchase",
-    ecoPointsRequired: 300,
-    image: "🍋",
-    categoryId: "drinks",
-    partnerIds: ["partner-1"],
-  },
-  {
-    id: "reward-bubbletea",
-    title: "10% off Bubble Tea",
-    description: "Get 10% off your bubble tea purchase",
-    ecoPointsRequired: 300,
-    image: "🧋",
-    categoryId: "drinks",
+    id: "reward-2",
+    title: "10% Off Purchase",
+    description: "Get 10% off your next purchase at EcoShop",
+    ecoPointsRequired: 500,
+    image: "🛍️",
+    categoryId: "other",
     partnerIds: ["partner-2"],
   },
   {
-    id: "reward-cocktails",
-    title: "10% off Cocktails",
-    description: "Get 10% off your cocktail purchase",
-    ecoPointsRequired: 300,
-    image: "🍸",
-    categoryId: "drinks",
-    partnerIds: ["partner-1"],
+    id: "reward-3",
+    title: "Free Day Pass",
+    description: "One free day pass to NatureGym",
+    ecoPointsRequired: 1000,
+    image: "💪",
+    categoryId: "other",
+    partnerIds: ["partner-3"],
   },
   {
-    id: "reward-icecream",
-    title: "10% off Ice Cream",
-    description: "Get 10% off your ice cream purchase",
-    ecoPointsRequired: 300,
-    image: "🍦",
+    id: "reward-4",
+    title: "Free Pastry",
+    description: "Choose any free pastry at GreenCafé",
+    ecoPointsRequired: 400,
+    image: "🥐",
     categoryId: "desserts",
-    partnerIds: ["partner-2"],
+    partnerIds: ["partner-1"],
+  },
+  {
+    id: "reward-nagi-coffee",
+    title: "10% discount on coffee and lemonade",
+    description: "Get 10% off coffee and lemonade at Nagi Coffee Bar",
+    ecoPointsRequired: 300,
+    image: "☕",
+    categoryId: "drinks",
+    partnerIds: ["partner-nagi"],
+  },
+  {
+    id: "reward-nagi-ice",
+    title: "10% discount on bubble tea, cocktails, lemonade and ice cream",
+    description: "Get 10% off bubble tea, cocktails, lemonade and ice cream at Nagimoko Ice",
+    ecoPointsRequired: 300,
+    image: "🧊",
+    categoryId: "drinks",
+    partnerIds: ["partner-nagi"],
   },
 ];
 
@@ -105,6 +154,7 @@ export default function RewardsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"rewards" | "partners">("rewards");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("drinks");
   const { messages } = useLanguage();
   const { colors } = useTheme();
@@ -131,16 +181,28 @@ export default function RewardsPage() {
     loadData();
   }, [loadData]);
 
-  // Filter rewards by selected category and available in user's city
   const filteredRewards = SAMPLE_REWARDS.filter((reward) => {
+    // Filter by category
     if (reward.categoryId !== selectedCategoryId) return false;
+    // Filter by city
     if (!profile?.city) return true;
-    // Check if any partner of this reward has a location in user's city
-    return reward.partnerIds.some((partnerId) => {
-      const partner = SAMPLE_PARTNERS.find((p) => p.id === partnerId);
-      return partner?.locations.some((loc) => loc.city === profile.city);
-    });
+    const rewardPartners = SAMPLE_PARTNERS.filter((p) =>
+      reward.partnerIds.includes(p.id)
+    );
+    return rewardPartners.some((p) =>
+      p.locations.some((loc) => normalizeCity(loc.city) === normalizeCity(profile.city))
+    );
   });
+
+  const filteredPartners = profile?.city
+    ? SAMPLE_PARTNERS.filter((partner) =>
+        partner.locations.some((loc) => normalizeCity(loc.city) === normalizeCity(profile.city))
+      )
+    : SAMPLE_PARTNERS;
+
+  const getRewardPartners = (reward: Reward) => {
+    return SAMPLE_PARTNERS.filter((p) => reward.partnerIds.includes(p.id));
+  };
 
   if (loading) {
     return (
@@ -208,80 +270,184 @@ export default function RewardsPage() {
           <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
             <h1 className="text-3xl font-bold">{messages.rewards.title}</h1>
 
-            {/* Category Tabs */}
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {SAMPLE_CATEGORIES.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategoryId(category.id)}
-                  className={`px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all duration-300 ${
-                    selectedCategoryId === category.id ? "shadow-lg" : ""
-                  }`}
-                  style={{
-                    backgroundColor: selectedCategoryId === category.id
-                      ? colors.cardBg
-                      : "transparent",
-                    color: selectedCategoryId === category.id
-                      ? colors.primary
-                      : colors.textSecondary,
-                  }}
-                >
-                  {category.icon} {category.name}
-                </button>
-              ))}
-            </div>
-
-            {/* Rewards List */}
-            {filteredRewards.length === 0 ? (
-              <div
-                className="col-span-full rounded-3xl p-8 text-center backdrop-blur-xl border"
+            <div className="flex gap-2 p-1 rounded-2xl" style={{ backgroundColor: `${colors.text}10` }}>
+              <button
+                onClick={() => setActiveTab("rewards")}
+                className={`flex-1 py-3 px-6 rounded-xl font-medium transition-all duration-300 ${
+                  activeTab === "rewards" ? "shadow-lg" : ""
+                }`}
                 style={{
-                  backgroundColor: colors.cardBg,
-                  borderColor: colors.border,
+                  backgroundColor: activeTab === "rewards" ? colors.cardBg : "transparent",
+                  color: activeTab === "rewards" ? colors.primary : colors.textSecondary,
                 }}
               >
-                <div className="text-5xl mb-4">🎁</div>
-                <p style={{ color: colors.textSecondary }}>{messages.rewards.noRewardsAvailable}</p>
+                {messages.rewards.tabRewards}
+              </button>
+              <button
+                onClick={() => setActiveTab("partners")}
+                className={`flex-1 py-3 px-6 rounded-xl font-medium transition-all duration-300 ${
+                  activeTab === "partners" ? "shadow-lg" : ""
+                }`}
+                style={{
+                  backgroundColor: activeTab === "partners" ? colors.cardBg : "transparent",
+                  color: activeTab === "partners" ? colors.primary : colors.textSecondary,
+                }}
+              >
+                {messages.rewards.tabPartners}
+              </button>
+            </div>
+
+            {activeTab === "rewards" && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {SAMPLE_CATEGORIES.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategoryId(category.id)}
+                    className={`px-4 py-2 rounded-xl font-semibold whitespace-nowrap transition-all duration-300 ${
+                      selectedCategoryId === category.id ? "shadow-lg" : ""
+                    }`}
+                    style={{
+                      backgroundColor: selectedCategoryId === category.id
+                        ? colors.cardBg
+                        : "transparent",
+                      color: selectedCategoryId === category.id
+                        ? colors.primary
+                        : colors.textSecondary,
+                    }}
+                  >
+                    {category.icon} {category.name}
+                  </button>
+                ))}
               </div>
-            ) : (
+            )}
+
+            {activeTab === "rewards" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredRewards.map((reward) => (
+                {filteredRewards.length === 0 ? (
                   <div
-                    key={reward.id}
-                    onClick={() => router.push(`/rewards/${reward.id}`)}
-                    className="group relative rounded-3xl p-6 transition-all duration-300 hover:scale-[1.02] backdrop-blur-xl border shadow-lg cursor-pointer"
+                    className="col-span-full rounded-3xl p-8 text-center backdrop-blur-xl border"
                     style={{
                       backgroundColor: colors.cardBg,
                       borderColor: colors.border,
                     }}
                   >
-                    <div className="text-5xl mb-4">{reward.image}</div>
-                    <h3 className="text-xl font-bold mb-2">{reward.title}</h3>
-                    <p className="text-sm mb-4" style={{ color: colors.textSecondary }}>
-                      {reward.description}
-                    </p>
-                    <div className="flex items-center gap-2 mb-4">
+                    <div className="text-5xl mb-4">🎁</div>
+                    <p style={{ color: colors.textSecondary }}>{messages.rewards.noRewardsAvailable}</p>
+                  </div>
+                ) : (
+                  filteredRewards.map((reward) => {
+                    const rewardPartners = getRewardPartners(reward);
+                    return (
                       <div
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold"
+                        key={reward.id}
+                        className="group relative rounded-3xl p-6 transition-all duration-300 hover:scale-[1.02] backdrop-blur-xl border shadow-lg"
                         style={{
-                          backgroundColor: `${colors.primary}20`,
-                          color: colors.primary,
+                          backgroundColor: colors.cardBg,
+                          borderColor: colors.border,
                         }}
                       >
-                        {reward.ecoPointsRequired} {messages.tasks.points}
+                        <div className="text-5xl mb-4">{reward.image}</div>
+                        <h3 className="text-xl font-bold mb-2">{reward.title}</h3>
+                        <p className="text-sm mb-4" style={{ color: colors.textSecondary }}>
+                          {reward.description}
+                        </p>
+                        <div className="flex items-center gap-2 mb-4">
+                          <div
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold"
+                            style={{
+                              backgroundColor: `${colors.primary}20`,
+                              color: colors.primary,
+                            }}
+                          >
+                            {reward.ecoPointsRequired} {messages.tasks.points}
+                          </div>
+                          <div className="text-sm" style={{ color: colors.textSecondary }}>
+                            {messages.rewards.partnerLocationsAvailable} {rewardPartners.length} {messages.rewards.branches}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => router.push(`/rewards/${reward.id}`)}
+                          className="w-full py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95"
+                          style={{
+                            background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
+                            color: colors.buttonText,
+                          }}
+                        >
+                          {messages.rewards.viewReward}
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            {activeTab === "partners" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredPartners.length === 0 ? (
+                  <div
+                    className="col-span-full rounded-3xl p-8 text-center backdrop-blur-xl border"
+                    style={{
+                      backgroundColor: colors.cardBg,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <div className="text-5xl mb-4">🤝</div>
+                    <p style={{ color: colors.textSecondary }}>{messages.rewards.noPartnersAvailable}</p>
+                  </div>
+                ) : (
+                  filteredPartners.map((partner) => (
+                    <div
+                      key={partner.id}
+                      className="group relative rounded-3xl p-6 transition-all duration-300 hover:scale-[1.02] backdrop-blur-xl border shadow-lg cursor-pointer"
+                      style={{
+                        backgroundColor: colors.cardBg,
+                        borderColor: colors.border,
+                      }}
+                      onClick={() => router.push(`/rewards/partner/${partner.id}`)}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="text-5xl">{partner.logo}</div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold mb-1">{partner.name}</h3>
+                          <p className="text-sm mb-3" style={{ color: colors.textSecondary }}>
+                            {messages.rewards.officialPartner}
+                          </p>
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            <div
+                              className="px-3 py-1 rounded-full text-xs font-bold"
+                              style={{
+                                backgroundColor:
+                                  partner.level === "Gold"
+                                    ? "#fbbf2420"
+                                    : partner.level === "Silver"
+                                    ? "#9ca3af20"
+                                    : `${colors.primary}20`,
+                                color:
+                                  partner.level === "Gold"
+                                    ? "#fbbf24"
+                                    : partner.level === "Silver"
+                                    ? "#9ca3af"
+                                    : colors.primary,
+                              }}
+                            >
+                              {partner.level}
+                            </div>
+                            <div
+                              className="px-3 py-1 rounded-full text-xs font-medium"
+                              style={{
+                                backgroundColor: `${colors.text}10`,
+                                color: colors.textSecondary,
+                              }}
+                            >
+                              {partner.locations.length} {messages.rewards.branches}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <button
-                      className="w-full py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95"
-                      style={{
-                        background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
-                        color: colors.buttonText,
-                      }}
-                    >
-                      {messages.rewards.viewReward}
-                    </button>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             )}
           </div>
