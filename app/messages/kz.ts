@@ -297,6 +297,32 @@ export const messages: Messages = {
     route: "Маршрут",
     viewDetails: "Толығырақ",
     whereToRedeem: "Қайдан алуға болады",
+    // Categories
+    categoryDrinks: "☕ Сусындылар",
+    categoryDesserts: "🍦 Десерттер",
+    categoryFood: "🍔 Тамақтар",
+    categoryBooks: "📚 Кітаптар",
+    categoryStationery: "✏️ Кәсіпқойлар",
+    // Reward titles
+    rewardCoffee: "Кофеге 10% жеңілдік",
+    rewardLemonade: "Лимонадға 10% жеңілдік",
+    rewardBubbleTea: "Бабл-тиға 10% жеңілдік",
+    rewardCocktails: "Коктейльдерге 10% жеңілдік",
+    rewardIceCream: "Мұзды қызыққа 10% жеңілдік",
+    // Reward descriptions
+    rewardCoffeeDesc: "Кофе сатып алуда 10% жеңілдік алыңыз",
+    rewardLemonadeDesc: "Лимонад сатып алуда 10% жеңілдік алыңыз",
+    rewardBubbleTeaDesc: "Бабл-ти сатып алуда 10% жеңілдік алыңыз",
+    rewardCocktailsDesc: "Коктейльдер сатып алуда 10% жеңілдік алыңыз",
+    rewardIceCreamDesc: "Мұзды қызық сатып алуда 10% жеңілдік алыңыз",
+    // Details page
+    availablePartners: "Қолжетімді партнерлер",
+    address: "Мекенжай",
+    cost: "Бағасы",
+    instagram: "Instagram",
+    buildRoute: "Маршрут құру",
+    redeemReward: "Сыйлықты тапсыру",
+    noPartnersForReward: "Сіздің қалаңызда осы сыйлық үшін партнерлер жоқ.",
   },
   selectCity: {
     title: "Қалаңызды таңдаңыз",

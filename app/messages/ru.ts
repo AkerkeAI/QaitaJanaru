@@ -297,6 +297,32 @@ export const messages: Messages = {
     route: "Маршрут",
     viewDetails: "Подробнее",
     whereToRedeem: "Где получить",
+    // Categories
+    categoryDrinks: "☕ Напитки",
+    categoryDesserts: "🍦 Десерты",
+    categoryFood: "🍔 Еда",
+    categoryBooks: "📚 Книги",
+    categoryStationery: "✏️ Канцелярия",
+    // Reward titles
+    rewardCoffee: "10% скидка на кофе",
+    rewardLemonade: "10% скидка на лимонад",
+    rewardBubbleTea: "10% скидка на бабл-ти",
+    rewardCocktails: "10% скидка на коктейли",
+    rewardIceCream: "10% скидка на мороженое",
+    // Reward descriptions
+    rewardCoffeeDesc: "Получите 10% скидку на покупку кофе",
+    rewardLemonadeDesc: "Получите 10% скидку на покупку лимонада",
+    rewardBubbleTeaDesc: "Получите 10% скидку на покупку бабл-ти",
+    rewardCocktailsDesc: "Получите 10% скидку на покупку коктейлей",
+    rewardIceCreamDesc: "Получите 10% скидку на покупку мороженого",
+    // Details page
+    availablePartners: "Доступные партнеры",
+    address: "Адрес",
+    cost: "Стоимость",
+    instagram: "Instagram",
+    buildRoute: "Построить маршрут",
+    redeemReward: "Активировать награду",
+    noPartnersForReward: "В вашем городе нет партнёров для этой награды.",
   },
   selectCity: {
     title: "Выберите ваш город",

@@ -608,6 +608,32 @@ export interface Messages {
     route: string;
     viewDetails: string;
     whereToRedeem: string;
+    // Categories
+    categoryDrinks: string;
+    categoryDesserts: string;
+    categoryFood: string;
+    categoryBooks: string;
+    categoryStationery: string;
+    // Reward titles
+    rewardCoffee: string;
+    rewardLemonade: string;
+    rewardBubbleTea: string;
+    rewardCocktails: string;
+    rewardIceCream: string;
+    // Reward descriptions
+    rewardCoffeeDesc: string;
+    rewardLemonadeDesc: string;
+    rewardBubbleTeaDesc: string;
+    rewardCocktailsDesc: string;
+    rewardIceCreamDesc: string;
+    // Details page
+    availablePartners: string;
+    address: string;
+    cost: string;
+    instagram: string;
+    buildRoute: string;
+    redeemReward: string;
+    noPartnersForReward: string;
   };
   selectCity: {
     title: string;

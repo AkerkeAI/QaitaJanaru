@@ -297,6 +297,32 @@ export const messages: Messages = {
     route: "Route",
     viewDetails: "View Details",
     whereToRedeem: "Where to Redeem",
+    // Categories
+    categoryDrinks: "☕ Drinks",
+    categoryDesserts: "🍦 Desserts",
+    categoryFood: "🍔 Food",
+    categoryBooks: "📚 Books",
+    categoryStationery: "✏️ Stationery",
+    // Reward titles
+    rewardCoffee: "10% off Coffee",
+    rewardLemonade: "10% off Lemonade",
+    rewardBubbleTea: "10% off Bubble Tea",
+    rewardCocktails: "10% off Cocktails",
+    rewardIceCream: "10% off Ice Cream",
+    // Reward descriptions
+    rewardCoffeeDesc: "Get 10% off your coffee purchase",
+    rewardLemonadeDesc: "Get 10% off your lemonade purchase",
+    rewardBubbleTeaDesc: "Get 10% off your bubble tea purchase",
+    rewardCocktailsDesc: "Get 10% off your cocktail purchase",
+    rewardIceCreamDesc: "Get 10% off your ice cream purchase",
+    // Details page
+    availablePartners: "Available Partners",
+    address: "Address",
+    cost: "Cost",
+    instagram: "Instagram",
+    buildRoute: "Build Route",
+    redeemReward: "Redeem Reward",
+    noPartnersForReward: "No partners available for this reward in your city.",
   },
   selectCity: {
     title: "Select your city",

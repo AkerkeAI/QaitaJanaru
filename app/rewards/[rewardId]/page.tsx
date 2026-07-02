@@ -4,135 +4,93 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Sidebar } from "@/app/components/Sidebar";
 import { UserStatusHeader } from "@/app/components/UserStatusHeader";
+import { QrHeaderAction } from "@/app/components/qr/QrHeaderAction";
 import { useLanguage } from "@/app/contexts/LanguageContext";
 import { useTheme } from "@/app/contexts/ThemeContext";
 import { getProfile, ProfileResponse } from "@/app/lib/api";
-import { Reward, Partner } from "@/app/types/rewards";
+import {
+  Reward,
+  Partner,
+  PartnerLocation,
+} from "@/app/types/rewards";
 
-const normalizeCity = (value?: string | null) => value?.trim().toLowerCase() || "";
-
+// Sample data
 const SAMPLE_PARTNERS: Partner[] = [
   {
     id: "partner-1",
-    name: "GreenCafé",
+    name: "Nagi Coffee Bar",
     logo: "☕",
     level: "Gold",
     locations: [
-      { id: "loc-1", address: "123 Green St, Almaty", city: "almaty", distance: 1.2 },
-      { id: "loc-2", address: "45 Eco Ave, Astana", city: "astana", distance: 0.8 },
+      {
+        id: "loc-1",
+        address: "33-181\nInside Dina Hypermarket",
+        city: "Aktau",
+      },
     ],
-    phone: "+7 (701) 123-4567",
-    website: "https://greencafe.kz",
-    stats: {
-      monthlyVisitors: 1240,
-      rewardsRedeemedThisMonth: 342,
-      profileViews: 892,
-    },
+    instagram: "@nagicoffee",
   },
   {
     id: "partner-2",
-    name: "EcoShop",
-    logo: "🛒",
+    name: "Nagimoko Ice",
+    logo: "🍦",
     level: "Silver",
     locations: [
-      { id: "loc-3", address: "789 Zero Waste Rd, Shymkent", city: "shymkent", distance: 2.1 },
-    ],
-    phone: "+7 (725) 987-6543",
-    website: "https://ecoshop.kz",
-    stats: {
-      monthlyVisitors: 856,
-      rewardsRedeemedThisMonth: 210,
-      profileViews: 543,
-    },
-  },
-  {
-    id: "partner-3",
-    name: "NatureGym",
-    logo: "🏋️",
-    level: "Eco",
-    locations: [
-      { id: "loc-4", address: "56 Workout Blvd, Almaty", city: "almaty", distance: 1.5 },
-    ],
-    phone: "+7 (701) 555-1234",
-    website: "https://naturegym.kz",
-    stats: {
-      monthlyVisitors: 678,
-      rewardsRedeemedThisMonth: 156,
-      profileViews: 432,
-    },
-  },
-  {
-    id: "partner-nagi",
-    name: "Nagi Coffee & Nagimoko Ice",
-    logo: "☕",
-    level: "Gold",
-    description:
-      "This partner supports environmental initiatives and rewards users for recycling through Qaita Janaru.",
-    locations: [
       {
-        id: "loc-nagi-1",
-        address: "Nagi Coffee Bar, 33-181, Inside Dina Hypermarket, Aktau",
-        city: "aktau",
-        distance: 0.6,
-      },
-      {
-        id: "loc-nagi-2",
-        address: "Nagimoko Ice, Shopping Center Astana, 14th Microdistrict, Kiosk, Aktau",
-        city: "aktau",
-        distance: 1.1,
+        id: "loc-2",
+        address: "Shopping Center Astana\n14th Microdistrict\nKiosk",
+        city: "Aktau",
       },
     ],
+    instagram: "@nagimokoice",
   },
 ];
 
 const SAMPLE_REWARDS: Reward[] = [
   {
-    id: "reward-1",
-    title: "Free Americano",
-    description: "Get a free americano at any GreenCafé location",
-    ecoPointsRequired: 700,
+    id: "reward-coffee",
+    titleKey: "rewardCoffee",
+    descriptionKey: "rewardCoffeeDesc",
+    ecoPointsRequired: 300,
     image: "☕",
+    categoryId: "drinks",
     partnerIds: ["partner-1"],
   },
   {
-    id: "reward-2",
-    title: "10% Off Purchase",
-    description: "Get 10% off your next purchase at EcoShop",
-    ecoPointsRequired: 500,
-    image: "🛍️",
+    id: "reward-lemonade",
+    titleKey: "rewardLemonade",
+    descriptionKey: "rewardLemonadeDesc",
+    ecoPointsRequired: 300,
+    image: "🍋",
+    categoryId: "drinks",
+    partnerIds: ["partner-1"],
+  },
+  {
+    id: "reward-bubbletea",
+    titleKey: "rewardBubbleTea",
+    descriptionKey: "rewardBubbleTeaDesc",
+    ecoPointsRequired: 300,
+    image: "🧋",
+    categoryId: "drinks",
     partnerIds: ["partner-2"],
   },
   {
-    id: "reward-3",
-    title: "Free Day Pass",
-    description: "One free day pass to NatureGym",
-    ecoPointsRequired: 1000,
-    image: "💪",
-    partnerIds: ["partner-3"],
-  },
-  {
-    id: "reward-4",
-    title: "Free Pastry",
-    description: "Choose any free pastry at GreenCafé",
-    ecoPointsRequired: 400,
-    image: "🥐",
+    id: "reward-cocktails",
+    titleKey: "rewardCocktails",
+    descriptionKey: "rewardCocktailsDesc",
+    ecoPointsRequired: 300,
+    image: "🍸",
+    categoryId: "drinks",
     partnerIds: ["partner-1"],
   },
   {
-    id: "reward-nagi-coffee",
-    title: "10% discount on coffee and lemonade",
-    description: "Get 10% off coffee and lemonade at Nagi Coffee Bar",
+    id: "reward-icecream",
+    titleKey: "rewardIceCream",
+    descriptionKey: "rewardIceCreamDesc",
     ecoPointsRequired: 300,
-    image: "☕",
-    partnerIds: ["partner-nagi"],
-  },
-  {
-    id: "reward-nagi-ice",
-    title: "10% discount on bubble tea, cocktails, lemonade and ice cream",
-    description: "Get 10% off bubble tea, cocktails, lemonade and ice cream at Nagimoko Ice",
-    ecoPointsRequired: 300,
-    image: "🧊",
-    partnerIds: ["partner-nagi"],
+    image: "🍦",
+    categoryId: "desserts",
+    partnerIds: ["partner-2"],
   },
 ];
 
@@ -146,7 +104,25 @@ export default function RewardDetailsPage() {
   const { colors } = useTheme();
 
   const rewardId = params.rewardId as string;
-  const reward = SAMPLE_REWARDS.find(r => r.id === rewardId);
+  const reward = SAMPLE_REWARDS.find((r) => r.id === rewardId);
+
+  const partners = reward
+    ? reward.partnerIds
+        .map((pid) => SAMPLE_PARTNERS.find((p) => p.id === pid))
+        .filter((p): p is Partner => p !== undefined)
+    : [];
+
+  // Filter partners to show only those with locations in user's city
+  const availablePartners = profile?.city
+    ? partners.filter((partner) =>
+        partner.locations.some((loc) => loc.city === profile.city)
+      )
+    : partners;
+
+  // Helper to get translated text
+  const getMessage = (key: string) => {
+    return (messages.rewards as any)[key] || key;
+  };
 
   const loadData = useCallback(async () => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
@@ -169,10 +145,6 @@ export default function RewardDetailsPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const getRewardPartners = (reward: Reward) => {
-    return SAMPLE_PARTNERS.filter((p) => reward.partnerIds.includes(p.id));
-  };
 
   if (loading) {
     return (
@@ -202,34 +174,21 @@ export default function RewardDetailsPage() {
         style={{ background: colors.bg, color: colors.text }}
       >
         <div className="text-center">
-          <p className="text-lg mb-4">Reward not found</p>
+          <h2 className="text-2xl font-bold mb-4">Reward not found</h2>
           <button
             onClick={() => router.push("/rewards")}
-            className="px-6 py-3 rounded-xl font-bold"
+            className="px-6 py-3 rounded-xl font-semibold"
             style={{
               background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
               color: colors.buttonText,
             }}
           >
-            {messages.common.back}
+            Back to rewards
           </button>
         </div>
       </main>
     );
   }
-
-  const rewardPartners = getRewardPartners(reward);
-  const partnerLocations = rewardPartners.flatMap((p) =>
-    profile?.city
-      ? p.locations.filter((loc) => normalizeCity(loc.city) === normalizeCity(profile.city))
-      : p.locations
-  );
-
-  const handleOpenRoute = (location: { address: string; city: string }) => {
-    const query = `${location.address}, ${location.city}, Kazakhstan`;
-    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
 
   return (
     <main
@@ -244,15 +203,15 @@ export default function RewardDetailsPage() {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="relative z-10 min-h-screen flex flex-col">
-        <header className="flex items-center gap-3 p-4 md:p-6 lg:p-8 flex-shrink-0">
+        <header className="flex items-center justify-between gap-3 p-4 md:p-6 lg:p-8 flex-shrink-0">
           <button
-            onClick={() => router.push("/rewards")}
+            onClick={() => setSidebarOpen(true)}
             className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group"
             style={{
               backgroundColor: colors.cardBg,
               borderColor: colors.border,
             }}
-            aria-label="Go back"
+            aria-label="Open menu"
           >
             <svg
               className="w-6 h-6 group-hover:text-white transition-colors"
@@ -263,82 +222,191 @@ export default function RewardDetailsPage() {
               viewBox="0 0 24 24"
               stroke={colors.textSecondary}
             >
-              <path d="M15 18l-6-6 6-6" />
+              <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
 
-          {profile && <div className="ml-auto"><UserStatusHeader {...{ ecoPoints: profile.eco_points, streak: profile.streak, level: profile.level }} /></div>}
+          {profile && <UserStatusHeader {...{ ecoPoints: profile.eco_points, streak: profile.streak, level: profile.level }} />}
+
+          <QrHeaderAction />
         </header>
 
         <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
           <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
-            <div
-              className="rounded-3xl p-8 backdrop-blur-xl border shadow-lg"
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border transition-all hover:brightness-110 active:scale-95"
               style={{
                 backgroundColor: colors.cardBg,
                 borderColor: colors.border,
+                color: colors.textSecondary,
               }}
             >
-              <div className="text-7xl mb-6">{reward.image}</div>
-              <h1 className="text-3xl font-bold mb-4">{reward.title}</h1>
-              <p className="text-lg mb-6" style={{ color: colors.textSecondary }}>
-                {reward.description}
-              </p>
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Back
+            </button>
+
+            <div className="flex items-center gap-4">
               <div
-                className="inline-flex items-center gap-1 px-4 py-3 rounded-2xl text-lg font-bold"
+                className="w-24 h-24 rounded-3xl flex items-center justify-center text-6xl"
                 style={{
-                  backgroundColor: `${colors.primary}20`,
-                  color: colors.primary,
+                  background: `linear-gradient(135deg, ${colors.primary}40, ${colors.accent}40)`,
                 }}
               >
-                {reward.ecoPointsRequired} {messages.tasks.points}
+                {reward.image}
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold">{getMessage(reward.titleKey)}</h1>
+                <p style={{ color: colors.textSecondary }}>
+                  {getMessage(reward.descriptionKey)}
+                </p>
               </div>
             </div>
 
-            <div>
-              <h2 className="text-2xl font-bold mb-6">{messages.rewards.whereToRedeem}</h2>
-              <div className="space-y-4">
-                {partnerLocations.map((location) => {
-                  const partner = rewardPartners.find(p => 
-                    p.locations.some(l => l.id === location.id)
-                  )!;
-                  return (
-                    <div
-                      key={location.id}
-                      className="rounded-3xl p-6 backdrop-blur-xl border shadow-lg"
-                      style={{
-                        backgroundColor: colors.cardBg,
-                        borderColor: colors.border,
-                      }}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="text-4xl">{partner.logo}</div>
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold mb-1">{partner.name}</h3>
-                          <p className="mb-2" style={{ color: colors.textSecondary }}>
-                            {location.address}
-                          </p>
-                          {location.distance && (
-                            <p className="text-sm mb-4" style={{ color: colors.primary }}>
-                              {location.distance.toFixed(1)} km away
-                            </p>
-                          )}
-                          <button
-                            onClick={() => handleOpenRoute(location)}
-                            className="px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95"
-                            style={{
-                              background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
-                              color: colors.buttonText,
-                            }}
-                          >
-                            Build Route
-                          </button>
-                        </div>
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border"
+              style={{
+                backgroundColor: `${colors.primary}20`,
+                borderColor: colors.border,
+              }}
+            >
+              <span className="text-lg font-bold" style={{ color: colors.primary }}>
+                {reward.ecoPointsRequired} {messages.tasks.points}
+              </span>
+              <span style={{ color: colors.textSecondary }}>{messages.rewards.cost}</span>
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">{messages.rewards.availablePartners}</h2>
+
+              {availablePartners.length === 0 ? (
+                <div
+                  className="rounded-3xl p-8 text-center backdrop-blur-xl border"
+                  style={{
+                    backgroundColor: colors.cardBg,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <p style={{ color: colors.textSecondary }}>
+                    {messages.rewards.noPartnersForReward}
+                  </p>
+                </div>
+              ) : (
+                availablePartners.map((partner) => (
+                  <div
+                    key={partner.id}
+                    className="rounded-3xl p-6 backdrop-blur-xl border shadow-lg"
+                    style={{
+                      backgroundColor: colors.cardBg,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <div className="flex items-start gap-4 mb-4">
+                      <div
+                        className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+                        style={{
+                          background: `linear-gradient(135deg, ${colors.primary}20, ${colors.accent}20)`,
+                        }}
+                      >
+                        {partner.logo}
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold">{partner.name}</h3>
+                        <span
+                          className="inline-block px-2 py-1 rounded-full text-xs font-bold mt-1"
+                          style={{
+                            backgroundColor:
+                              partner.level === "Gold"
+                                ? "#fbbf2420"
+                                : partner.level === "Silver"
+                                ? "#9ca3af20"
+                                : `${colors.primary}20`,
+                            color:
+                              partner.level === "Gold"
+                                ? "#fbbf24"
+                                : partner.level === "Silver"
+                                ? "#9ca3af"
+                                : colors.primary,
+                          }}
+                        >
+                          {partner.level}
+                        </span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    {partner.locations.map((location) => (
+                      <div
+                        key={location.id}
+                        className="mb-4"
+                      >
+                        <div className="mb-2">
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: colors.textSecondary }}
+                          >
+                            {messages.rewards.address}
+                          </span>
+                          <p className="whitespace-pre-line">{location.address}</p>
+                        </div>
+                        {location.city && (
+                          <div className="mb-4">
+                            <span
+                              className="text-sm font-semibold"
+                              style={{ color: colors.textSecondary }}
+                            >
+                              City
+                            </span>
+                            <p>{location.city}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {partner.instagram && (
+                      <div className="mb-4">
+                        <span
+                          className="text-sm font-semibold"
+                          style={{ color: colors.textSecondary }}
+                        >
+                          {messages.rewards.instagram}
+                        </span>
+                        <p className="text-lg">{partner.instagram}</p>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        className="flex-1 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95"
+                        style={{
+                          background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
+                          color: colors.buttonText,
+                        }}
+                      >
+                        {messages.rewards.buildRoute}
+                      </button>
+                      <button
+                        className="flex-1 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95 border"
+                        style={{
+                          borderColor: colors.border,
+                          color: colors.primary,
+                        }}
+                      >
+                        {messages.rewards.redeemReward}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

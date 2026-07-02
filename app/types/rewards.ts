@@ -18,6 +18,7 @@ export interface Partner {
   locations: PartnerLocation[];
   phone?: string;
   website?: string;
+  instagram?: string;
   stats?: {
     monthlyVisitors: number;
     rewardsRedeemedThisMonth: number;
@@ -25,11 +26,18 @@ export interface Partner {
   };
 }
 
+export interface RewardCategory {
+  id: string;
+  icon: string;
+  nameKey: string; // translation key
+}
+
 export interface Reward {
   id: string;
-  title: string;
-  description: string;
+  titleKey: string; // translation key
+  descriptionKey: string; // translation key
   ecoPointsRequired: number;
   image: string;
+  categoryId: string;
   partnerIds: string[];
 }
