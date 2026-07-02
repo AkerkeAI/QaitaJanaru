@@ -92,6 +92,7 @@ const SAMPLE_REWARDS: Reward[] = [
     description: "Get a free americano at any GreenCafé location",
     ecoPointsRequired: 700,
     image: "☕",
+    categoryId: "drinks",
     partnerIds: ["partner-1"],
   },
   {
@@ -100,6 +101,7 @@ const SAMPLE_REWARDS: Reward[] = [
     description: "Get 10% off your next purchase at EcoShop",
     ecoPointsRequired: 500,
     image: "🛍️",
+    categoryId: "drinks",
     partnerIds: ["partner-2"],
   },
   {
@@ -108,6 +110,7 @@ const SAMPLE_REWARDS: Reward[] = [
     description: "One free day pass to NatureGym",
     ecoPointsRequired: 1000,
     image: "💪",
+    categoryId: "drinks",
     partnerIds: ["partner-3"],
   },
   {
@@ -116,6 +119,7 @@ const SAMPLE_REWARDS: Reward[] = [
     description: "Choose any free pastry at GreenCafé",
     ecoPointsRequired: 400,
     image: "🥐",
+    categoryId: "desserts",
     partnerIds: ["partner-1"],
   },
   {
@@ -124,6 +128,7 @@ const SAMPLE_REWARDS: Reward[] = [
     description: "Get 10% off coffee and lemonade at Nagi Coffee Bar",
     ecoPointsRequired: 300,
     image: "☕",
+    categoryId: "drinks",
     partnerIds: ["partner-nagi"],
   },
   {
@@ -132,6 +137,7 @@ const SAMPLE_REWARDS: Reward[] = [
     description: "Get 10% off bubble tea, cocktails, lemonade and ice cream at Nagimoko Ice",
     ecoPointsRequired: 300,
     image: "🧊",
+    categoryId: "drinks",
     partnerIds: ["partner-nagi"],
   },
 ];

@@ -29,15 +29,15 @@ export interface Partner {
 export interface RewardCategory {
   id: string;
   icon: string;
-  nameKey: string; // translation key
+  name: string;
 }
 
 export interface Reward {
   id: string;
-  titleKey: string; // translation key
-  descriptionKey: string; // translation key
+  title: string;
+  description: string;
   ecoPointsRequired: number;
   image: string;
-  categoryId: string;
   partnerIds: string[];
+  categoryId: string;
 }

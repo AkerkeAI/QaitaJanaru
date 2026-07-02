@@ -49,8 +49,8 @@ const SAMPLE_PARTNERS: Partner[] = [
 const SAMPLE_REWARDS: Reward[] = [
   {
     id: "reward-coffee",
-    titleKey: "rewardCoffee",
-    descriptionKey: "rewardCoffeeDesc",
+    title: "10% off Coffee",
+    description: "Get 10% off your coffee purchase",
     ecoPointsRequired: 300,
     image: "☕",
     categoryId: "drinks",
@@ -58,8 +58,8 @@ const SAMPLE_REWARDS: Reward[] = [
   },
   {
     id: "reward-lemonade",
-    titleKey: "rewardLemonade",
-    descriptionKey: "rewardLemonadeDesc",
+    title: "10% off Lemonade",
+    description: "Get 10% off your lemonade purchase",
     ecoPointsRequired: 300,
     image: "🍋",
     categoryId: "drinks",
@@ -67,8 +67,8 @@ const SAMPLE_REWARDS: Reward[] = [
   },
   {
     id: "reward-bubbletea",
-    titleKey: "rewardBubbleTea",
-    descriptionKey: "rewardBubbleTeaDesc",
+    title: "10% off Bubble Tea",
+    description: "Get 10% off your bubble tea purchase",
     ecoPointsRequired: 300,
     image: "🧋",
     categoryId: "drinks",
@@ -76,8 +76,8 @@ const SAMPLE_REWARDS: Reward[] = [
   },
   {
     id: "reward-cocktails",
-    titleKey: "rewardCocktails",
-    descriptionKey: "rewardCocktailsDesc",
+    title: "10% off Cocktails",
+    description: "Get 10% off your cocktail purchase",
     ecoPointsRequired: 300,
     image: "🍸",
     categoryId: "drinks",
@@ -85,8 +85,8 @@ const SAMPLE_REWARDS: Reward[] = [
   },
   {
     id: "reward-icecream",
-    titleKey: "rewardIceCream",
-    descriptionKey: "rewardIceCreamDesc",
+    title: "10% off Ice Cream",
+    description: "Get 10% off your ice cream purchase",
     ecoPointsRequired: 300,
     image: "🍦",
     categoryId: "desserts",
@@ -118,11 +118,6 @@ export default function RewardDetailsPage() {
         partner.locations.some((loc) => loc.city === profile.city)
       )
     : partners;
-
-  // Helper to get translated text
-  const getMessage = (key: string) => {
-    return (messages.rewards as any)[key] || key;
-  };
 
   const loadData = useCallback(async () => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
@@ -266,9 +261,9 @@ export default function RewardDetailsPage() {
                 {reward.image}
               </div>
               <div>
-                <h1 className="text-3xl font-bold">{getMessage(reward.titleKey)}</h1>
+                <h1 className="text-3xl font-bold">{reward.title}</h1>
                 <p style={{ color: colors.textSecondary }}>
-                  {getMessage(reward.descriptionKey)}
+                  {reward.description}
                 </p>
               </div>
             </div>

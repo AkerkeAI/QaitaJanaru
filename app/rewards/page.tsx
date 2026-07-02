@@ -17,8 +17,8 @@ import {
 
 // Sample data
 const SAMPLE_CATEGORIES: RewardCategory[] = [
-  { id: "drinks", icon: "☕", nameKey: "categoryDrinks" },
-  { id: "desserts", icon: "🍦", nameKey: "categoryDesserts" },
+  { id: "drinks", icon: "☕", name: "Drinks" },
+  { id: "desserts", icon: "🍦", name: "Desserts" },
 ];
 
 const SAMPLE_PARTNERS: Partner[] = [
@@ -55,8 +55,8 @@ const SAMPLE_PARTNERS: Partner[] = [
 const SAMPLE_REWARDS: Reward[] = [
   {
     id: "reward-coffee",
-    titleKey: "rewardCoffee",
-    descriptionKey: "rewardCoffeeDesc",
+    title: "10% off Coffee",
+    description: "Get 10% off your coffee purchase",
     ecoPointsRequired: 300,
     image: "☕",
     categoryId: "drinks",
@@ -64,8 +64,8 @@ const SAMPLE_REWARDS: Reward[] = [
   },
   {
     id: "reward-lemonade",
-    titleKey: "rewardLemonade",
-    descriptionKey: "rewardLemonadeDesc",
+    title: "10% off Lemonade",
+    description: "Get 10% off your lemonade purchase",
     ecoPointsRequired: 300,
     image: "🍋",
     categoryId: "drinks",
@@ -73,8 +73,8 @@ const SAMPLE_REWARDS: Reward[] = [
   },
   {
     id: "reward-bubbletea",
-    titleKey: "rewardBubbleTea",
-    descriptionKey: "rewardBubbleTeaDesc",
+    title: "10% off Bubble Tea",
+    description: "Get 10% off your bubble tea purchase",
     ecoPointsRequired: 300,
     image: "🧋",
     categoryId: "drinks",
@@ -82,8 +82,8 @@ const SAMPLE_REWARDS: Reward[] = [
   },
   {
     id: "reward-cocktails",
-    titleKey: "rewardCocktails",
-    descriptionKey: "rewardCocktailsDesc",
+    title: "10% off Cocktails",
+    description: "Get 10% off your cocktail purchase",
     ecoPointsRequired: 300,
     image: "🍸",
     categoryId: "drinks",
@@ -91,8 +91,8 @@ const SAMPLE_REWARDS: Reward[] = [
   },
   {
     id: "reward-icecream",
-    titleKey: "rewardIceCream",
-    descriptionKey: "rewardIceCreamDesc",
+    title: "10% off Ice Cream",
+    description: "Get 10% off your ice cream purchase",
     ecoPointsRequired: 300,
     image: "🍦",
     categoryId: "desserts",
@@ -141,11 +141,6 @@ export default function RewardsPage() {
       return partner?.locations.some((loc) => loc.city === profile.city);
     });
   });
-
-  // Helper to get translated text
-  const getMessage = (key: string) => {
-    return (messages.rewards as any)[key] || key;
-  };
 
   if (loading) {
     return (
@@ -231,7 +226,7 @@ export default function RewardsPage() {
                       : colors.textSecondary,
                   }}
                 >
-                  {getMessage(category.nameKey)}
+                  {category.icon} {category.name}
                 </button>
               ))}
             </div>
@@ -261,9 +256,9 @@ export default function RewardsPage() {
                     }}
                   >
                     <div className="text-5xl mb-4">{reward.image}</div>
-                    <h3 className="text-xl font-bold mb-2">{getMessage(reward.titleKey)}</h3>
+                    <h3 className="text-xl font-bold mb-2">{reward.title}</h3>
                     <p className="text-sm mb-4" style={{ color: colors.textSecondary }}>
-                      {getMessage(reward.descriptionKey)}
+                      {reward.description}
                     </p>
                     <div className="flex items-center gap-2 mb-4">
                       <div
