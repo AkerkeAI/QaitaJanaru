@@ -10,7 +10,6 @@ import {
   ScanResponse,
   LoadingState,
 } from "../types/scan";
-import { SCAN_API_BASE_URL } from "../constants/scan";
 import {
   findNearestRecyclingCenters,
   openExternalNavigation,
@@ -167,7 +166,7 @@ export default function ScanWastePage() {
 
       setLoadingState("analyzing");
 
-      const requestUrl = `${SCAN_API_BASE_URL}/scan/${userId}?language=${language}`;
+      const requestUrl = `/api/scan/${userId}?language=${encodeURIComponent(language)}`;
       const response = await fetch(requestUrl, {
         method: "POST",
         body: formData,
@@ -175,7 +174,15 @@ export default function ScanWastePage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(mapScanError(response.status, errorData.detail));
+        const backendDetail =
+          typeof errorData.detail === "string"
+            ? errorData.detail
+            : typeof errorData.error === "string"
+              ? errorData.error
+              : typeof errorData.message === "string"
+                ? errorData.message
+                : undefined;
+        throw new Error(mapScanError(response.status, backendDetail));
       }
 
       setLoadingState("generating");
@@ -204,6 +211,12 @@ export default function ScanWastePage() {
 
       setLoadingState("complete");
     } catch (err) {
+      if (err instanceof TypeError) {
+        setError(messages.scanWaste.scanFailed);
+        setLoadingState("error");
+        return;
+      }
+
       setError(
         err instanceof Error ? err.message : messages.scanWaste.scanFailed,
       );

@@ -7,6 +7,18 @@ export interface RewardProviderLocation {
   location: PartnerLocation;
 }
 
+const rewardLocationIdsByRewardId: Record<string, string[]> = {
+  "reward-1": ["loc-1", "loc-2"],
+  "reward-2": ["loc-3"],
+  "reward-3": ["loc-4"],
+  "reward-4": ["loc-1", "loc-2"],
+  "reward-coffee": ["loc-nagi-1"],
+  "reward-lemonade": ["loc-nagi-1"],
+  "reward-bubble-tea": ["loc-nagi-2"],
+  "reward-cocktails": ["loc-nagi-1"],
+  "reward-ice-cream": ["loc-nagi-2"],
+};
+
 export const normalizeCity = (value?: string | null) => value?.trim().toLowerCase() || "";
 
 export const rewardCategories: RewardCategory[] = [
@@ -262,9 +274,16 @@ export const getRewardProviderLocations = (
 ): RewardProviderLocation[] =>
   getRewardPartners(reward).flatMap((partner) =>
     partner.locations
-      .filter((location) =>
-        city ? normalizeCity(location.city) === normalizeCity(city) : true,
-      )
+      .filter((location) => {
+        const allowedLocationIds = rewardLocationIdsByRewardId[reward.id];
+        const matchesReward =
+          !allowedLocationIds || allowedLocationIds.includes(location.id);
+        const matchesCity = city
+          ? normalizeCity(location.city) === normalizeCity(city)
+          : true;
+
+        return matchesReward && matchesCity;
+      })
       .map((location) => ({
         partner,
         location,
