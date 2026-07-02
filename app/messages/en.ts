@@ -303,6 +303,9 @@ export const messages: Messages = {
     categoryFood: "🍔 Food",
     categoryBooks: "📚 Books",
     categoryStationery: "✏️ Stationery",
+    categoryEcoProducts: "🌿 Eco products",
+    categoryClothing: "👕 Clothing",
+    categoryEntertainment: "🎉 Entertainment",
     // Reward titles
     rewardCoffee: "10% off Coffee",
     rewardLemonade: "10% off Lemonade",

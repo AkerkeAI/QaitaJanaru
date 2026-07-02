@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Sidebar } from "@/app/components/Sidebar";
 import { UserStatusHeader } from "@/app/components/UserStatusHeader";
@@ -8,91 +8,7 @@ import { QrHeaderAction } from "@/app/components/qr/QrHeaderAction";
 import { useLanguage } from "@/app/contexts/LanguageContext";
 import { useTheme } from "@/app/contexts/ThemeContext";
 import { getProfile, ProfileResponse } from "@/app/lib/api";
-import {
-  Reward,
-  Partner,
-  PartnerLocation,
-} from "@/app/types/rewards";
-
-// Sample data
-const SAMPLE_PARTNERS: Partner[] = [
-  {
-    id: "partner-1",
-    name: "Nagi Coffee Bar",
-    logo: "☕",
-    level: "Gold",
-    locations: [
-      {
-        id: "loc-1",
-        address: "33-181\nInside Dina Hypermarket",
-        city: "Aktau",
-      },
-    ],
-    instagram: "@nagicoffee",
-  },
-  {
-    id: "partner-2",
-    name: "Nagimoko Ice",
-    logo: "🍦",
-    level: "Silver",
-    locations: [
-      {
-        id: "loc-2",
-        address: "Shopping Center Astana\n14th Microdistrict\nKiosk",
-        city: "Aktau",
-      },
-    ],
-    instagram: "@nagimokoice",
-  },
-];
-
-const SAMPLE_REWARDS: Reward[] = [
-  {
-    id: "reward-coffee",
-    title: "10% off Coffee",
-    description: "Get 10% off your coffee purchase",
-    ecoPointsRequired: 300,
-    image: "☕",
-    categoryId: "drinks",
-    partnerIds: ["partner-1"],
-  },
-  {
-    id: "reward-lemonade",
-    title: "10% off Lemonade",
-    description: "Get 10% off your lemonade purchase",
-    ecoPointsRequired: 300,
-    image: "🍋",
-    categoryId: "drinks",
-    partnerIds: ["partner-1"],
-  },
-  {
-    id: "reward-bubbletea",
-    title: "10% off Bubble Tea",
-    description: "Get 10% off your bubble tea purchase",
-    ecoPointsRequired: 300,
-    image: "🧋",
-    categoryId: "drinks",
-    partnerIds: ["partner-2"],
-  },
-  {
-    id: "reward-cocktails",
-    title: "10% off Cocktails",
-    description: "Get 10% off your cocktail purchase",
-    ecoPointsRequired: 300,
-    image: "🍸",
-    categoryId: "drinks",
-    partnerIds: ["partner-1"],
-  },
-  {
-    id: "reward-icecream",
-    title: "10% off Ice Cream",
-    description: "Get 10% off your ice cream purchase",
-    ecoPointsRequired: 300,
-    image: "🍦",
-    categoryId: "desserts",
-    partnerIds: ["partner-2"],
-  },
-];
+import { getRewardProviderLocations, rewards } from "@/app/lib/rewardsData";
 
 export default function RewardDetailsPage() {
   const router = useRouter();
@@ -104,20 +20,12 @@ export default function RewardDetailsPage() {
   const { colors } = useTheme();
 
   const rewardId = params.rewardId as string;
-  const reward = SAMPLE_REWARDS.find((r) => r.id === rewardId);
+  const reward = rewards.find((item) => item.id === rewardId);
 
-  const partners = reward
-    ? reward.partnerIds
-        .map((pid) => SAMPLE_PARTNERS.find((p) => p.id === pid))
-        .filter((p): p is Partner => p !== undefined)
-    : [];
-
-  // Filter partners to show only those with locations in user's city
-  const availablePartners = profile?.city
-    ? partners.filter((partner) =>
-        partner.locations.some((loc) => loc.city === profile.city)
-      )
-    : partners;
+  const providerLocations = useMemo(
+    () => (reward ? getRewardProviderLocations(reward, profile?.city) : []),
+    [profile?.city, reward],
+  );
 
   const loadData = useCallback(async () => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
@@ -140,6 +48,15 @@ export default function RewardDetailsPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const handleOpenRoute = useCallback((lat?: number, lng?: number) => {
+    if (typeof lat !== "number" || typeof lng !== "number") {
+      return;
+    }
+
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }, []);
 
   if (loading) {
     return (
@@ -248,7 +165,7 @@ export default function RewardDetailsPage() {
                   clipRule="evenodd"
                 />
               </svg>
-              Back
+              {messages.common.back}
             </button>
 
             <div className="flex items-center gap-4">
@@ -284,7 +201,7 @@ export default function RewardDetailsPage() {
             <div className="space-y-4">
               <h2 className="text-xl font-bold">{messages.rewards.availablePartners}</h2>
 
-              {availablePartners.length === 0 ? (
+              {providerLocations.length === 0 ? (
                 <div
                   className="rounded-3xl p-8 text-center backdrop-blur-xl border"
                   style={{
@@ -297,9 +214,9 @@ export default function RewardDetailsPage() {
                   </p>
                 </div>
               ) : (
-                availablePartners.map((partner) => (
+                providerLocations.map(({ partner, location }) => (
                   <div
-                    key={partner.id}
+                    key={`${partner.id}-${location.id}`}
                     className="rounded-3xl p-6 backdrop-blur-xl border shadow-lg"
                     style={{
                       backgroundColor: colors.cardBg,
@@ -336,36 +253,19 @@ export default function RewardDetailsPage() {
                         >
                           {partner.level}
                         </span>
+                        <p className="mt-2 font-semibold">{location.name || partner.name}</p>
                       </div>
                     </div>
 
-                    {partner.locations.map((location) => (
-                      <div
-                        key={location.id}
-                        className="mb-4"
+                    <div className="mb-4">
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: colors.textSecondary }}
                       >
-                        <div className="mb-2">
-                          <span
-                            className="text-sm font-semibold"
-                            style={{ color: colors.textSecondary }}
-                          >
-                            {messages.rewards.address}
-                          </span>
-                          <p className="whitespace-pre-line">{location.address}</p>
-                        </div>
-                        {location.city && (
-                          <div className="mb-4">
-                            <span
-                              className="text-sm font-semibold"
-                              style={{ color: colors.textSecondary }}
-                            >
-                              City
-                            </span>
-                            <p>{location.city}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                        {messages.rewards.address}
+                      </span>
+                      <p className="whitespace-pre-line">{location.address}</p>
+                    </div>
 
                     {partner.instagram && (
                       <div className="mb-4">
@@ -379,8 +279,15 @@ export default function RewardDetailsPage() {
                       </div>
                     )}
 
+                    {location.workingHours && (
+                      <div className="mb-4">
+                        <p style={{ color: colors.textSecondary }}>{location.workingHours}</p>
+                      </div>
+                    )}
+
                     <div className="flex flex-col sm:flex-row gap-3">
                       <button
+                        onClick={() => handleOpenRoute(location.lat, location.lng)}
                         className="flex-1 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95"
                         style={{
                           background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
@@ -388,15 +295,6 @@ export default function RewardDetailsPage() {
                         }}
                       >
                         {messages.rewards.buildRoute}
-                      </button>
-                      <button
-                        className="flex-1 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95 border"
-                        style={{
-                          borderColor: colors.border,
-                          color: colors.primary,
-                        }}
-                      >
-                        {messages.rewards.redeemReward}
                       </button>
                     </div>
                   </div>

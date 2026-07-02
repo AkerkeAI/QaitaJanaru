@@ -2,8 +2,10 @@ export type PartnerLevel = "Gold" | "Silver" | "Eco";
 
 export interface PartnerLocation {
   id: string;
+  name?: string;
   address: string;
   city: string;
+  workingHours?: string;
   distance?: number; // in km
   lat?: number;
   lng?: number;

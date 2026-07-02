@@ -303,6 +303,9 @@ export const messages: Messages = {
     categoryFood: "🍔 Тамақтар",
     categoryBooks: "📚 Кітаптар",
     categoryStationery: "✏️ Кәсіпқойлар",
+    categoryEcoProducts: "🌿 Эко тауарлар",
+    categoryClothing: "👕 Киім",
+    categoryEntertainment: "🎉 Ойын-сауық",
     // Reward titles
     rewardCoffee: "Кофеге 10% жеңілдік",
     rewardLemonade: "Лимонадға 10% жеңілдік",

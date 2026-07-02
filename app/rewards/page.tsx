@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/app/components/Sidebar";
 import { UserStatusHeader } from "@/app/components/UserStatusHeader";
@@ -8,146 +8,27 @@ import { QrHeaderAction } from "@/app/components/qr/QrHeaderAction";
 import { useLanguage } from "@/app/contexts/LanguageContext";
 import { useTheme } from "@/app/contexts/ThemeContext";
 import { getProfile, ProfileResponse } from "@/app/lib/api";
-import { Reward, Partner, RewardCategory } from "@/app/types/rewards";
+import {
+  getPartnersForCity,
+  getRewardProviderLocations,
+  getRewardsForCity,
+  rewardCategories,
+} from "@/app/lib/rewardsData";
 
-const normalizeCity = (value?: string | null) => value?.trim().toLowerCase() || "";
+const getCategoryLabel = (categoryId: string, fallbackName: string, messages: ReturnType<typeof useLanguage>["messages"]) => {
+  const labels: Record<string, string> = {
+    drinks: messages.rewards.categoryDrinks,
+    desserts: messages.rewards.categoryDesserts,
+    food: messages.rewards.categoryFood,
+    books: messages.rewards.categoryBooks,
+    stationery: messages.rewards.categoryStationery,
+    "eco-products": messages.rewards.categoryEcoProducts,
+    clothing: messages.rewards.categoryClothing,
+    entertainment: messages.rewards.categoryEntertainment,
+  };
 
-const SAMPLE_CATEGORIES: RewardCategory[] = [
-  { id: "drinks", icon: "☕", name: "Drinks" },
-  { id: "desserts", icon: "🍦", name: "Desserts" },
-  { id: "other", icon: "🎁", name: "Other" },
-];
-
-const SAMPLE_PARTNERS: Partner[] = [
-  {
-    id: "partner-1",
-    name: "GreenCafé",
-    logo: "☕",
-    level: "Gold",
-    locations: [
-      { id: "loc-1", address: "123 Green St, Almaty", city: "almaty", distance: 1.2 },
-      { id: "loc-2", address: "45 Eco Ave, Astana", city: "astana", distance: 0.8 },
-    ],
-    phone: "+7 (701) 123-4567",
-    website: "https://greencafe.kz",
-    stats: {
-      monthlyVisitors: 1240,
-      rewardsRedeemedThisMonth: 342,
-      profileViews: 892,
-    },
-  },
-  {
-    id: "partner-2",
-    name: "EcoShop",
-    logo: "🛒",
-    level: "Silver",
-    locations: [
-      { id: "loc-3", address: "789 Zero Waste Rd, Shymkent", city: "shymkent", distance: 2.1 },
-    ],
-    phone: "+7 (725) 987-6543",
-    website: "https://ecoshop.kz",
-    stats: {
-      monthlyVisitors: 856,
-      rewardsRedeemedThisMonth: 210,
-      profileViews: 543,
-    },
-  },
-  {
-    id: "partner-3",
-    name: "NatureGym",
-    logo: "🏋️",
-    level: "Eco",
-    locations: [
-      { id: "loc-4", address: "56 Workout Blvd, Almaty", city: "almaty", distance: 1.5 },
-    ],
-    phone: "+7 (701) 555-1234",
-    website: "https://naturegym.kz",
-    stats: {
-      monthlyVisitors: 678,
-      rewardsRedeemedThisMonth: 156,
-      profileViews: 432,
-    },
-  },
-  {
-    id: "partner-nagi",
-    name: "Nagi Coffee & Nagimoko Ice",
-    logo: "☕",
-    level: "Gold",
-    description:
-      "This partner supports environmental initiatives and rewards users for recycling through Qaita Janaru.",
-    locations: [
-      {
-        id: "loc-nagi-1",
-        address: "Nagi Coffee Bar, 33-181, Inside Dina Hypermarket, Aktau",
-        city: "aktau",
-        distance: 0.6,
-      },
-      {
-        id: "loc-nagi-2",
-        address: "Nagimoko Ice, Shopping Center Astana, 14th Microdistrict, Kiosk, Aktau",
-        city: "aktau",
-        distance: 1.1,
-      },
-    ],
-  },
-];
-
-const SAMPLE_REWARDS: Reward[] = [
-  {
-    id: "reward-1",
-    title: "Free Americano",
-    description: "Get a free americano at any GreenCafé location",
-    ecoPointsRequired: 700,
-    image: "☕",
-    categoryId: "drinks",
-    partnerIds: ["partner-1"],
-  },
-  {
-    id: "reward-2",
-    title: "10% Off Purchase",
-    description: "Get 10% off your next purchase at EcoShop",
-    ecoPointsRequired: 500,
-    image: "🛍️",
-    categoryId: "other",
-    partnerIds: ["partner-2"],
-  },
-  {
-    id: "reward-3",
-    title: "Free Day Pass",
-    description: "One free day pass to NatureGym",
-    ecoPointsRequired: 1000,
-    image: "💪",
-    categoryId: "other",
-    partnerIds: ["partner-3"],
-  },
-  {
-    id: "reward-4",
-    title: "Free Pastry",
-    description: "Choose any free pastry at GreenCafé",
-    ecoPointsRequired: 400,
-    image: "🥐",
-    categoryId: "desserts",
-    partnerIds: ["partner-1"],
-  },
-  {
-    id: "reward-nagi-coffee",
-    title: "10% discount on coffee and lemonade",
-    description: "Get 10% off coffee and lemonade at Nagi Coffee Bar",
-    ecoPointsRequired: 300,
-    image: "☕",
-    categoryId: "drinks",
-    partnerIds: ["partner-nagi"],
-  },
-  {
-    id: "reward-nagi-ice",
-    title: "10% discount on bubble tea, cocktails, lemonade and ice cream",
-    description: "Get 10% off bubble tea, cocktails, lemonade and ice cream at Nagimoko Ice",
-    ecoPointsRequired: 300,
-    image: "🧊",
-    categoryId: "drinks",
-    partnerIds: ["partner-nagi"],
-  },
-];
+  return labels[categoryId] || fallbackName;
+};
 
 export default function RewardsPage() {
   const router = useRouter();
@@ -155,7 +36,7 @@ export default function RewardsPage() {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"rewards" | "partners">("rewards");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("drinks");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const { messages } = useLanguage();
   const { colors } = useTheme();
 
@@ -181,28 +62,42 @@ export default function RewardsPage() {
     loadData();
   }, [loadData]);
 
-  const filteredRewards = SAMPLE_REWARDS.filter((reward) => {
-    // Filter by category
-    if (reward.categoryId !== selectedCategoryId) return false;
-    // Filter by city
-    if (!profile?.city) return true;
-    const rewardPartners = SAMPLE_PARTNERS.filter((p) =>
-      reward.partnerIds.includes(p.id)
-    );
-    return rewardPartners.some((p) =>
-      p.locations.some((loc) => normalizeCity(loc.city) === normalizeCity(profile.city))
-    );
-  });
+  const cityRewards = useMemo(
+    () => getRewardsForCity(profile?.city),
+    [profile?.city],
+  );
 
-  const filteredPartners = profile?.city
-    ? SAMPLE_PARTNERS.filter((partner) =>
-        partner.locations.some((loc) => normalizeCity(loc.city) === normalizeCity(profile.city))
-      )
-    : SAMPLE_PARTNERS;
+  const availableCategories = useMemo(
+    () =>
+      rewardCategories.filter((category) =>
+        cityRewards.some((reward) => reward.categoryId === category.id),
+      ),
+    [cityRewards],
+  );
 
-  const getRewardPartners = (reward: Reward) => {
-    return SAMPLE_PARTNERS.filter((p) => reward.partnerIds.includes(p.id));
-  };
+  useEffect(() => {
+    if (!availableCategories.length) {
+      setSelectedCategoryId("");
+      return;
+    }
+
+    if (!availableCategories.some((category) => category.id === selectedCategoryId)) {
+      setSelectedCategoryId(availableCategories[0].id);
+    }
+  }, [availableCategories, selectedCategoryId]);
+
+  const filteredRewards = useMemo(() => {
+    if (!selectedCategoryId) {
+      return cityRewards;
+    }
+
+    return cityRewards.filter((reward) => reward.categoryId === selectedCategoryId);
+  }, [cityRewards, selectedCategoryId]);
+
+  const filteredPartners = useMemo(
+    () => getPartnersForCity(profile?.city),
+    [profile?.city],
+  );
 
   if (loading) {
     return (
@@ -299,7 +194,7 @@ export default function RewardsPage() {
 
             {activeTab === "rewards" && (
               <div className="flex gap-2 overflow-x-auto pb-2">
-                {SAMPLE_CATEGORIES.map((category) => (
+                {availableCategories.map((category) => (
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategoryId(category.id)}
@@ -315,7 +210,7 @@ export default function RewardsPage() {
                         : colors.textSecondary,
                     }}
                   >
-                    {category.icon} {category.name}
+                    {getCategoryLabel(category.id, `${category.icon} ${category.name}`, messages)}
                   </button>
                 ))}
               </div>
@@ -336,15 +231,19 @@ export default function RewardsPage() {
                   </div>
                 ) : (
                   filteredRewards.map((reward) => {
-                    const rewardPartners = getRewardPartners(reward);
+                    const providerLocations = getRewardProviderLocations(
+                      reward,
+                      profile?.city,
+                    );
                     return (
                       <div
                         key={reward.id}
-                        className="group relative rounded-3xl p-6 transition-all duration-300 hover:scale-[1.02] backdrop-blur-xl border shadow-lg"
+                        className="group relative rounded-3xl p-6 transition-all duration-300 hover:scale-[1.02] backdrop-blur-xl border shadow-lg cursor-pointer"
                         style={{
                           backgroundColor: colors.cardBg,
                           borderColor: colors.border,
                         }}
+                        onClick={() => router.push(`/rewards/${reward.id}`)}
                       >
                         <div className="text-5xl mb-4">{reward.image}</div>
                         <h3 className="text-xl font-bold mb-2">{reward.title}</h3>
@@ -362,7 +261,7 @@ export default function RewardsPage() {
                             {reward.ecoPointsRequired} {messages.tasks.points}
                           </div>
                           <div className="text-sm" style={{ color: colors.textSecondary }}>
-                            {messages.rewards.partnerLocationsAvailable} {rewardPartners.length} {messages.rewards.branches}
+                            {messages.rewards.partnerLocationsAvailable} {providerLocations.length} {messages.rewards.branches}
                           </div>
                         </div>
                         <button

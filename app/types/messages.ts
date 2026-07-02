@@ -614,6 +614,9 @@ export interface Messages {
     categoryFood: string;
     categoryBooks: string;
     categoryStationery: string;
+    categoryEcoProducts: string;
+    categoryClothing: string;
+    categoryEntertainment: string;
     // Reward titles
     rewardCoffee: string;
     rewardLemonade: string;
