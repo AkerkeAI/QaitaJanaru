@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { getProfile, updateProfile } from "../lib/api";
@@ -13,8 +13,6 @@ interface DropdownOption {
 
 export default function SelectCityPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const nextPath = searchParams?.get("next") || "/profile";
   const { messages } = useLanguage();
   const { colors } = useTheme();
 
@@ -63,7 +61,7 @@ export default function SelectCityPage() {
       try {
         const profile = await getProfile(storedUserId);
         if (isValidCity(profile.city)) {
-          router.push(nextPath);
+          router.replace("/profile");
           return;
         }
       } catch (err) {
@@ -73,7 +71,7 @@ export default function SelectCityPage() {
       }
     };
     checkAuth();
-  }, [router, nextPath]);
+  }, [router]);
 
   const handleSave = async () => {
     const selectedCity = city.trim();
@@ -81,11 +79,22 @@ export default function SelectCityPage() {
     setIsSaving(true);
     setError("");
     try {
-      await updateProfile(userId, { city: selectedCity });
-      localStorage.setItem("qaitaJanaru_city", selectedCity);
-      router.push(nextPath);
+      const updatedProfile = await updateProfile(userId, { city: selectedCity });
+      localStorage.setItem("qaitaJanaru_city", updatedProfile.city);
+      router.replace("/profile");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save city");
+      const errorMessage =
+        err instanceof Error ? err.message : messages.selectCity.saveError;
+
+      if (errorMessage === "CITY_REQUIRED") {
+        setError(messages.register.selectCityRequired);
+      } else if (errorMessage === "NO_PROFILE_FIELDS_TO_UPDATE") {
+        setError(messages.selectCity.saveError);
+      } else if (errorMessage === "Failed to update profile") {
+        setError(messages.selectCity.saveError);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -139,10 +148,10 @@ export default function SelectCityPage() {
                 className="text-3xl font-black tracking-tight mb-2"
                 style={{ color: "#ffffff" }}
               >
-                {messages.register.city}
+                {messages.selectCity.title}
               </h1>
               <p className="text-sm font-medium" style={{ color: "#6ee7b7" }}>
-                {messages.register.selectCityRequired}
+                {messages.selectCity.subtitle}
               </p>
             </div>
 
@@ -191,7 +200,7 @@ export default function SelectCityPage() {
                   color: "#ffffff",
                 }}
               >
-                {isSaving ? "Saving..." : "Сохранить"}
+                {isSaving ? messages.selectCity.saving : messages.selectCity.save}
               </button>
             </div>
           </div>

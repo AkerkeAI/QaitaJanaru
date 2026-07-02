@@ -332,10 +332,13 @@ export const messages: Messages = {
     subtitle: "Жалғастыру үшін қаланы таңдаңыз",
     save: "Сақтау",
     saving: "Сақталуде...",
+    saveError: "Қаланы сақтау мүмкін болмады",
   },
   recyclingMap: {
     title: "Қайта өңдеу картасы",
     subtitle: "Сіздің жаныңыздағы қайта өңдеу орталықтарын табыңыз",
+    searchPlaceholder: "Атау, мекенжай, қала немесе санат бойынша іздеу",
+    noSearchResults: "Ештеңе табылмады",
     yourLocation: "Сіздің орналасуыңыз",
     findLocation: "Менің орналасуымды табу",
     acceptedMaterials: "Қабылданатын материалдар",

@@ -332,11 +332,14 @@ export const messages: Messages = {
     subtitle: "Please select your city to continue",
     save: "Save",
     saving: "Saving...",
+    saveError: "Failed to save city",
   },
 
   recyclingMap: {
     title: "Recycling Map",
     subtitle: "Find recycling centers near you",
+    searchPlaceholder: "Search by name, address, city, or category",
+    noSearchResults: "Nothing found",
     yourLocation: "Your Location",
     findLocation: "Find My Location",
     acceptedMaterials: "Accepted Materials",

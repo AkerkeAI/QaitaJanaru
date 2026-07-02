@@ -332,10 +332,13 @@ export const messages: Messages = {
     subtitle: "Пожалуйста, выберите ваш город, чтобы продолжить",
     save: "Сохранить",
     saving: "Сохранение...",
+    saveError: "Не удалось сохранить город",
   },
   recyclingMap: {
     title: "Карта переработки",
     subtitle: "Найдите центры переработки рядом с вами",
+    searchPlaceholder: "Поиск по названию, адресу, городу или категории",
+    noSearchResults: "Ничего не найдено",
     yourLocation: "Ваше местоположение",
     findLocation: "Найти мое местоположение",
     acceptedMaterials: "Принимаемые материалы",

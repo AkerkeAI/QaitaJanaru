@@ -4,7 +4,7 @@ from app.models.recycling_point import RecyclingPoint
 from app.models.recycling_submission import RecyclingSubmission
 from app.models.scan_history import ScanHistory
 from app.models.user import User
-from app.schemas.profile import ProfileResponse
+from app.schemas.profile import ProfileResponse, UpdateProfileRequest
 from app.services.user_service import sync_user_level
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -96,12 +96,50 @@ def _serialize_profile(user: User, db: Session) -> ProfileResponse:
     )
 
 
+def _validate_city(city: str) -> str:
+    normalized_city = city.strip()
+    if not normalized_city:
+        raise HTTPException(status_code=400, detail="CITY_REQUIRED")
+
+    if normalized_city.lower() == "unknown":
+        raise HTTPException(status_code=400, detail="CITY_REQUIRED")
+
+    return normalized_city
+
+
 @router.get("/{user_id}", response_model=ProfileResponse)
 def get_profile(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    return _serialize_profile(user, db)
+
+
+@router.patch("/{user_id}", response_model=ProfileResponse)
+def update_profile(
+    user_id: int,
+    payload: UpdateProfileRequest,
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    updated = False
+
+    if payload.city is not None:
+        user.city = _validate_city(payload.city)
+        updated = True
+
+    if not updated:
+        raise HTTPException(status_code=400, detail="NO_PROFILE_FIELDS_TO_UPDATE")
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
 
     return _serialize_profile(user, db)
 

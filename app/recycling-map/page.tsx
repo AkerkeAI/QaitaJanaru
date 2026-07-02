@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
-import { useMemo } from "react";
 import type {
   MapContainer as MapContainerType,
   TileLayer as TileLayerType,
@@ -82,6 +81,7 @@ export default function RecyclingMapPage() {
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [recyclingPoints, setRecyclingPoints] = useState<RecyclingPoint[]>([]);
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const mapRef = useRef<any>(null);
   const { messages, language } = useLanguage();
   const { theme, colors } = useTheme();
@@ -260,15 +260,36 @@ export default function RecyclingMapPage() {
 
   // Prepare translated points
   const translatedPoints = useMemo(() => {
-    return filteredPoints.map((point) => ({
-      ...point,
-      waste_type_translated: translateWasteType(point.waste_type, language),
-      facility_type_translated: translateFacilityType(
-        point.facility_type,
-        language,
-      ),
-    }));
-  }, [filteredPoints, language]);
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return filteredPoints
+      .map((point) => ({
+        ...point,
+        waste_type_translated: translateWasteType(point.waste_type, language),
+        facility_type_translated: translateFacilityType(
+          point.facility_type,
+          language,
+        ),
+      }))
+      .filter((point) => {
+        if (!normalizedQuery) return true;
+
+        const searchableText = [
+          point.name,
+          point.address,
+          point.city,
+          point.waste_type,
+          point.waste_type_translated,
+          point.facility_type,
+          point.facility_type_translated,
+          point.description,
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return searchableText.includes(normalizedQuery);
+      });
+  }, [filteredPoints, language, searchQuery]);
 
   return (
     <main
@@ -332,6 +353,40 @@ export default function RecyclingMapPage() {
 
         {/* Content Area */}
         <div className="flex-1 px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8">
+          <div
+            className="mb-4 rounded-2xl border backdrop-blur-xl shadow-lg"
+            style={{
+              background: colors.cardBg,
+              borderColor: colors.border,
+            }}
+          >
+            <div className="flex items-center gap-3 px-4 py-3">
+              <svg
+                className="w-5 h-5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                style={{ color: colors.textSecondary }}
+              >
+                <path d="m21 21-4.35-4.35" />
+                <circle cx="11" cy="11" r="6" />
+              </svg>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={messages.recyclingMap.searchPlaceholder}
+                className="w-full bg-transparent outline-none text-sm md:text-base placeholder:opacity-100"
+                style={{
+                  color: colors.text,
+                }}
+              />
+            </div>
+          </div>
+
           {/* Map Container - Integrated into page */}
           <div
             className="relative rounded-3xl overflow-hidden backdrop-blur-xl"
@@ -385,14 +440,16 @@ export default function RecyclingMapPage() {
                     </Marker>
                   )}
 
-                  {/* Filtering by category (from query param) */}
-                  {categoryFilter && filteredPoints.length === 0 && (
+                  {/* Filtering by category/search */}
+                  {translatedPoints.length === 0 && (
                     <div className="absolute inset-0 z-[1001] flex items-center justify-center pointer-events-none">
                       <div
                         className="bg-black/60 px-6 py-4 rounded-xl"
                         style={{ color: colors.text }}
                       >
-                        {messages.recyclingMap.noCenterFound}
+                        {searchQuery.trim()
+                          ? messages.recyclingMap.noSearchResults
+                          : messages.recyclingMap.noCenterFound}
                       </div>
                     </div>
                   )}

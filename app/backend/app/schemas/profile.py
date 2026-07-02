@@ -3,6 +3,10 @@ from typing import List
 from pydantic import BaseModel
 
 
+class UpdateProfileRequest(BaseModel):
+    city: str | None = None
+
+
 class RecyclingMaterialStatsResponse(BaseModel):
     key: str
     quantity: int

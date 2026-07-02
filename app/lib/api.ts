@@ -275,7 +275,7 @@ export async function updateProfile(
   data: UpdateProfileRequest,
 ): Promise<ProfileResponse> {
   const response = await fetch(`${API_URL}/profile/${userId}`, {
-    method: "PUT",
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
     },

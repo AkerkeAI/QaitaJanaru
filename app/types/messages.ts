@@ -252,6 +252,8 @@ export interface Messages {
   recyclingMap: {
     title: string;
     subtitle: string;
+    searchPlaceholder: string;
+    noSearchResults: string;
     yourLocation: string;
     findLocation: string;
     acceptedMaterials: string;
@@ -643,5 +645,6 @@ export interface Messages {
     subtitle: string;
     save: string;
     saving: string;
+    saveError: string;
   };
 }
