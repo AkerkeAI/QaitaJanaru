@@ -1,5 +1,12 @@
 from app.db.session import Base, SessionLocal, engine
 from app.models.chat_message import ChatMessage  # noqa: F401
+from app.models.partner_qr_branch import PartnerQrBranch  # noqa: F401
+from app.models.partner_qr_branch_reward import PartnerQrBranchReward  # noqa: F401
+from app.models.partner_qr_code import PartnerQrCode  # noqa: F401
+from app.models.partner_qr_exchange import PartnerQrExchange  # noqa: F401
+from app.models.partner_qr_partner import PartnerQrPartner  # noqa: F401
+from app.models.partner_qr_receipt import PartnerQrReceipt  # noqa: F401
+from app.models.partner_qr_reward import PartnerQrReward  # noqa: F401
 from app.models.password_reset_code import PasswordResetCode  # noqa: F401
 from app.models.qr_claim import QrClaim  # noqa: F401
 from app.models.recycling_point import RecyclingPoint  # noqa: F401
@@ -10,6 +17,7 @@ from app.routers import (
     auth,
     chat,
     leaderboard,
+    partner_qr,
     profile,
     qr,
     recycling_points,
@@ -17,6 +25,7 @@ from app.routers import (
     scan,
     tasks,
 )
+from app.services.partner_qr_seed import seed_partner_qr_data
 from app.services.recycling_points_seed import seed_recycling_points
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,6 +42,7 @@ def ensure_database_tables() -> None:
         # Automatic migration for phone authentication fields
         migrate_phone_fields(db)
         seed_recycling_points(db)
+        seed_partner_qr_data(db)
     finally:
         db.close()
 
@@ -83,6 +93,7 @@ app.include_router(chat.router)
 app.include_router(routing.router)
 app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
 app.include_router(qr.router)
+app.include_router(partner_qr.router)
 app.include_router(recycling_points.router)
 
 

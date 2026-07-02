@@ -317,6 +317,48 @@ export interface Messages {
     chaptersProgressUpdated: string;
     statsUpdated: string;
   };
+  adminQr: {
+    title: string;
+    recyclingTab: string;
+    partnerTab: string;
+    downloadAllZip: string;
+    searchPlaceholder: string;
+    loading: string;
+    partnerName: string;
+    branchName: string;
+    city: string;
+    address: string;
+    assigned: string;
+    reserved: string;
+    availablePool: string;
+    noItems: string;
+    downloadPoster: string;
+  };
+  partnerQr: {
+    title: string;
+    branch: string;
+    availableRewards: string;
+    exchange: string;
+    exchanging: string;
+    ecoPointsPrice: string;
+    issueDate: string;
+    expirationTime: string;
+    receiptTitle: string;
+    receiptDescription: string;
+    receiptExpired: string;
+    receiptUsed: string;
+    receiptValid: string;
+    insufficientEcoPoints: string;
+    notFound: string;
+    loading: string;
+    processingError: string;
+    route: string;
+    instagram: string;
+    workingHours: string;
+    ecoPointsBalance: string;
+    openReceipt: string;
+    loginRequired: string;
+  };
   ecoAssistant: {
     title: string;
     subtitle: string;

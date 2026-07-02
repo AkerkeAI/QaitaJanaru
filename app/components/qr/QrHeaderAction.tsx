@@ -64,11 +64,14 @@ export function QrHeaderAction() {
 
       try {
         const parsedUrl = new URL(rawValue);
-        if (parsedUrl.pathname.startsWith("/qr/")) {
+        if (
+          parsedUrl.pathname.startsWith("/qr/") ||
+          parsedUrl.pathname.startsWith("/partner-qr/")
+        ) {
           targetPath = `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
         }
       } catch {
-        if (rawValue.startsWith("/qr/")) {
+        if (rawValue.startsWith("/qr/") || rawValue.startsWith("/partner-qr/")) {
           targetPath = rawValue;
         }
       }
@@ -77,6 +80,13 @@ export function QrHeaderAction() {
         const match = rawValue.match(/\/qr\/(\d+)/);
         if (match) {
           targetPath = `/qr/${match[1]}`;
+        }
+      }
+
+      if (!targetPath) {
+        const partnerMatch = rawValue.match(/\/partner-qr\/([A-Za-z0-9-]+)/);
+        if (partnerMatch) {
+          targetPath = `/partner-qr/${partnerMatch[1]}`;
         }
       }
 
