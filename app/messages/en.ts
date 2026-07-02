@@ -421,6 +421,7 @@ export const messages: Messages = {
     exchange: "Exchange",
     exchanging: "Exchanging...",
     ecoPointsPrice: "Eco Points",
+    ecoPointsBalanceLabel: "Eco Points balance",
     issueDate: "Issue date",
     expirationTime: "Expiration time",
     receiptTitle: "Digital Receipt",
@@ -438,6 +439,7 @@ export const messages: Messages = {
     ecoPointsBalance: "Eco Points balance",
     openReceipt: "Open receipt",
     loginRequired: "Please sign in to continue.",
+    backToProfile: "Back to Profile",
   },
   ecoAssistant: {
     title: "Eco Assistant",

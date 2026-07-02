@@ -341,6 +341,7 @@ export interface Messages {
     exchange: string;
     exchanging: string;
     ecoPointsPrice: string;
+    ecoPointsBalanceLabel: string;
     issueDate: string;
     expirationTime: string;
     receiptTitle: string;
@@ -358,6 +359,7 @@ export interface Messages {
     ecoPointsBalance: string;
     openReceipt: string;
     loginRequired: string;
+    backToProfile: string;
   };
   ecoAssistant: {
     title: string;

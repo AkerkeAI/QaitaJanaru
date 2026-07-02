@@ -9,6 +9,12 @@ import {
   PartnerQrReceiptResponse,
 } from "../../../lib/partnerQrApi";
 
+function parseServerUtcTimestamp(value: string): Date {
+  const normalizedValue =
+    /(?:Z|[+-]\d{2}:\d{2})$/.test(value) ? value : `${value}Z`;
+  return new Date(normalizedValue);
+}
+
 export default function PartnerQrReceiptPage() {
   const params = useParams<{ receiptId: string }>();
   const router = useRouter();
@@ -43,10 +49,14 @@ export default function PartnerQrReceiptPage() {
 
   const formatter = useMemo(
     () =>
-      new Intl.DateTimeFormat(language === "ru" ? "ru-RU" : language === "kz" ? "kk-KZ" : "en-US", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }),
+      new Intl.DateTimeFormat(
+        language === "ru" ? "ru-RU" : language === "kz" ? "kk-KZ" : "en-US",
+        {
+          dateStyle: "medium",
+          timeStyle: "short",
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+      ),
     [language],
   );
 
@@ -95,7 +105,7 @@ export default function PartnerQrReceiptPage() {
               color: colors.buttonText,
             }}
           >
-            {messages.common.back}
+            {messages.partnerQr.backToProfile}
           </button>
         </div>
       </main>
@@ -197,7 +207,7 @@ export default function PartnerQrReceiptPage() {
               {messages.partnerQr.issueDate}
             </div>
             <div className="mt-1 font-semibold">
-              {formatter.format(new Date(receipt.issued_at))}
+              {formatter.format(parseServerUtcTimestamp(receipt.issued_at))}
             </div>
           </div>
           <div
@@ -211,7 +221,7 @@ export default function PartnerQrReceiptPage() {
               {messages.partnerQr.expirationTime}
             </div>
             <div className="mt-1 font-semibold">
-              {formatter.format(new Date(receipt.expires_at))}
+              {formatter.format(parseServerUtcTimestamp(receipt.expires_at))}
             </div>
           </div>
         </div>
@@ -234,10 +244,25 @@ export default function PartnerQrReceiptPage() {
             className="text-xs uppercase tracking-wide"
             style={{ color: colors.textSecondary }}
           >
-            {messages.partnerQr.ecoPointsBalance}
+            {messages.partnerQr.ecoPointsBalanceLabel}
           </div>
-          <div className="mt-1 font-semibold">{receipt.eco_points_balance}</div>
+          <div className="mt-1 font-semibold">
+            {receipt.eco_points_balance} {messages.partnerQr.ecoPointsPrice}
+          </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => router.push("/profile")}
+          className="w-full px-6 py-4 rounded-2xl font-semibold border"
+          style={{
+            backgroundColor: colors.cardBg,
+            borderColor: colors.border,
+            color: colors.text,
+          }}
+        >
+          {messages.partnerQr.backToProfile}
+        </button>
       </div>
     </main>
   );

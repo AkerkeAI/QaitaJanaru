@@ -223,7 +223,9 @@ export default function PartnerQrPage() {
           className="rounded-3xl p-6 border shadow-2xl space-y-4"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
-          <h2 className="text-xl font-bold">{messages.partnerQr.availableRewards}</h2>
+          <h2 className="text-xl font-bold">
+            {messages.partnerQr.availableRewards}
+          </h2>
 
           {errorMessage ? (
             <div
@@ -253,7 +255,8 @@ export default function PartnerQrPage() {
                       {reward.description}
                     </div>
                     <div className="font-medium">
-                      {reward.eco_points_required} {messages.partnerQr.ecoPointsPrice}
+                      {reward.eco_points_required}{" "}
+                      {messages.partnerQr.ecoPointsPrice}
                     </div>
                   </div>
                 </div>
@@ -275,6 +278,19 @@ export default function PartnerQrPage() {
               </div>
             ))}
           </div>
+
+          <button
+            type="button"
+            onClick={() => router.push("/profile")}
+            className="w-full md:w-auto px-6 py-3 rounded-2xl font-semibold border"
+            style={{
+              backgroundColor: colors.cardBg,
+              borderColor: colors.border,
+              color: colors.text,
+            }}
+          >
+            {messages.partnerQr.backToProfile}
+          </button>
         </div>
       </div>
     </main>
