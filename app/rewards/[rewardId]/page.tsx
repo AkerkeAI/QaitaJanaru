@@ -9,6 +9,16 @@ import { useLanguage } from "@/app/contexts/LanguageContext";
 import { useTheme } from "@/app/contexts/ThemeContext";
 import { getProfile, ProfileResponse } from "@/app/lib/api";
 import { getRewardProviderLocations, rewards } from "@/app/lib/rewardsData";
+import {
+  formatByPartner,
+  formatEcoPointsPrice,
+  getLocalizedAddress,
+  getLocalizedCityName,
+  getLocalizedLocationName,
+  getLocalizedPartnerName,
+  getLocalizedReward,
+  getPartnerLevelBadge,
+} from "@/app/lib/rewardsLocalization";
 
 export default function RewardDetailsPage() {
   const router = useRouter();
@@ -26,6 +36,10 @@ export default function RewardDetailsPage() {
     () => (reward ? getRewardProviderLocations(reward, profile?.city) : []),
     [profile?.city, reward],
   );
+
+  const localizedReward = reward
+    ? getLocalizedReward(reward, messages)
+    : null;
 
   const loadData = useCallback(async () => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
@@ -72,21 +86,21 @@ export default function RewardDetailsPage() {
             }}
           ></div>
           <p className="text-lg" style={{ color: colors.textSecondary }}>
-            Loading...
+            {messages.rewards.loading}
           </p>
         </div>
       </main>
     );
   }
 
-  if (!reward) {
+  if (!reward || !localizedReward) {
     return (
       <main
-        className="min-h-screen relative overflow-hidden flex items-center justify-center"
+        className="min-h-screen relative overflow-hidden flex items-center justify-center px-4"
         style={{ background: colors.bg, color: colors.text }}
       >
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Reward not found</h2>
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold">{messages.rewards.rewardNotFound}</h2>
           <button
             onClick={() => router.push("/rewards")}
             className="px-6 py-3 rounded-xl font-semibold"
@@ -95,7 +109,7 @@ export default function RewardDetailsPage() {
               color: colors.buttonText,
             }}
           >
-            Back to rewards
+            {messages.rewards.backToRewards}
           </button>
         </div>
       </main>
@@ -104,7 +118,7 @@ export default function RewardDetailsPage() {
 
   return (
     <main
-      className="min-h-screen relative overflow-hidden"
+      className="min-h-screen relative overflow-x-hidden"
       style={{ background: colors.bg, color: colors.text }}
     >
       <div
@@ -118,7 +132,7 @@ export default function RewardDetailsPage() {
         <header className="flex items-center justify-between gap-3 p-4 md:p-6 lg:p-8 flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group"
+            className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
             style={{
               backgroundColor: colors.cardBg,
               borderColor: colors.border,
@@ -138,13 +152,21 @@ export default function RewardDetailsPage() {
             </svg>
           </button>
 
-          {profile && <UserStatusHeader {...{ ecoPoints: profile.eco_points, streak: profile.streak, level: profile.level }} />}
+          {profile && (
+            <UserStatusHeader
+              {...{
+                ecoPoints: profile.eco_points,
+                streak: profile.streak,
+                level: profile.level,
+              }}
+            />
+          )}
 
           <QrHeaderAction />
         </header>
 
         <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
-          <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
+          <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 min-w-0">
             <button
               onClick={() => router.back()}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border transition-all hover:brightness-110 active:scale-95"
@@ -154,11 +176,7 @@ export default function RewardDetailsPage() {
                 color: colors.textSecondary,
               }}
             >
-              <svg
-                className="w-4 h-4"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
+              <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                 <path
                   fillRule="evenodd"
                   d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z"
@@ -168,38 +186,50 @@ export default function RewardDetailsPage() {
               {messages.common.back}
             </button>
 
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start gap-4 min-w-0">
               <div
-                className="w-24 h-24 rounded-3xl flex items-center justify-center text-6xl"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl flex items-center justify-center text-5xl sm:text-6xl flex-shrink-0"
                 style={{
                   background: `linear-gradient(135deg, ${colors.primary}40, ${colors.accent}40)`,
                 }}
               >
                 {reward.image}
               </div>
-              <div>
-                <h1 className="text-3xl font-bold">{reward.title}</h1>
-                <p style={{ color: colors.textSecondary }}>
-                  {reward.description}
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl sm:text-3xl font-bold break-words">
+                  {localizedReward.title}
+                </h1>
+                <p
+                  className="break-words"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {localizedReward.description}
                 </p>
               </div>
             </div>
 
             <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border"
+              className="inline-flex flex-wrap items-center gap-2 px-4 py-3 rounded-2xl border max-w-full"
               style={{
                 backgroundColor: `${colors.primary}20`,
                 borderColor: colors.border,
               }}
             >
-              <span className="text-lg font-bold" style={{ color: colors.primary }}>
-                {reward.ecoPointsRequired} {messages.tasks.points}
+              <span
+                className="text-sm font-semibold"
+                style={{ color: colors.textSecondary }}
+              >
+                {messages.rewards.priceLabel}
               </span>
-              <span style={{ color: colors.textSecondary }}>{messages.rewards.cost}</span>
+              <span className="text-lg font-bold break-words" style={{ color: colors.primary }}>
+                {formatEcoPointsPrice(reward.ecoPointsRequired, messages)}
+              </span>
             </div>
 
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">{messages.rewards.availablePartners}</h2>
+              <h2 className="text-xl font-bold">
+                {messages.rewards.availablePartners}
+              </h2>
 
               {providerLocations.length === 0 ? (
                 <div
@@ -214,81 +244,107 @@ export default function RewardDetailsPage() {
                   </p>
                 </div>
               ) : (
-                providerLocations.map(({ partner, location }) => (
-                  <div
-                    key={`${partner.id}-${location.id}`}
-                    className="rounded-3xl p-6 backdrop-blur-xl border shadow-lg"
-                    style={{
-                      backgroundColor: colors.cardBg,
-                      borderColor: colors.border,
-                    }}
-                  >
-                    <div className="flex items-start gap-4 mb-4">
-                      <div
-                        className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
-                        style={{
-                          background: `linear-gradient(135deg, ${colors.primary}20, ${colors.accent}20)`,
-                        }}
-                      >
-                        {partner.logo}
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold">{partner.name}</h3>
-                        <span
-                          className="inline-block px-2 py-1 rounded-full text-xs font-bold mt-1"
+                providerLocations.map(({ partner, location }) => {
+                  const levelBadge = getPartnerLevelBadge(
+                    partner.level,
+                    messages,
+                  );
+                  const branchName = getLocalizedLocationName(
+                    location,
+                    messages,
+                  );
+                  const partnerName = getLocalizedPartnerName(
+                    partner,
+                    messages,
+                  );
+
+                  return (
+                    <div
+                      key={`${partner.id}-${location.id}`}
+                      className="rounded-3xl p-5 sm:p-6 backdrop-blur-xl border shadow-lg min-w-0"
+                      style={{
+                        backgroundColor: colors.cardBg,
+                        borderColor: colors.border,
+                      }}
+                    >
+                      <div className="flex flex-col sm:flex-row items-start gap-4 mb-4 min-w-0">
+                        <div
+                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl flex-shrink-0"
                           style={{
-                            backgroundColor:
-                              partner.level === "Gold"
-                                ? "#fbbf2420"
-                                : partner.level === "Silver"
-                                ? "#9ca3af20"
-                                : `${colors.primary}20`,
-                            color:
-                              partner.level === "Gold"
-                                ? "#fbbf24"
-                                : partner.level === "Silver"
-                                ? "#9ca3af"
-                                : colors.primary,
+                            background: `linear-gradient(135deg, ${colors.primary}20, ${colors.accent}20)`,
                           }}
                         >
-                          {partner.level}
-                        </span>
-                        <p className="mt-2 font-semibold">{location.name || partner.name}</p>
+                          {partner.logo}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-xl sm:text-2xl font-bold break-words">
+                            {branchName}
+                          </h3>
+                          <p
+                            className="text-sm sm:text-base break-words"
+                            style={{ color: colors.textSecondary }}
+                          >
+                            {formatByPartner(partnerName, messages)}
+                          </p>
+                          <span
+                            className="inline-block px-2 py-1 rounded-full text-xs font-bold mt-2 break-words"
+                            style={{
+                              backgroundColor: levelBadge.backgroundColor,
+                              color: levelBadge.color,
+                            }}
+                          >
+                            {levelBadge.label}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="mb-4">
-                      <span
-                        className="text-sm font-semibold"
-                        style={{ color: colors.textSecondary }}
-                      >
-                        {messages.rewards.address}
-                      </span>
-                      <p className="whitespace-pre-line">{location.address}</p>
-                    </div>
-
-                    {partner.instagram && (
-                      <div className="mb-4">
+                      <div className="mb-4 min-w-0">
                         <span
                           className="text-sm font-semibold"
                           style={{ color: colors.textSecondary }}
                         >
-                          {messages.rewards.instagram}
+                          {messages.rewards.address}
                         </span>
-                        <p className="text-lg">{partner.instagram}</p>
+                        <p className="break-words">
+                          {getLocalizedAddress(location, messages)}
+                        </p>
+                        <p
+                          className="text-sm break-words"
+                          style={{ color: colors.textSecondary }}
+                        >
+                          {getLocalizedCityName(location.city, messages)}
+                        </p>
                       </div>
-                    )}
 
-                    {location.workingHours && (
-                      <div className="mb-4">
-                        <p style={{ color: colors.textSecondary }}>{location.workingHours}</p>
-                      </div>
-                    )}
+                      {partner.instagram && (
+                        <div className="mb-4 min-w-0">
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: colors.textSecondary }}
+                          >
+                            {messages.rewards.instagram}
+                          </span>
+                          <p className="text-lg break-words">{partner.instagram}</p>
+                        </div>
+                      )}
 
-                    <div className="flex flex-col sm:flex-row gap-3">
+                      {location.workingHours && (
+                        <div className="mb-4 min-w-0">
+                          <span
+                            className="text-sm font-semibold"
+                            style={{ color: colors.textSecondary }}
+                          >
+                            {messages.rewards.workingHours}
+                          </span>
+                          <p className="break-words">{location.workingHours}</p>
+                        </div>
+                      )}
+
                       <button
-                        onClick={() => handleOpenRoute(location.lat, location.lng)}
-                        className="flex-1 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95"
+                        onClick={() =>
+                          handleOpenRoute(location.lat, location.lng)
+                        }
+                        className="w-full sm:w-auto min-w-[10rem] py-3 px-6 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95"
                         style={{
                           background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
                           color: colors.buttonText,
@@ -297,8 +353,8 @@ export default function RewardDetailsPage() {
                         {messages.rewards.buildRoute}
                       </button>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

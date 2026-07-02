@@ -14,6 +14,12 @@ import {
   getRewardsForCity,
   rewardCategories,
 } from "@/app/lib/rewardsData";
+import {
+  formatEcoPointsPrice,
+  getLocalizedPartnerName,
+  getLocalizedReward,
+  getPartnerLevelBadge,
+} from "@/app/lib/rewardsLocalization";
 
 const getCategoryLabel = (categoryId: string, fallbackName: string, messages: ReturnType<typeof useLanguage>["messages"]) => {
   const labels: Record<string, string> = {
@@ -113,7 +119,7 @@ export default function RewardsPage() {
             }}
           ></div>
           <p className="text-lg" style={{ color: colors.textSecondary }}>
-            Loading...
+            {messages.rewards.loading}
           </p>
         </div>
       </main>
@@ -122,7 +128,7 @@ export default function RewardsPage() {
 
   return (
     <main
-      className="min-h-screen relative overflow-hidden"
+      className="min-h-screen relative overflow-x-hidden"
       style={{ background: colors.bg, color: colors.text }}
     >
       <div
@@ -235,6 +241,7 @@ export default function RewardsPage() {
                       reward,
                       profile?.city,
                     );
+                    const localizedReward = getLocalizedReward(reward, messages);
                     return (
                       <div
                         key={reward.id}
@@ -246,11 +253,16 @@ export default function RewardsPage() {
                         onClick={() => router.push(`/rewards/${reward.id}`)}
                       >
                         <div className="text-5xl mb-4">{reward.image}</div>
-                        <h3 className="text-xl font-bold mb-2">{reward.title}</h3>
-                        <p className="text-sm mb-4" style={{ color: colors.textSecondary }}>
-                          {reward.description}
+                        <h3 className="text-xl font-bold mb-2 break-words">
+                          {localizedReward.title}
+                        </h3>
+                        <p
+                          className="text-sm mb-4 break-words"
+                          style={{ color: colors.textSecondary }}
+                        >
+                          {localizedReward.description}
                         </p>
-                        <div className="flex items-center gap-2 mb-4">
+                        <div className="flex flex-wrap items-center gap-2 mb-4">
                           <div
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold"
                             style={{
@@ -258,7 +270,10 @@ export default function RewardsPage() {
                               color: colors.primary,
                             }}
                           >
-                            {reward.ecoPointsRequired} {messages.tasks.points}
+                            {formatEcoPointsPrice(
+                              reward.ecoPointsRequired,
+                              messages,
+                            )}
                           </div>
                           <div className="text-sm" style={{ color: colors.textSecondary }}>
                             {messages.rewards.partnerLocationsAvailable} {providerLocations.length} {messages.rewards.branches}
@@ -295,42 +310,39 @@ export default function RewardsPage() {
                     <p style={{ color: colors.textSecondary }}>{messages.rewards.noPartnersAvailable}</p>
                   </div>
                 ) : (
-                  filteredPartners.map((partner) => (
+                  filteredPartners.map((partner) => {
+                    const levelBadge = getPartnerLevelBadge(
+                      partner.level,
+                      messages,
+                    );
+                    return (
                     <div
                       key={partner.id}
-                      className="group relative rounded-3xl p-6 transition-all duration-300 hover:scale-[1.02] backdrop-blur-xl border shadow-lg cursor-pointer"
+                      className="group relative rounded-3xl p-6 transition-all duration-300 hover:scale-[1.02] backdrop-blur-xl border shadow-lg cursor-pointer min-w-0"
                       style={{
                         backgroundColor: colors.cardBg,
                         borderColor: colors.border,
                       }}
                       onClick={() => router.push(`/rewards/partner/${partner.id}`)}
                     >
-                      <div className="flex items-start gap-4">
-                        <div className="text-5xl">{partner.logo}</div>
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold mb-1">{partner.name}</h3>
-                          <p className="text-sm mb-3" style={{ color: colors.textSecondary }}>
+                      <div className="flex items-start gap-4 min-w-0">
+                        <div className="text-5xl flex-shrink-0">{partner.logo}</div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xl font-bold mb-1 break-words">
+                            {getLocalizedPartnerName(partner, messages)}
+                          </h3>
+                          <p className="text-sm mb-3 break-words" style={{ color: colors.textSecondary }}>
                             {messages.rewards.officialPartner}
                           </p>
                           <div className="flex flex-wrap gap-2 mb-3">
                             <div
-                              className="px-3 py-1 rounded-full text-xs font-bold"
+                              className="px-3 py-1 rounded-full text-xs font-bold break-words"
                               style={{
-                                backgroundColor:
-                                  partner.level === "Gold"
-                                    ? "#fbbf2420"
-                                    : partner.level === "Silver"
-                                    ? "#9ca3af20"
-                                    : `${colors.primary}20`,
-                                color:
-                                  partner.level === "Gold"
-                                    ? "#fbbf24"
-                                    : partner.level === "Silver"
-                                    ? "#9ca3af"
-                                    : colors.primary,
+                                backgroundColor: levelBadge.backgroundColor,
+                                color: levelBadge.color,
                               }}
                             >
-                              {partner.level}
+                              {levelBadge.label}
                             </div>
                             <div
                               className="px-3 py-1 rounded-full text-xs font-medium"
@@ -345,7 +357,8 @@ export default function RewardsPage() {
                         </div>
                       </div>
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             )}

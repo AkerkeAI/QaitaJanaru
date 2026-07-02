@@ -15,7 +15,7 @@ const rewardLocationIdsByRewardId: Record<string, string[]> = {
   "reward-coffee": ["loc-nagi-1"],
   "reward-lemonade": ["loc-nagi-1", "loc-nagi-2"],
   "reward-bubble-tea": ["loc-nagi-2"],
-  "reward-cocktails": ["loc-nagi-1"],
+  "reward-cocktails": ["loc-nagi-2"],
   "reward-ice-cream": ["loc-nagi-2"],
 };
 
@@ -143,7 +143,7 @@ export const rewardPartners: Partner[] = [
       {
         id: "loc-nagi-2",
         name: "Nagimoko Ice",
-        address: "Shopping Center Astana, 14th Microdistrict, Kiosk, Aktau",
+        address: "Shopping Center Astana, 15th Microdistrict, Kiosk, Aktau",
         city: "aktau",
         workingHours: "16:00 - 01:00",
         distance: 1.1,

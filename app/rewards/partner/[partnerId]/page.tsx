@@ -1,146 +1,29 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Sidebar } from "@/app/components/Sidebar";
 import { UserStatusHeader } from "@/app/components/UserStatusHeader";
+import { QrHeaderAction } from "@/app/components/qr/QrHeaderAction";
 import { useLanguage } from "@/app/contexts/LanguageContext";
 import { useTheme } from "@/app/contexts/ThemeContext";
 import { getProfile, ProfileResponse } from "@/app/lib/api";
-import { Reward, Partner } from "@/app/types/rewards";
-
-const normalizeCity = (value?: string | null) => value?.trim().toLowerCase() || "";
-
-const SAMPLE_PARTNERS: Partner[] = [
-  {
-    id: "partner-1",
-    name: "GreenCafé",
-    logo: "☕",
-    level: "Gold",
-    locations: [
-      { id: "loc-1", address: "123 Green St, Almaty", city: "almaty", distance: 1.2 },
-      { id: "loc-2", address: "45 Eco Ave, Astana", city: "astana", distance: 0.8 },
-    ],
-    phone: "+7 (701) 123-4567",
-    website: "https://greencafe.kz",
-    stats: {
-      monthlyVisitors: 1240,
-      rewardsRedeemedThisMonth: 342,
-      profileViews: 892,
-    },
-  },
-  {
-    id: "partner-2",
-    name: "EcoShop",
-    logo: "🛒",
-    level: "Silver",
-    locations: [
-      { id: "loc-3", address: "789 Zero Waste Rd, Shymkent", city: "shymkent", distance: 2.1 },
-    ],
-    phone: "+7 (725) 987-6543",
-    website: "https://ecoshop.kz",
-    stats: {
-      monthlyVisitors: 856,
-      rewardsRedeemedThisMonth: 210,
-      profileViews: 543,
-    },
-  },
-  {
-    id: "partner-3",
-    name: "NatureGym",
-    logo: "🏋️",
-    level: "Eco",
-    locations: [
-      { id: "loc-4", address: "56 Workout Blvd, Almaty", city: "almaty", distance: 1.5 },
-    ],
-    phone: "+7 (701) 555-1234",
-    website: "https://naturegym.kz",
-    stats: {
-      monthlyVisitors: 678,
-      rewardsRedeemedThisMonth: 156,
-      profileViews: 432,
-    },
-  },
-  {
-    id: "partner-nagi",
-    name: "Nagi Coffee & Nagimoko Ice",
-    logo: "☕",
-    level: "Gold",
-    description:
-      "This partner supports environmental initiatives and rewards users for recycling through Qaita Janaru.",
-    locations: [
-      {
-        id: "loc-nagi-1",
-        address: "Nagi Coffee Bar, 33-181, Inside Dina Hypermarket, Aktau",
-        city: "aktau",
-        distance: 0.6,
-      },
-      {
-        id: "loc-nagi-2",
-        address: "Nagimoko Ice, Shopping Center Astana, 14th Microdistrict, Kiosk, Aktau",
-        city: "aktau",
-        distance: 1.1,
-      },
-    ],
-  },
-];
-
-const SAMPLE_REWARDS: Reward[] = [
-  {
-    id: "reward-1",
-    title: "Free Americano",
-    description: "Get a free americano at any GreenCafé location",
-    ecoPointsRequired: 700,
-    image: "☕",
-    categoryId: "drinks",
-    partnerIds: ["partner-1"],
-  },
-  {
-    id: "reward-2",
-    title: "10% Off Purchase",
-    description: "Get 10% off your next purchase at EcoShop",
-    ecoPointsRequired: 500,
-    image: "🛍️",
-    categoryId: "drinks",
-    partnerIds: ["partner-2"],
-  },
-  {
-    id: "reward-3",
-    title: "Free Day Pass",
-    description: "One free day pass to NatureGym",
-    ecoPointsRequired: 1000,
-    image: "💪",
-    categoryId: "drinks",
-    partnerIds: ["partner-3"],
-  },
-  {
-    id: "reward-4",
-    title: "Free Pastry",
-    description: "Choose any free pastry at GreenCafé",
-    ecoPointsRequired: 400,
-    image: "🥐",
-    categoryId: "desserts",
-    partnerIds: ["partner-1"],
-  },
-  {
-    id: "reward-nagi-coffee",
-    title: "10% discount on coffee and lemonade",
-    description: "Get 10% off coffee and lemonade at Nagi Coffee Bar",
-    ecoPointsRequired: 300,
-    image: "☕",
-    categoryId: "drinks",
-    partnerIds: ["partner-nagi"],
-  },
-  {
-    id: "reward-nagi-ice",
-    title: "10% discount on bubble tea, cocktails, lemonade and ice cream",
-    description: "Get 10% off bubble tea, cocktails, lemonade and ice cream at Nagimoko Ice",
-    ecoPointsRequired: 300,
-    image: "🧊",
-    categoryId: "drinks",
-    partnerIds: ["partner-nagi"],
-  },
-];
+import {
+  normalizeCity,
+  rewardPartners,
+  rewards,
+} from "@/app/lib/rewardsData";
+import {
+  formatDistanceAway,
+  formatEcoPointsPrice,
+  getLocalizedAddress,
+  getLocalizedCityName,
+  getLocalizedLocationName,
+  getLocalizedPartnerDescription,
+  getLocalizedPartnerName,
+  getLocalizedReward,
+  getPartnerLevelBadge,
+} from "@/app/lib/rewardsLocalization";
 
 export default function PartnerProfilePage() {
   const router = useRouter();
@@ -152,7 +35,15 @@ export default function PartnerProfilePage() {
   const { colors } = useTheme();
 
   const partnerId = params.partnerId as string;
-  const partner = SAMPLE_PARTNERS.find(p => p.id === partnerId);
+  const partner = rewardPartners.find((item) => item.id === partnerId);
+
+  const partnerRewards = useMemo(
+    () =>
+      partner
+        ? rewards.filter((reward) => reward.partnerIds.includes(partner.id))
+        : [],
+    [partner],
+  );
 
   const loadData = useCallback(async () => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
@@ -176,8 +67,27 @@ export default function PartnerProfilePage() {
     loadData();
   }, [loadData]);
 
-  const getPartnerRewards = (partner: Partner) => {
-    return SAMPLE_REWARDS.filter((reward) => reward.partnerIds.includes(partner.id));
+  const filteredLocations = useMemo(() => {
+    if (!partner) {
+      return [];
+    }
+
+    if (!profile?.city) {
+      return partner.locations;
+    }
+
+    return partner.locations.filter(
+      (location) =>
+        normalizeCity(location.city) === normalizeCity(profile.city),
+    );
+  }, [partner, profile?.city]);
+
+  const handleOpenRoute = (lat?: number, lng?: number) => {
+    if (typeof lat === "number" && typeof lng === "number") {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
   };
 
   if (loading) {
@@ -186,7 +96,7 @@ export default function PartnerProfilePage() {
         className="min-h-screen relative overflow-hidden flex items-center justify-center"
         style={{ background: colors.bg, color: colors.text }}
       >
-        <div className="text-center">
+        <div className="text-center px-4">
           <div
             className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-t-transparent mb-6"
             style={{
@@ -194,7 +104,7 @@ export default function PartnerProfilePage() {
             }}
           ></div>
           <p className="text-lg" style={{ color: colors.textSecondary }}>
-            Loading...
+            {messages.rewards.loading}
           </p>
         </div>
       </main>
@@ -204,11 +114,11 @@ export default function PartnerProfilePage() {
   if (!partner) {
     return (
       <main
-        className="min-h-screen relative overflow-hidden flex items-center justify-center"
+        className="min-h-screen relative overflow-hidden flex items-center justify-center px-4"
         style={{ background: colors.bg, color: colors.text }}
       >
-        <div className="text-center">
-          <p className="text-lg mb-4">Partner not found</p>
+        <div className="text-center space-y-4">
+          <p className="text-lg">{messages.rewards.partnerNotFound}</p>
           <button
             onClick={() => router.push("/rewards")}
             className="px-6 py-3 rounded-xl font-bold"
@@ -224,39 +134,32 @@ export default function PartnerProfilePage() {
     );
   }
 
-  const partnerRewards = getPartnerRewards(partner);
-  const filteredLocations = profile?.city
-    ? partner.locations.filter((loc) => normalizeCity(loc.city) === normalizeCity(profile.city))
-    : partner.locations;
-
-  const handleOpenRoute = (location: { address: string; city: string }) => {
-    const query = `${location.address}, ${location.city}, Kazakhstan`;
-    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
+  const levelBadge = getPartnerLevelBadge(partner.level, messages);
+  const partnerName = getLocalizedPartnerName(partner, messages);
+  const partnerDescription = getLocalizedPartnerDescription(partner, messages);
 
   return (
     <main
-      className="min-h-screen relative overflow-hidden"
+      className="min-h-screen relative overflow-x-hidden"
       style={{ background: colors.bg, color: colors.text }}
     >
       <div
-        className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] animate-pulse"
+        className="fixed top-0 right-0 w-[500px] max-w-[100vw] h-[500px] rounded-full blur-[120px] animate-pulse pointer-events-none"
         style={{ backgroundColor: `${colors.primary}20` }}
       ></div>
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="relative z-10 min-h-screen flex flex-col">
-        <header className="flex items-center gap-3 p-4 md:p-6 lg:p-8 flex-shrink-0">
+        <header className="flex items-center justify-between gap-2 sm:gap-3 p-4 md:p-6 lg:p-8 flex-shrink-0 min-w-0">
           <button
             onClick={() => router.push("/rewards")}
-            className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group"
+            className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group flex-shrink-0"
             style={{
               backgroundColor: colors.cardBg,
               borderColor: colors.border,
             }}
-            aria-label="Go back"
+            aria-label={messages.common.back}
           >
             <svg
               className="w-6 h-6 group-hover:text-white transition-colors"
@@ -271,86 +174,115 @@ export default function PartnerProfilePage() {
             </svg>
           </button>
 
-          {profile && <div className="ml-auto"><UserStatusHeader {...{ ecoPoints: profile.eco_points, streak: profile.streak, level: profile.level }} /></div>}
+          {profile && (
+            <div className="min-w-0 flex-shrink">
+              <UserStatusHeader
+                {...{
+                  ecoPoints: profile.eco_points,
+                  streak: profile.streak,
+                  level: profile.level,
+                }}
+              />
+            </div>
+          )}
+
+          <QrHeaderAction />
         </header>
 
-        <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
-          <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
+        <div className="flex-1 px-3 sm:px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
+          <div className="max-w-4xl mx-auto space-y-5 sm:space-y-6 md:space-y-8 min-w-0">
             <div
-              className="rounded-3xl p-8 backdrop-blur-xl border shadow-lg"
+              className="rounded-3xl p-5 sm:p-8 backdrop-blur-xl border shadow-lg min-w-0"
               style={{
                 backgroundColor: colors.cardBg,
                 borderColor: colors.border,
               }}
             >
-              <div className="flex items-start gap-6">
-                <div className="text-7xl">{partner.logo}</div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl font-bold">{partner.name}</h1>
+              <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 min-w-0">
+                <div className="text-5xl sm:text-6xl md:text-7xl flex-shrink-0">
+                  {partner.logo}
+                </div>
+                <div className="flex-1 min-w-0 w-full">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 mb-2">
+                    <h1 className="text-2xl sm:text-3xl font-bold break-words">
+                      {partnerName}
+                    </h1>
                     <div
-                      className="px-3 py-1 rounded-full text-sm font-bold"
+                      className="self-start px-3 py-1 rounded-full text-sm font-bold break-words"
                       style={{
-                        backgroundColor:
-                          partner.level === "Gold"
-                            ? "#fbbf2420"
-                            : partner.level === "Silver"
-                            ? "#9ca3af20"
-                            : `${colors.primary}20`,
-                        color:
-                          partner.level === "Gold"
-                            ? "#fbbf24"
-                            : partner.level === "Silver"
-                            ? "#9ca3af"
-                            : colors.primary,
+                        backgroundColor: levelBadge.backgroundColor,
+                        color: levelBadge.color,
                       }}
                     >
-                      {partner.level}
+                      {levelBadge.label}
                     </div>
                   </div>
-                  <p className="mb-2 font-semibold" style={{ color: colors.primary }}>
-                    Official Partner of Qaita Janaru
+                  <p
+                    className="mb-2 font-semibold break-words"
+                    style={{ color: colors.primary }}
+                  >
+                    {messages.rewards.officialPartner}
                   </p>
-                  <p className="mb-4" style={{ color: colors.textSecondary }}>
-                    {partner.description || "This partner supports environmental initiatives and rewards users for recycling through Qaita Janaru."}
+                  <p
+                    className="mb-4 break-words"
+                    style={{ color: colors.textSecondary }}
+                  >
+                    {partnerDescription}
                   </p>
+
                   {partner.stats && (
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">{partner.stats.monthlyVisitors}</div>
-                        <div className="text-sm" style={{ color: colors.textSecondary }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                      <div className="text-center rounded-2xl p-3 border min-w-0" style={{ borderColor: colors.border }}>
+                        <div className="text-xl sm:text-2xl font-bold">
+                          {partner.stats.monthlyVisitors}
+                        </div>
+                        <div
+                          className="text-xs sm:text-sm break-words"
+                          style={{ color: colors.textSecondary }}
+                        >
                           {messages.rewards.monthlyVisitors}
                         </div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">{partner.stats.rewardsRedeemedThisMonth}</div>
-                        <div className="text-sm" style={{ color: colors.textSecondary }}>
+                      <div className="text-center rounded-2xl p-3 border min-w-0" style={{ borderColor: colors.border }}>
+                        <div className="text-xl sm:text-2xl font-bold">
+                          {partner.stats.rewardsRedeemedThisMonth}
+                        </div>
+                        <div
+                          className="text-xs sm:text-sm break-words"
+                          style={{ color: colors.textSecondary }}
+                        >
                           {messages.rewards.rewardsRedeemedThisMonth}
                         </div>
                       </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">{partner.stats.profileViews}</div>
-                        <div className="text-sm" style={{ color: colors.textSecondary }}>
+                      <div className="text-center rounded-2xl p-3 border min-w-0" style={{ borderColor: colors.border }}>
+                        <div className="text-xl sm:text-2xl font-bold">
+                          {partner.stats.profileViews}
+                        </div>
+                        <div
+                          className="text-xs sm:text-sm break-words"
+                          style={{ color: colors.textSecondary }}
+                        >
                           {messages.rewards.profileViews}
                         </div>
                       </div>
                     </div>
                   )}
-                  <div className="flex flex-wrap gap-4">
+
+                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4 min-w-0">
                     {partner.phone && (
-                      <div className="flex items-center gap-2">
-                        <span>📞</span>
-                        <span>{partner.phone}</span>
+                      <div className="flex items-start gap-2 min-w-0 break-words">
+                        <span className="flex-shrink-0">📞</span>
+                        <span className="break-all">{partner.phone}</span>
                       </div>
                     )}
                     {partner.website && (
-                      <div className="flex items-center gap-2">
-                        <span>🌐</span>
+                      <div className="flex items-start gap-2 min-w-0">
+                        <span className="flex-shrink-0">🌐</span>
                         <a
                           href={partner.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="underline"
+                          className="underline break-all"
                           style={{ color: colors.primary }}
                         >
                           {partner.website}
@@ -363,69 +295,108 @@ export default function PartnerProfilePage() {
             </div>
 
             {partnerRewards.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-bold mb-6">{messages.rewards.availableRewards}</h2>
+              <div className="min-w-0">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 break-words">
+                  {messages.rewards.availableRewards}
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {partnerRewards.map((reward) => (
-                    <div
-                      key={reward.id}
-                      className="group relative rounded-3xl p-6 transition-all duration-300 hover:scale-[1.02] backdrop-blur-xl border shadow-lg cursor-pointer"
-                      style={{
-                        backgroundColor: colors.cardBg,
-                        borderColor: colors.border,
-                      }}
-                      onClick={() => router.push(`/rewards/${reward.id}`)}
-                    >
-                      <div className="text-5xl mb-4">{reward.image}</div>
-                      <h3 className="text-xl font-bold mb-2">{reward.title}</h3>
-                      <p className="text-sm mb-4" style={{ color: colors.textSecondary }}>
-                        {reward.description}
-                      </p>
+                  {partnerRewards.map((reward) => {
+                    const localizedReward = getLocalizedReward(reward, messages);
+                    return (
                       <div
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold"
+                        key={reward.id}
+                        className="group relative rounded-3xl p-5 sm:p-6 transition-all duration-300 hover:scale-[1.01] backdrop-blur-xl border shadow-lg cursor-pointer min-w-0"
                         style={{
-                          backgroundColor: `${colors.primary}20`,
-                          color: colors.primary,
+                          backgroundColor: colors.cardBg,
+                          borderColor: colors.border,
                         }}
+                        onClick={() => router.push(`/rewards/${reward.id}`)}
                       >
-                        {reward.ecoPointsRequired} {messages.tasks.points}
+                        <div className="text-5xl mb-4">{reward.image}</div>
+                        <h3 className="text-lg sm:text-xl font-bold mb-2 break-words">
+                          {localizedReward.title}
+                        </h3>
+                        <p
+                          className="text-sm mb-4 break-words"
+                          style={{ color: colors.textSecondary }}
+                        >
+                          {localizedReward.description}
+                        </p>
+                        <div
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold break-words"
+                          style={{
+                            backgroundColor: `${colors.primary}20`,
+                            color: colors.primary,
+                          }}
+                        >
+                          {formatEcoPointsPrice(
+                            reward.ecoPointsRequired,
+                            messages,
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            <div>
-              <h2 className="text-2xl font-bold mb-6">{messages.rewards.branches}</h2>
+            <div className="min-w-0">
+              <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 break-words">
+                {messages.rewards.branches}
+              </h2>
               <div className="space-y-4">
                 {filteredLocations.map((location) => (
                   <div
                     key={location.id}
-                    className="rounded-3xl p-6 backdrop-blur-xl border shadow-lg"
+                    className="rounded-3xl p-5 sm:p-6 backdrop-blur-xl border shadow-lg min-w-0"
                     style={{
                       backgroundColor: colors.cardBg,
                       borderColor: colors.border,
                     }}
                   >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-medium mb-1">{location.address}</p>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between min-w-0">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-lg break-words mb-1">
+                          {getLocalizedLocationName(location, messages)}
+                        </p>
+                        <p className="break-words mb-1">
+                          {getLocalizedAddress(location, messages)}
+                        </p>
+                        <p
+                          className="text-sm break-words"
+                          style={{ color: colors.textSecondary }}
+                        >
+                          {getLocalizedCityName(location.city, messages)}
+                        </p>
+                        {location.workingHours && (
+                          <p
+                            className="text-sm mt-2 break-words"
+                            style={{ color: colors.textSecondary }}
+                          >
+                            {messages.rewards.workingHours}: {location.workingHours}
+                          </p>
+                        )}
                         {location.distance && (
-                          <p className="text-sm" style={{ color: colors.primary }}>
-                            {location.distance.toFixed(1)} km away
+                          <p
+                            className="text-sm mt-1 break-words"
+                            style={{ color: colors.primary }}
+                          >
+                            {formatDistanceAway(location.distance, messages)}
                           </p>
                         )}
                       </div>
                       <button
-                        onClick={() => handleOpenRoute(location)}
-                        className="px-4 py-2 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95"
+                        onClick={() =>
+                          handleOpenRoute(location.lat, location.lng)
+                        }
+                        className="w-full sm:w-auto sm:flex-shrink-0 min-w-[10rem] px-4 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95"
                         style={{
                           background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
                           color: colors.buttonText,
                         }}
                       >
-                        Build Route
+                        {messages.rewards.buildRoute}
                       </button>
                     </div>
                   </div>

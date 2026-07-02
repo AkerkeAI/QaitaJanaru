@@ -8,7 +8,16 @@ import {
   exchangePartnerQrReward,
   getPartnerQrBranch,
   PartnerQrBranchResponse,
+  PartnerQrRewardItem,
 } from "../../lib/partnerQrApi";
+import {
+  findCatalogRewardByPartnerQrId,
+  formatEcoPointsPrice,
+  getCatalogRewardImage,
+  getLocalizedCityName,
+  getLocalizedPartnerQrBranch,
+  getLocalizedPartnerQrReward,
+} from "../../lib/rewardsLocalization";
 
 export default function PartnerQrPage() {
   const params = useParams<{ qrIdentifier: string }>();
@@ -47,12 +56,47 @@ export default function PartnerQrPage() {
     params.qrIdentifier,
   ]);
 
+  const branchDisplay = useMemo(() => {
+    if (!branch) {
+      return null;
+    }
+
+    return getLocalizedPartnerQrBranch(
+      branch.partner_name,
+      branch.branch_name,
+      branch.address,
+      messages,
+    );
+  }, [branch, messages]);
+
   const routeUrl = useMemo(() => {
     if (!branch?.lat || !branch?.lng) {
       return null;
     }
     return `https://www.google.com/maps/dir/?api=1&destination=${branch.lat},${branch.lng}`;
   }, [branch?.lat, branch?.lng]);
+
+  const getDisplayReward = (reward: PartnerQrRewardItem) => {
+    const catalogReward = findCatalogRewardByPartnerQrId(reward.id);
+    const localized = getLocalizedPartnerQrReward(
+      reward.id,
+      reward.title,
+      reward.description,
+      messages,
+    );
+    const image =
+      catalogReward?.image ||
+      getCatalogRewardImage(reward.id) ||
+      reward.image;
+    const ecoPointsRequired =
+      catalogReward?.ecoPointsRequired ?? reward.eco_points_required;
+
+    return {
+      ...localized,
+      image,
+      ecoPointsRequired,
+    };
+  };
 
   const handleExchange = async (rewardId: string) => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
@@ -98,11 +142,11 @@ export default function PartnerQrPage() {
   if (loading) {
     return (
       <main
-        className="min-h-screen flex items-center justify-center px-6"
+        className="min-h-screen flex items-center justify-center px-4 sm:px-6 overflow-x-hidden"
         style={{ background: colors.bg, color: colors.text }}
       >
         <div
-          className="w-full max-w-xl rounded-3xl p-8 border shadow-2xl"
+          className="w-full max-w-xl rounded-3xl p-6 sm:p-8 border shadow-2xl min-w-0"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
           <p>{messages.partnerQr.loading}</p>
@@ -111,24 +155,26 @@ export default function PartnerQrPage() {
     );
   }
 
-  if (!branch) {
+  if (!branch || !branchDisplay) {
     return (
       <main
-        className="min-h-screen flex items-center justify-center px-6"
+        className="min-h-screen flex items-center justify-center px-4 sm:px-6 overflow-x-hidden"
         style={{ background: colors.bg, color: colors.text }}
       >
         <div
-          className="w-full max-w-xl rounded-3xl p-8 border shadow-2xl space-y-4"
+          className="w-full max-w-xl rounded-3xl p-6 sm:p-8 border shadow-2xl space-y-4 min-w-0"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
-          <h1 className="text-2xl font-bold">{messages.partnerQr.title}</h1>
-          <p style={{ color: colors.textSecondary }}>
+          <h1 className="text-xl sm:text-2xl font-bold break-words">
+            {messages.partnerQr.title}
+          </h1>
+          <p className="break-words" style={{ color: colors.textSecondary }}>
             {errorMessage || messages.partnerQr.notFound}
           </p>
           <button
             type="button"
             onClick={() => router.push("/profile")}
-            className="px-6 py-3 rounded-2xl font-semibold"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl font-semibold"
             style={{
               background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
               color: colors.buttonText,
@@ -143,17 +189,17 @@ export default function PartnerQrPage() {
 
   return (
     <main
-      className="min-h-screen px-4 py-6 md:py-8"
+      className="min-h-screen px-3 sm:px-4 py-5 sm:py-8 overflow-x-hidden"
       style={{ background: colors.bg, color: colors.text }}
     >
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div className="max-w-4xl mx-auto space-y-4 min-w-0">
         <div
-          className="rounded-3xl p-6 border shadow-2xl space-y-4"
+          className="rounded-3xl p-5 sm:p-6 border shadow-2xl space-y-4 min-w-0"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3 min-w-0">
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl"
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl flex-shrink-0"
               style={{
                 background: `linear-gradient(135deg, ${colors.primary}, ${colors.accent})`,
                 color: colors.buttonText,
@@ -161,17 +207,22 @@ export default function PartnerQrPage() {
             >
               🎁
             </div>
-            <div className="space-y-1">
-              <h1 className="text-2xl font-bold">{branch.partner_name}</h1>
-              <p style={{ color: colors.textSecondary }}>
-                {messages.partnerQr.branch}: {branch.branch_name}
+            <div className="space-y-1 min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold break-words">
+                {branchDisplay.branchTitle}
+              </h1>
+              <p
+                className="text-sm sm:text-base break-words"
+                style={{ color: colors.textSecondary }}
+              >
+                {branchDisplay.partnerLabel}
               </p>
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 grid-cols-1 md:grid-cols-2 min-w-0">
             <div
-              className="rounded-2xl p-4 border"
+              className="rounded-2xl p-4 border min-w-0"
               style={{ borderColor: colors.border }}
             >
               <div
@@ -180,11 +231,13 @@ export default function PartnerQrPage() {
               >
                 {messages.adminQr.address}
               </div>
-              <div className="mt-1">{branch.city}</div>
-              <div>{branch.address}</div>
+              <div className="mt-1 break-words">
+                {getLocalizedCityName(branch.city, messages)}
+              </div>
+              <div className="break-words">{branchDisplay.address}</div>
             </div>
             <div
-              className="rounded-2xl p-4 border"
+              className="rounded-2xl p-4 border min-w-0"
               style={{ borderColor: colors.border }}
             >
               <div
@@ -193,10 +246,13 @@ export default function PartnerQrPage() {
               >
                 {messages.partnerQr.workingHours}
               </div>
-              <div className="mt-1">
+              <div className="mt-1 break-words">
                 {branch.working_hours || messages.common.unknown}
               </div>
-              <div style={{ color: colors.textSecondary }}>
+              <div
+                className="break-words"
+                style={{ color: colors.textSecondary }}
+              >
                 {messages.partnerQr.instagram}:{" "}
                 {branch.instagram || messages.common.unknown}
               </div>
@@ -208,7 +264,7 @@ export default function PartnerQrPage() {
               href={routeUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex px-5 py-3 rounded-2xl font-semibold"
+              className="inline-flex w-full sm:w-auto justify-center px-5 py-3 rounded-2xl font-semibold text-center"
               style={{
                 background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
                 color: colors.buttonText,
@@ -220,16 +276,16 @@ export default function PartnerQrPage() {
         </div>
 
         <div
-          className="rounded-3xl p-6 border shadow-2xl space-y-4"
+          className="rounded-3xl p-5 sm:p-6 border shadow-2xl space-y-4 min-w-0"
           style={{ backgroundColor: colors.cardBg, borderColor: colors.border }}
         >
-          <h2 className="text-xl font-bold">
+          <h2 className="text-lg sm:text-xl font-bold break-words">
             {messages.partnerQr.availableRewards}
           </h2>
 
           {errorMessage ? (
             <div
-              className="rounded-2xl px-4 py-3 border"
+              className="rounded-2xl px-4 py-3 border break-words"
               style={{
                 backgroundColor: colors.cardBg,
                 borderColor: "rgba(239,68,68,0.35)",
@@ -240,49 +296,62 @@ export default function PartnerQrPage() {
             </div>
           ) : null}
 
-          <div className="grid gap-4">
-            {branch.rewards.map((reward) => (
-              <div
-                key={reward.id}
-                className="rounded-3xl p-5 border flex flex-col md:flex-row md:items-center md:justify-between gap-4"
-                style={{ borderColor: colors.border }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="text-4xl leading-none">{reward.image}</div>
-                  <div className="space-y-1">
-                    <div className="text-lg font-semibold">{reward.title}</div>
-                    <div style={{ color: colors.textSecondary }}>
-                      {reward.description}
+          <div className="grid gap-4 min-w-0">
+            {branch.rewards.map((reward) => {
+              const displayReward = getDisplayReward(reward);
+
+              return (
+                <div
+                  key={reward.id}
+                  className="rounded-3xl p-4 sm:p-5 border flex flex-col gap-4 min-w-0"
+                  style={{ borderColor: colors.border }}
+                >
+                  <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+                    <div className="text-3xl sm:text-4xl leading-none flex-shrink-0">
+                      {displayReward.image}
                     </div>
-                    <div className="font-medium">
-                      {reward.eco_points_required}{" "}
-                      {messages.partnerQr.ecoPointsPrice}
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="text-base sm:text-lg font-semibold break-words">
+                        {displayReward.title}
+                      </div>
+                      <div
+                        className="break-words text-sm sm:text-base"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        {displayReward.description}
+                      </div>
+                      <div className="font-medium break-words">
+                        {formatEcoPointsPrice(
+                          displayReward.ecoPointsRequired,
+                          messages,
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <button
-                  type="button"
-                  onClick={() => void handleExchange(reward.id)}
-                  disabled={exchangingRewardId === reward.id}
-                  className="px-6 py-3 rounded-2xl font-semibold disabled:opacity-70"
-                  style={{
-                    background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
-                    color: colors.buttonText,
-                  }}
-                >
-                  {exchangingRewardId === reward.id
-                    ? messages.partnerQr.exchanging
-                    : messages.partnerQr.exchange}
-                </button>
-              </div>
-            ))}
+                  <button
+                    type="button"
+                    onClick={() => void handleExchange(reward.id)}
+                    disabled={exchangingRewardId === reward.id}
+                    className="w-full sm:w-auto sm:self-end min-w-[10rem] px-6 py-3 rounded-2xl font-semibold disabled:opacity-70"
+                    style={{
+                      background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
+                      color: colors.buttonText,
+                    }}
+                  >
+                    {exchangingRewardId === reward.id
+                      ? messages.partnerQr.exchanging
+                      : messages.partnerQr.exchange}
+                  </button>
+                </div>
+              );
+            })}
           </div>
 
           <button
             type="button"
             onClick={() => router.push("/profile")}
-            className="w-full md:w-auto px-6 py-3 rounded-2xl font-semibold border"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl font-semibold border"
             style={{
               backgroundColor: colors.cardBg,
               borderColor: colors.border,
