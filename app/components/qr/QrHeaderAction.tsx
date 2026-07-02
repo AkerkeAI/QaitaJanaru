@@ -283,11 +283,6 @@ export function QrHeaderAction() {
                 <p className="text-sm text-white/80">
                   {permissionError || messages.tasks.qrScannerDescription}
                 </p>
-                {scannerReady && !permissionError && (
-                  <p className="mt-2 text-xs text-white/70">
-                    {messages.tasks.qrScannerHint}
-                  </p>
-                )}
               </div>
 
               <button

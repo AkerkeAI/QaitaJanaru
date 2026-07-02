@@ -65,7 +65,12 @@ SEED_PARTNERS: list[dict[str, Any]] = [
             "lat": 43.65811,
             "lng": 51.1692,
         },
-        "reward_ids": ["partner-reward-ice-cream", "partner-reward-bubble-tea", "partner-reward-cocktail", "partner-reward-limonade"],
+        "reward_ids": [
+            "partner-reward-ice-cream",
+            "partner-reward-bubble-tea",
+            "partner-reward-cocktail",
+            "partner-reward-limonade",
+        ],
     },
 ]
 

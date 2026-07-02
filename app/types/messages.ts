@@ -601,7 +601,6 @@ export interface Messages {
     openQrScanner: string;
     qrScannerTitle: string;
     qrScannerDescription: string;
-    qrScannerHint: string;
     qrPermissionDenied: string;
     qrUnsupported: string;
     dailyLoginTitle: string;
