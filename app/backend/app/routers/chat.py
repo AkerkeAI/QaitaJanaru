@@ -1,11 +1,12 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from app.db.session import SessionLocal
 from app.models.chat_message import ChatMessage
 from app.models.user import User
 from app.schemas.chat import ChatHistoryResponse, ChatMessageResponse
 from app.services.task_service import record_chat_message
-from fastapi import APIRouter, Depends, HTTPException
+from app.services.usage_limit_service import DailyLimitReachedError, consume_assistant_message
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
@@ -35,6 +36,41 @@ async def get_chat_history(user_id: int, db: Session = Depends(get_db)):
     )
 
     return ChatHistoryResponse(messages=messages)
+
+
+@router.post("/consume/{user_id}")
+async def consume_assistant_usage(
+    user_id: int,
+    local_date: str = Query(...),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    try:
+        parsed_local_date = date.fromisoformat(local_date)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="INVALID_LOCAL_DATE") from exc
+
+    try:
+        consume_assistant_message(user, parsed_local_date)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    except DailyLimitReachedError as exc:
+        raise HTTPException(status_code=429, detail=exc.limit_type) from exc
+
+    return {
+        "assistant_messages_today": int(user.assistant_messages_today or 0),
+        "scans_used_today": int(user.scans_used_today or 0),
+        "last_limit_reset_date": (
+            user.last_limit_reset_date.isoformat()
+            if user.last_limit_reset_date
+            else None
+        ),
+    }
 
 
 @router.post("/message/{user_id}/user", response_model=ChatMessageResponse)

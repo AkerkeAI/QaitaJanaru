@@ -441,6 +441,16 @@ export const messages: Messages = {
     loginRequired: "Жалғастыру үшін жүйеге кіріңіз.",
     backToProfile: "Профильге оралу",
   },
+  dailyLimits: {
+    scanTitle: "Сіз бүгінгі лимитке жеттіңіз.",
+    scanBody: "Бүгін 3 сканерлеудің барлығы пайдаланылды.",
+    scanFooter: "Ертең қайта көріңіз.",
+    scanBack: "Қайту",
+    assistantTitle: "Сіз бүгінгі лимитке жеттіңіз.",
+    assistantBody: "Бүгін 10 хабарлама жіберілді.",
+    assistantFooter: "Ертең қайта көріңіз.",
+    assistantBack: "Артқа",
+  },
   ecoAssistant: {
     title: "Эко-көмекші",
     subtitle:

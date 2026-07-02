@@ -44,8 +44,8 @@ SEED_PARTNERS: list[dict[str, Any]] = [
             "name": "33-181 Hypermarket Dina",
             "city": "Aktau",
             "address": "33-181 Hypermarket Dina",
-            "instagram": "@nagicoffeebar",
-            "working_hours": "09:00 - 22:00",
+            "instagram": "@nagimoko_ice",
+            "working_hours": "11:00 - 22:00",
             "lat": 43.65107,
             "lng": 51.19724,
         },
@@ -57,15 +57,15 @@ SEED_PARTNERS: list[dict[str, Any]] = [
     {
         "name": "Nagimoko Ice",
         "branch": {
-            "name": "TC Astana, 14th district",
+            "name": "TC Astana, 15th district",
             "city": "Aktau",
-            "address": "TC Astana, 14th district",
-            "instagram": "@nagimokoice",
-            "working_hours": "10:00 - 22:00",
+            "address": "TC Astana, 15th district",
+            "instagram": "@nagimoko_ice",
+            "working_hours": "16:00 - 01:00",
             "lat": 43.65811,
             "lng": 51.1692,
         },
-        "reward_ids": ["partner-reward-ice-cream"],
+        "reward_ids": ["partner-reward-ice-cream", "partner-reward-bubble-tea", "partner-reward-cocktail", "partner-reward-limonade"],
     },
 ]
 

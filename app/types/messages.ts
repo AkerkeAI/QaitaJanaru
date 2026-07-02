@@ -361,6 +361,16 @@ export interface Messages {
     loginRequired: string;
     backToProfile: string;
   };
+  dailyLimits: {
+    scanTitle: string;
+    scanBody: string;
+    scanFooter: string;
+    scanBack: string;
+    assistantTitle: string;
+    assistantBody: string;
+    assistantFooter: string;
+    assistantBack: string;
+  };
   ecoAssistant: {
     title: string;
     subtitle: string;

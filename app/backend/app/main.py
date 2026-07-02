@@ -41,6 +41,7 @@ def ensure_database_tables() -> None:
     try:
         # Automatic migration for phone authentication fields
         migrate_phone_fields(db)
+        migrate_usage_limit_fields(db)
         seed_recycling_points(db)
         seed_partner_qr_data(db)
     finally:
@@ -74,6 +75,41 @@ def migrate_phone_fields(db) -> None:
 
     except Exception as e:
         print(f"Error during phone fields migration: {e}")
+        db.rollback()
+
+
+def migrate_usage_limit_fields(db) -> None:
+    try:
+        inspector = inspect(engine)
+        columns = [col["name"] for col in inspector.get_columns("users")]
+
+        if "scans_used_today" not in columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN scans_used_today INTEGER DEFAULT 0"))
+            db.commit()
+            print("✓ Added scans_used_today column to users table")
+
+        inspector = inspect(engine)
+        columns = [col["name"] for col in inspector.get_columns("users")]
+
+        if "assistant_messages_today" not in columns:
+            db.execute(
+                text(
+                    "ALTER TABLE users ADD COLUMN assistant_messages_today INTEGER DEFAULT 0"
+                )
+            )
+            db.commit()
+            print("✓ Added assistant_messages_today column to users table")
+
+        inspector = inspect(engine)
+        columns = [col["name"] for col in inspector.get_columns("users")]
+
+        if "last_limit_reset_date" not in columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN last_limit_reset_date DATE"))
+            db.commit()
+            print("✓ Added last_limit_reset_date column to users table")
+
+    except Exception as e:
+        print(f"Error during usage limit fields migration: {e}")
         db.rollback()
 
 

@@ -443,6 +443,16 @@ export const messages: Messages = {
     loginRequired: "Пожалуйста, войдите в аккаунт.",
     backToProfile: "Вернуться в профиль",
   },
+  dailyLimits: {
+    scanTitle: "Вы достигли дневного лимита.",
+    scanBody: "Сегодня вы уже использовали все 3 сканирования.",
+    scanFooter: "Попробуйте снова завтра.",
+    scanBack: "Вернуться",
+    assistantTitle: "Вы достигли дневного лимита.",
+    assistantBody: "Сегодня вы уже отправили 10 сообщений.",
+    assistantFooter: "Попробуйте снова завтра.",
+    assistantBack: "Назад",
+  },
   ecoAssistant: {
     title: "Эко-помощник",
     subtitle:

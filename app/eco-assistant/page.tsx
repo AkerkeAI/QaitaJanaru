@@ -9,8 +9,9 @@ import { searchRecyclingPoints, buildRoute } from "../lib/recyclingSearch";
 import { translateWasteType, preparationSteps } from "../lib/wasteTranslations";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
 import { UserStatusHeader } from "../components/UserStatusHeader";
+import { DailyLimitNotice } from "../components/DailyLimitNotice";
 import { getStatusHeaderValues } from "../lib/profileHelpers";
-import { getProfile, ProfileResponse } from "../lib/api";
+import { useDailyLimits } from "../hooks/useDailyLimits";
 import {
   getRecyclingPoints,
   type RecyclingPoint,
@@ -31,7 +32,13 @@ export default function EcoAssistantPage() {
   const [inputText, setInputText] = useState("");
   const [recyclingPoints, setRecyclingPoints] = useState<RecyclingPoint[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [assistantLimitReached, setAssistantLimitReached] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const {
+    profile,
+    canSendAssistantMessage,
+    consumeAssistantMessage,
+  } = useDailyLimits(userId);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
@@ -62,21 +69,18 @@ export default function EcoAssistantPage() {
   };
 
   useEffect(() => {
-    const userId = localStorage.getItem("qaitaJanaru_user_id");
-    if (!userId) {
+    const storedUserId = localStorage.getItem("qaitaJanaru_user_id");
+    if (!storedUserId) {
       router.push("/login");
       return;
     }
 
-    // Load chat history from backend
-    void getProfile(userId)
-      .then(setProfile)
-      .catch((error) => console.error("Failed to load profile header:", error));
+    setUserId(storedUserId);
 
     const loadChatHistory = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/chat/history/${userId}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/chat/history/${storedUserId}`,
         );
         if (response.ok) {
           const data = await response.json();
@@ -92,7 +96,7 @@ export default function EcoAssistantPage() {
         console.error("Failed to load chat history:", error);
         // Fallback to localStorage if backend fetch fails
         const savedHistory = localStorage.getItem(
-          `qaitaJanaru_chat_history_${userId}`,
+          `qaitaJanaru_chat_history_${storedUserId}`,
         );
         if (savedHistory) {
           try {
@@ -178,27 +182,27 @@ export default function EcoAssistantPage() {
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
 
-    const userId = localStorage.getItem("qaitaJanaru_user_id");
     if (!userId) {
       router.push("/login");
       return;
     }
 
-    const userMessage: Message = {
-      id: Date.now(),
-      text: text.trim(),
-      isUser: true,
-      timestamp: new Date(),
-    };
+    setAssistantLimitReached(false);
 
-    const updatedMessages = [...messages, userMessage];
-
-    setMessages(updatedMessages);
-    setInputText("");
-    setIsTyping(true);
-
-    // Check if this is a recycling location query
+    // Check if this is a recycling location query (local lookup, no AI limit)
     if (isRecyclingQuery(text)) {
+      const userMessage: Message = {
+        id: Date.now(),
+        text: text.trim(),
+        isUser: true,
+        timestamp: new Date(),
+      };
+
+      const updatedMessages = [...messages, userMessage];
+
+      setMessages(updatedMessages);
+      setInputText("");
+      setIsTyping(true);
       const matchingPoints = searchRecyclingPoints(text, recyclingPoints);
 
       // Find which materials are mentioned to get preparation steps
@@ -297,6 +301,37 @@ export default function EcoAssistantPage() {
       setIsTyping(false);
       return;
     }
+
+    if (!canSendAssistantMessage) {
+      setAssistantLimitReached(true);
+      return;
+    }
+
+    try {
+      await consumeAssistantMessage();
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === "DAILY_ASSISTANT_LIMIT_REACHED"
+      ) {
+        setAssistantLimitReached(true);
+        return;
+      }
+      console.error("Failed to consume assistant usage:", error);
+    }
+
+    const userMessage: Message = {
+      id: Date.now(),
+      text: text.trim(),
+      isUser: true,
+      timestamp: new Date(),
+    };
+
+    const updatedMessages = [...messages, userMessage];
+
+    setMessages(updatedMessages);
+    setInputText("");
+    setIsTyping(true);
 
     try {
       // Save user message to backend
@@ -703,6 +738,18 @@ export default function EcoAssistantPage() {
             {translations.ecoAssistant.welcomeMessage}
           </p>
         </div>
+
+        {assistantLimitReached && (
+          <div className="mb-6">
+            <DailyLimitNotice
+              title={translations.dailyLimits.assistantTitle}
+              body={translations.dailyLimits.assistantBody}
+              footer={translations.dailyLimits.assistantFooter}
+              backLabel={translations.dailyLimits.assistantBack}
+              onBack={() => setAssistantLimitReached(false)}
+            />
+          </div>
+        )}
 
         {/* Chat Messages */}
         <div className="space-y-4 pb-4">

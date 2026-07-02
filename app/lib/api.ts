@@ -69,6 +69,9 @@ export interface ProfileResponse {
   level: number;
   streak: number;
   total_scans: number;
+  scans_used_today: number;
+  assistant_messages_today: number;
+  last_limit_reset_date: string | null;
   achievements?: string[];
   analytics: RecyclingAnalyticsResponse;
 }
@@ -220,8 +223,14 @@ export async function resetPassword(
   return response.json();
 }
 
-export async function getProfile(userId: string): Promise<ProfileResponse> {
-  const response = await fetch(`${API_URL}/profile/${userId}`, {
+export async function getProfile(
+  userId: string,
+  localDate?: string,
+): Promise<ProfileResponse> {
+  const query = localDate
+    ? `?local_date=${encodeURIComponent(localDate)}`
+    : "";
+  const response = await fetch(`${API_URL}/profile/${userId}${query}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -233,6 +242,37 @@ export async function getProfile(userId: string): Promise<ProfileResponse> {
     const errorCode = error.detail;
     throw new Error(
       ERROR_CODE_MAP[errorCode] || errorCode || "Failed to fetch profile",
+    );
+  }
+
+  return response.json();
+}
+
+export interface DailyUsageResponse {
+  scans_used_today: number;
+  assistant_messages_today: number;
+  last_limit_reset_date: string | null;
+}
+
+export async function consumeAssistantUsage(
+  userId: string,
+  localDate: string,
+): Promise<DailyUsageResponse> {
+  const response = await fetch(
+    `${API_URL}/chat/consume/${userId}?local_date=${encodeURIComponent(localDate)}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const error: ApiError = await response.json();
+    const errorCode = error.detail;
+    throw new Error(
+      ERROR_CODE_MAP[errorCode] || errorCode || "Failed to consume assistant usage",
     );
   }
 

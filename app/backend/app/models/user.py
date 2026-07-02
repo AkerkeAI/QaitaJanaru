@@ -31,3 +31,7 @@ class User(Base):
     last_daily_reset = Column(DateTime, nullable=True)
     last_weekly_reset = Column(DateTime, nullable=True)
     current_week_set = Column(String, nullable=True, default="week-set-a")
+
+    scans_used_today = Column(Integer, default=0)
+    assistant_messages_today = Column(Integer, default=0)
+    last_limit_reset_date = Column(Date, nullable=True)

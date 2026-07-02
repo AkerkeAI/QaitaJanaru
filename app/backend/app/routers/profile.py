@@ -1,3 +1,5 @@
+from datetime import date
+
 from app.db.session import SessionLocal
 from app.models.chat_message import ChatMessage
 from app.models.recycling_point import RecyclingPoint
@@ -5,8 +7,9 @@ from app.models.recycling_submission import RecyclingSubmission
 from app.models.scan_history import ScanHistory
 from app.models.user import User
 from app.schemas.profile import ProfileResponse, UpdateProfileRequest
+from app.services.usage_limit_service import sync_usage_limits
 from app.services.user_service import sync_user_level
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/profile", tags=["Profile"])
@@ -87,6 +90,13 @@ def _serialize_profile(user: User, db: Session) -> ProfileResponse:
         level=int(user.level or 1),
         streak=int(user.streak or 0),
         total_scans=int(user.total_scans or 0),
+        scans_used_today=int(user.scans_used_today or 0),
+        assistant_messages_today=int(user.assistant_messages_today or 0),
+        last_limit_reset_date=(
+            user.last_limit_reset_date.isoformat()
+            if user.last_limit_reset_date
+            else None
+        ),
         analytics={
             "total_recycling_actions": len(submissions),
             "total_eco_points_earned": int(user.eco_points or 0),
@@ -107,12 +117,32 @@ def _validate_city(city: str) -> str:
     return normalized_city
 
 
+def _parse_local_date(local_date: str | None) -> date | None:
+    if not local_date:
+        return None
+    try:
+        return date.fromisoformat(local_date)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="INVALID_LOCAL_DATE") from exc
+
+
 @router.get("/{user_id}", response_model=ProfileResponse)
-def get_profile(user_id: int, db: Session = Depends(get_db)):
+def get_profile(
+    user_id: int,
+    local_date: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    parsed_local_date = _parse_local_date(local_date)
+    if parsed_local_date is not None:
+        sync_usage_limits(user, parsed_local_date)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
     return _serialize_profile(user, db)
 

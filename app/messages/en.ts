@@ -441,6 +441,16 @@ export const messages: Messages = {
     loginRequired: "Please sign in to continue.",
     backToProfile: "Back to Profile",
   },
+  dailyLimits: {
+    scanTitle: "Daily limit reached.",
+    scanBody: "You have already used all 3 scans today.",
+    scanFooter: "Please try again tomorrow.",
+    scanBack: "Back",
+    assistantTitle: "Daily limit reached.",
+    assistantBody: "You have already sent 10 messages today.",
+    assistantFooter: "Please try again tomorrow.",
+    assistantBack: "Back",
+  },
   ecoAssistant: {
     title: "Eco Assistant",
     subtitle:

@@ -1,12 +1,13 @@
 import traceback
-from datetime import datetime
+from datetime import date, datetime
 
 from app.db.session import SessionLocal
 from app.models.scan_history import ScanHistory
 from app.models.user import User
 from app.schemas.scan import ScanResponse
 from app.services.ai_waste_detector import AIProviderError, analyze_waste_image
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from app.services.usage_limit_service import DailyLimitReachedError, consume_scan
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/scan", tags=["Scan"])
@@ -38,12 +39,26 @@ async def scan_waste(
     user_id: int,
     file: UploadFile = File(...),
     language: str = "en",
+    local_date: str = Query(...),
     db: Session = Depends(get_db),
 ):
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    try:
+        parsed_local_date = date.fromisoformat(local_date)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="INVALID_LOCAL_DATE") from exc
+
+    try:
+        consume_scan(user, parsed_local_date)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    except DailyLimitReachedError as exc:
+        raise HTTPException(status_code=429, detail=exc.limit_type) from exc
 
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(

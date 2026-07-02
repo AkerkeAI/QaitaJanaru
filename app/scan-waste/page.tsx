@@ -18,8 +18,10 @@ import {
 import { translateWasteType } from "../lib/wasteTranslations";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
 import { UserStatusHeader } from "../components/UserStatusHeader";
+import { DailyLimitNotice } from "../components/DailyLimitNotice";
 import { getStatusHeaderValues } from "../lib/profileHelpers";
-import { getProfile, ProfileResponse } from "../lib/api";
+import { getLocalDateString } from "../lib/dailyLimits";
+import { useDailyLimits } from "../hooks/useDailyLimits";
 import {
   getRecyclingPoints,
   type RecyclingPoint,
@@ -34,7 +36,9 @@ export default function ScanWastePage() {
   const [scanResult, setScanResult] = useState<WasteDetectionResult | null>(
     null,
   );
-  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [scanLimitReached, setScanLimitReached] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const { profile, canScan, refresh: refreshDailyLimits } = useDailyLimits(userId);
   const [nearestCenters, setNearestCenters] = useState<
     NearestRecyclingCenter[]
   >([]);
@@ -67,15 +71,13 @@ export default function ScanWastePage() {
   };
 
   useEffect(() => {
-    const userId = localStorage.getItem("qaitaJanaru_user_id");
-    if (!userId) {
+    const storedUserId = localStorage.getItem("qaitaJanaru_user_id");
+    if (!storedUserId) {
       router.push("/login");
       return;
     }
 
-    void getProfile(userId)
-      .then(setProfile)
-      .catch((error) => console.error("Failed to load profile header:", error));
+    setUserId(storedUserId);
 
     const loadRecyclingPoints = async () => {
       try {
@@ -126,6 +128,9 @@ export default function ScanWastePage() {
   };
 
   const mapScanError = (status: number, detail?: string) => {
+    if (status === 429 && detail === "DAILY_SCAN_LIMIT_REACHED") {
+      return "DAILY_SCAN_LIMIT_REACHED";
+    }
     if (status === 400) {
       return detail || messages.scanWaste.invalidImage;
     }
@@ -150,13 +155,19 @@ export default function ScanWastePage() {
       return;
     }
 
+    if (!canScan) {
+      setScanLimitReached(true);
+      setError(null);
+      return;
+    }
+
     setLoadingState("uploading");
     setError(null);
+    setScanLimitReached(false);
     setScanResult(null);
     setNearestCenters([]);
 
     try {
-      const userId = localStorage.getItem("qaitaJanaru_user_id");
       if (!userId) {
         throw new Error(messages.scanWaste.userNotFound);
       }
@@ -166,7 +177,8 @@ export default function ScanWastePage() {
 
       setLoadingState("analyzing");
 
-      const requestUrl = `/api/scan/${userId}?language=${encodeURIComponent(language)}`;
+      const localDate = getLocalDateString();
+      const requestUrl = `/api/scan/${userId}?language=${encodeURIComponent(language)}&local_date=${encodeURIComponent(localDate)}`;
       const response = await fetch(requestUrl, {
         method: "POST",
         body: formData,
@@ -200,6 +212,7 @@ export default function ScanWastePage() {
       };
 
       setScanResult(result);
+      void refreshDailyLimits();
       setNearestCenters(
         findNearestRecyclingCenters(
           recyclingPoints,
@@ -220,6 +233,13 @@ export default function ScanWastePage() {
       setError(
         err instanceof Error ? err.message : messages.scanWaste.scanFailed,
       );
+      if (
+        err instanceof Error &&
+        err.message === "DAILY_SCAN_LIMIT_REACHED"
+      ) {
+        setScanLimitReached(true);
+        setError(null);
+      }
       setLoadingState("error");
     }
   };
@@ -230,6 +250,7 @@ export default function ScanWastePage() {
     setScanResult(null);
     setNearestCenters([]);
     setError(null);
+    setScanLimitReached(false);
     setLoadingState("idle");
   };
 
@@ -789,6 +810,16 @@ export default function ScanWastePage() {
                 </button>
               </div>
             </div>
+          )}
+
+          {scanLimitReached && (
+            <DailyLimitNotice
+              title={messages.dailyLimits.scanTitle}
+              body={messages.dailyLimits.scanBody}
+              footer={messages.dailyLimits.scanFooter}
+              backLabel={messages.dailyLimits.scanBack}
+              onBack={handleReset}
+            />
           )}
 
           {error && (

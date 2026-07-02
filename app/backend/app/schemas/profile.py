@@ -40,4 +40,7 @@ class ProfileResponse(BaseModel):
     level: int
     streak: int
     total_scans: int
+    scans_used_today: int
+    assistant_messages_today: int
+    last_limit_reset_date: str | None
     analytics: RecyclingAnalyticsResponse

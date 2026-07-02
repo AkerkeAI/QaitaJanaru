@@ -36,6 +36,14 @@ export async function POST(
     const { userId } = await context.params;
     const searchParams = new URL(request.url).searchParams;
     const language = searchParams.get("language") || "en";
+    const localDate = searchParams.get("local_date");
+
+    if (!localDate) {
+      return NextResponse.json(
+        { detail: "LOCAL_DATE_REQUIRED" },
+        { status: 400 },
+      );
+    }
 
     const incomingFormData = await request.formData();
     const file = incomingFormData.get("file");
@@ -51,7 +59,7 @@ export async function POST(
     formData.append("file", file, file.name);
 
     const backendResponse = await fetch(
-      `${SCAN_API_BASE_URL}/scan/${encodeURIComponent(userId)}?language=${encodeURIComponent(language)}`,
+      `${SCAN_API_BASE_URL}/scan/${encodeURIComponent(userId)}?language=${encodeURIComponent(language)}&local_date=${encodeURIComponent(localDate)}`,
       {
         method: "POST",
         body: formData,
