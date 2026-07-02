@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { HelpCard } from "@/app/components/HelpCard";
 import { Sidebar } from "@/app/components/Sidebar";
 import { UserStatusHeader } from "@/app/components/UserStatusHeader";
 import { QrHeaderAction } from "@/app/components/qr/QrHeaderAction";
@@ -168,10 +169,15 @@ export default function RewardsPage() {
         </header>
 
         <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
-          <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
-            <h1 className="text-3xl font-bold">{messages.rewards.title}</h1>
+          <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 min-w-0">
+            <h1 className="text-3xl font-bold break-words">{messages.rewards.title}</h1>
 
-            <div className="flex gap-2 p-1 rounded-2xl" style={{ backgroundColor: `${colors.text}10` }}>
+            <HelpCard
+              title={messages.help.howToUse}
+              body={messages.help.rewards}
+            />
+
+            <div className="flex gap-2 p-1 rounded-2xl min-w-0" style={{ backgroundColor: `${colors.text}10` }}>
               <button
                 onClick={() => setActiveTab("rewards")}
                 className={`flex-1 py-3 px-6 rounded-xl font-medium transition-all duration-300 ${

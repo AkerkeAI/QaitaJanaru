@@ -10,6 +10,7 @@ import { getProfile, ProfileResponse } from "../lib/api";
 import { claimReward, getTaskProgress } from "../lib/tasksApi";
 import { getAchievementChapters } from "../lib/taskConfig";
 import { buildAchievementCampaign } from "../lib/achievementCampaign";
+import { HelpCard } from "../components/HelpCard";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
 import { UserStatusHeader } from "../components/UserStatusHeader";
 import { getStatusHeaderValues } from "../lib/profileHelpers";
@@ -170,7 +171,7 @@ export default function TasksPage() {
 
     return (
       <div
-        className={`group relative rounded-2xl p-5 transition-all duration-300 hover:scale-[1.02] ${task.completed ? "" : "opacity-90"}`}
+        className={`group relative rounded-2xl p-4 sm:p-5 transition-all duration-300 md:hover:scale-[1.02] min-w-0 max-w-full ${task.completed ? "" : "opacity-90"}`}
         style={{
           backgroundColor: task.completed
             ? `${colors.primary}15`
@@ -179,9 +180,9 @@ export default function TasksPage() {
           borderWidth: 1,
         }}
       >
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-3 sm:gap-4 min-w-0">
           <div
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-lg flex-shrink-0 ${task.completed ? "animate-bounce" : ""}`}
+            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-xl sm:text-2xl shadow-lg flex-shrink-0 ${task.completed ? "animate-bounce" : ""}`}
             style={{
               background: task.completed
                 ? "linear-gradient(to bottom right, #fbbf24, #f97316)"
@@ -192,14 +193,14 @@ export default function TasksPage() {
           >
             {task.completed && task.type !== "achievement" ? "✓" : task.icon}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-2 gap-2">
-              <h4 className="font-bold text-lg leading-snug break-words whitespace-normal">
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <div className="flex flex-wrap items-start justify-between mb-2 gap-2">
+              <h4 className="font-bold text-base sm:text-lg leading-snug break-words whitespace-normal flex-1 min-w-0">
                 {task.title}
               </h4>
               {task.reward > 0 && (
                 <div
-                  className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold"
+                  className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold flex-shrink-0 max-w-full"
                   style={{
                     backgroundColor: `${colors.primary}20`,
                     color: colors.primary,
@@ -211,29 +212,32 @@ export default function TasksPage() {
                 </div>
               )}
             </div>
-            <p className="text-sm mb-3" style={{ color: colors.textSecondary }}>
+            <p
+              className="text-sm mb-3 break-words"
+              style={{ color: colors.textSecondary }}
+            >
               {task.description}
             </p>
 
             {task.type !== "achievement" && (
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <div
-                  className="flex justify-between text-xs"
+                  className="flex justify-between text-xs gap-2"
                   style={{ color: colors.textSecondary }}
                 >
-                  <span>
+                  <span className="truncate">
                     {task.current} / {task.target}
                   </span>
-                  <span>{Math.round(progress * 100)}%</span>
+                  <span className="flex-shrink-0">{Math.round(progress * 100)}%</span>
                 </div>
                 <div
-                  className="relative h-2 rounded-full overflow-hidden"
+                  className="relative h-2 rounded-full overflow-hidden w-full max-w-full"
                   style={{ backgroundColor: `${colors.text}10` }}
                 >
                   <div
-                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
+                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-500 max-w-full"
                     style={{
-                      width: `${progress * 100}%`,
+                      width: `${Math.min(progress * 100, 100)}%`,
                       background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
                     }}
                   />
@@ -244,7 +248,7 @@ export default function TasksPage() {
             {canClaim && (
               <button
                 onClick={() => handleClaimReward(task)}
-                className="mt-3 w-full py-2 rounded-xl font-bold text-sm transition-all duration-300 hover:scale-105 active:scale-95"
+                className="mt-3 w-full max-w-full py-2.5 px-3 rounded-xl font-bold text-sm transition-all duration-300 md:hover:scale-105 active:scale-95 break-words"
                 style={{
                   background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
                   color: colors.buttonText,
@@ -321,7 +325,7 @@ export default function TasksPage() {
 
   return (
     <main
-      className="min-h-screen relative overflow-hidden"
+      className="min-h-screen relative overflow-x-hidden"
       style={{ background: colors.bg, color: colors.text }}
     >
       <div
@@ -368,10 +372,15 @@ export default function TasksPage() {
           <QrHeaderAction />
         </header>
 
-        <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
-          <div className="max-w-4xl mx-auto space-y-8 md:space-y-10">
+        <div className="flex-1 px-3 sm:px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
+          <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 min-w-0">
+            <HelpCard
+              title={messages.help.howToUse}
+              body={messages.help.tasks}
+            />
+
             <div
-              className="relative rounded-3xl p-6 md:p-8 backdrop-blur-xl border shadow-xl"
+              className="relative rounded-3xl p-4 sm:p-6 md:p-8 backdrop-blur-xl border shadow-xl min-w-0"
               style={{
                 backgroundColor: colors.cardBg,
                 borderColor: colors.border,
@@ -408,15 +417,15 @@ export default function TasksPage() {
             </div>
 
             <div
-              className="relative rounded-3xl p-6 md:p-8 backdrop-blur-xl border shadow-xl"
+              className="relative rounded-3xl p-4 sm:p-6 md:p-8 backdrop-blur-xl border shadow-xl min-w-0"
               style={{
                 backgroundColor: colors.cardBg,
                 borderColor: colors.border,
               }}
             >
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-6 min-w-0">
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg"
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg flex-shrink-0"
                   style={{
                     background:
                       "linear-gradient(to bottom right, #a855f7, #ec4899)",
@@ -446,15 +455,15 @@ export default function TasksPage() {
             </div>
 
             <div
-              className="relative rounded-3xl p-6 md:p-8 backdrop-blur-xl border shadow-xl"
+              className="relative rounded-3xl p-4 sm:p-6 md:p-8 backdrop-blur-xl border shadow-xl min-w-0"
               style={{
                 backgroundColor: colors.cardBg,
                 borderColor: colors.border,
               }}
             >
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-6 min-w-0">
                 <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg"
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-lg flex-shrink-0"
                   style={{
                     background:
                       "linear-gradient(to bottom right, #fbbf24, #f97316)",
@@ -462,7 +471,7 @@ export default function TasksPage() {
                 >
                   🏆
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <h3 className="text-xl font-bold">
                     {messages.tasks.achievements}
                   </h3>
@@ -491,9 +500,9 @@ export default function TasksPage() {
                       borderWidth: 1,
                     }}
                   >
-                    <div className="flex items-center gap-3 mb-4">
+                    <div className="flex flex-wrap items-start gap-3 mb-4 min-w-0">
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
                         style={{
                           background: chapter.unlocked
                             ? "linear-gradient(to bottom right, #fbbf24, #f97316)"
@@ -502,10 +511,10 @@ export default function TasksPage() {
                       >
                         {chapter.unlocked ? chapter.icon : "🔒"}
                       </div>
-                      <div>
-                        <h4 className="font-bold">{chapter.title}</h4>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold break-words">{chapter.title}</h4>
                         <p
-                          className="text-xs"
+                          className="text-xs break-words"
                           style={{ color: colors.textSecondary }}
                         >
                           {chapter.description}
@@ -513,7 +522,7 @@ export default function TasksPage() {
                       </div>
                       {chapter.completed && (
                         <div
-                          className="ml-auto px-3 py-1 rounded-full text-xs font-medium"
+                          className="px-3 py-1 rounded-full text-xs font-medium flex-shrink-0"
                           style={{
                             backgroundColor: `${colors.primary}20`,
                             color: colors.primary,
@@ -524,7 +533,7 @@ export default function TasksPage() {
                       )}
                       {!chapter.unlocked && (
                         <div
-                          className="ml-auto px-3 py-1 rounded-full text-xs font-medium"
+                          className="px-3 py-1 rounded-full text-xs font-medium flex-shrink-0"
                           style={{
                             backgroundColor: `${colors.text}10`,
                             color: colors.textSecondary,
@@ -558,8 +567,8 @@ export default function TasksPage() {
                                   ? achievement.icon
                                   : "🔒"}
                             </span>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm truncate">
+                            <div className="flex-1 min-w-0 overflow-hidden">
+                              <div className="font-medium text-sm break-words">
                                 {achievement.title}
                               </div>
                               <div

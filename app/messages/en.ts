@@ -133,6 +133,23 @@ export const messages: Messages = {
     deleteAccountSuccess: "Account deleted successfully.",
     theme: "Theme",
     chooseTheme: "Choose Theme",
+    feedbackTitle: "Found a bug?",
+    feedbackPrompt: "Contact us:",
+    feedbackEmail: "qaitajanaru@gmail.com",
+    cityUpdated: "City updated successfully.",
+  },
+  help: {
+    howToUse: "How to use",
+    rewards:
+      "• Earn Eco Points by recycling and completing activities\n• Exchange points for rewards at partner locations\n• Scan partner QR codes to redeem rewards",
+    tasks:
+      "• Complete daily and weekly tasks\n• Claim Eco Points when tasks are finished\n• Some tasks refresh every day or week",
+    scanWaste:
+      "• Photograph waste clearly in good lighting\n• AI identifies the material and type\n• Follow the recycling instructions shown",
+    leaderboard:
+      "• Compare your progress with other users\n• View city rankings for your area\n• See global user rankings",
+    recyclingMap:
+      "• Find nearby recycling points on the map\n• Tap a point to view details\n• Build a route to the selected location",
   },
   login: {
     title: "Welcome Back",

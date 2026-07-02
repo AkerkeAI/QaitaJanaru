@@ -10,6 +10,8 @@ import { themeNames, Theme } from "../lib/theme";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
 import { UserStatusHeader } from "../components/UserStatusHeader";
 import { getStatusHeaderValues } from "../lib/profileHelpers";
+import { updateProfile } from "../lib/api";
+import { getCityLabel, getCityOptions } from "../lib/cityOptions";
 
 interface Profile {
   id: number;
@@ -30,6 +32,10 @@ export default function SettingsPage() {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [selectedCity, setSelectedCity] = useState("");
+  const [savingCity, setSavingCity] = useState(false);
+  const [citySaveMessage, setCitySaveMessage] = useState("");
+  const [citySaveError, setCitySaveError] = useState("");
   const { language, messages, setLanguage } = useLanguage();
   const { theme, colors, setTheme } = useTheme();
   const touchStartX = useRef(0);
@@ -71,6 +77,16 @@ export default function SettingsPage() {
     // Load profile immediately on mount to ensure header shows correct values
     fetchProfile();
   }, [router]);
+
+  useEffect(() => {
+    if (showAccountModal && profile?.city) {
+      setSelectedCity(profile.city.trim().toLowerCase());
+      setCitySaveMessage("");
+      setCitySaveError("");
+    }
+  }, [showAccountModal, profile?.city]);
+
+  const cityOptions = getCityOptions(messages);
 
   const handleLanguageSelect = (selectedLanguage: Language) => {
     setLanguage(selectedLanguage);
@@ -126,6 +142,35 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error("Failed to delete account:", error);
+    }
+  };
+
+  const handleSaveCity = async () => {
+    const userId = localStorage.getItem("qaitaJanaru_user_id");
+    if (!userId || !selectedCity) {
+      return;
+    }
+
+    setSavingCity(true);
+    setCitySaveMessage("");
+    setCitySaveError("");
+
+    try {
+      const updatedProfile = await updateProfile(userId, { city: selectedCity });
+      setProfile(updatedProfile);
+      localStorage.setItem("qaitaJanaru_city", updatedProfile.city);
+      setCitySaveMessage(messages.settings.cityUpdated);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : messages.selectCity.saveError;
+
+      if (errorMessage === "CITY_REQUIRED") {
+        setCitySaveError(messages.register.selectCityRequired);
+      } else {
+        setCitySaveError(messages.selectCity.saveError);
+      }
+    } finally {
+      setSavingCity(false);
     }
   };
 
@@ -414,6 +459,32 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
+
+            <div
+              className="mt-8 rounded-xl backdrop-blur-xl border p-5 sm:p-6 min-w-0"
+              style={{
+                backgroundColor: colors.cardBg,
+                borderColor: colors.border,
+              }}
+            >
+              <h2 className="text-base font-bold mb-2 break-words">
+                {messages.settings.feedbackTitle}
+              </h2>
+              <p
+                className="text-sm mb-3 break-words"
+                style={{ color: colors.textSecondary }}
+              >
+                {messages.settings.feedbackPrompt}
+              </p>
+              <a
+                href={`mailto:${messages.settings.feedbackEmail}`}
+                className="inline-flex items-center gap-2 text-sm font-semibold break-all"
+                style={{ color: colors.primary }}
+              >
+                <span aria-hidden="true">📧</span>
+                <span>{messages.settings.feedbackEmail}</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -571,7 +642,7 @@ export default function SettingsPage() {
                 ✕
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
               <div>
                 <p
                   className="text-xs uppercase tracking-wider mb-1"
@@ -579,7 +650,9 @@ export default function SettingsPage() {
                 >
                   {messages.register.fullName}
                 </p>
-                <p className="text-lg font-semibold">{profile.full_name}</p>
+                <p className="text-lg font-semibold break-words">
+                  {profile.full_name}
+                </p>
               </div>
               <div>
                 <p
@@ -588,16 +661,68 @@ export default function SettingsPage() {
                 >
                   {messages.login.email}
                 </p>
-                <p className="text-lg font-semibold">{profile.email}</p>
+                <p className="text-lg font-semibold break-all">{profile.email}</p>
               </div>
               <div>
                 <p
-                  className="text-xs uppercase tracking-wider mb-1"
+                  className="text-xs uppercase tracking-wider mb-2"
                   style={{ color: colors.textSecondary }}
                 >
                   {messages.register.city}
                 </p>
-                <p className="text-lg font-semibold">{profile.city}</p>
+                <p
+                  className="text-sm mb-3 break-words"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {getCityLabel(profile.city, messages)}
+                </p>
+                <div
+                  className="max-h-48 overflow-y-auto rounded-xl border [scrollbar-width:none] [-webkit-overflow-scrolling:touch]"
+                  style={{ borderColor: colors.border }}
+                >
+                  {cityOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setSelectedCity(option.value)}
+                      className="w-full px-4 py-3 text-left text-sm font-medium transition-all hover:opacity-90"
+                      style={{
+                        background:
+                          selectedCity === option.value
+                            ? `${colors.primary}20`
+                            : "transparent",
+                        color: colors.text,
+                        borderBottom: `1px solid ${colors.border}`,
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+                {citySaveError ? (
+                  <p className="text-sm mt-2" style={{ color: colors.danger }}>
+                    {citySaveError}
+                  </p>
+                ) : null}
+                {citySaveMessage ? (
+                  <p className="text-sm mt-2" style={{ color: colors.primary }}>
+                    {citySaveMessage}
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => void handleSaveCity()}
+                  disabled={!selectedCity || savingCity}
+                  className="mt-3 w-full py-3 rounded-xl font-semibold disabled:opacity-50"
+                  style={{
+                    background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
+                    color: colors.buttonText,
+                  }}
+                >
+                  {savingCity
+                    ? messages.selectCity.saving
+                    : messages.selectCity.save}
+                </button>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

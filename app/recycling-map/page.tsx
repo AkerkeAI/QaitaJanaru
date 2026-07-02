@@ -21,6 +21,7 @@ import {
   translateWasteType,
   translateFacilityType,
 } from "../lib/wasteTranslations";
+import { HelpCard } from "../components/HelpCard";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
 import { buildRoute } from "../lib/recyclingSearch";
 import { UserStatusHeader } from "../components/UserStatusHeader";
@@ -293,7 +294,7 @@ export default function RecyclingMapPage() {
 
   return (
     <main
-      className="min-h-screen text-white relative overflow-hidden"
+      className="min-h-screen text-white relative overflow-x-hidden"
       style={{ background: colors.bg }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -352,9 +353,15 @@ export default function RecyclingMapPage() {
         </header>
 
         {/* Content Area */}
-        <div className="flex-1 px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8">
-          <div
-            className="mb-4 rounded-2xl border backdrop-blur-xl shadow-lg"
+        <div className="flex-1 px-3 sm:px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8 min-w-0">
+          <div className="max-w-6xl mx-auto space-y-3 sm:space-y-4 min-w-0">
+            <HelpCard
+              title={messages.help.howToUse}
+              body={messages.help.recyclingMap}
+            />
+
+            <div
+              className="rounded-2xl border backdrop-blur-xl shadow-lg min-w-0"
             style={{
               background: colors.cardBg,
               borderColor: colors.border,
@@ -389,10 +396,11 @@ export default function RecyclingMapPage() {
 
           {/* Map Container - Integrated into page */}
           <div
-            className="relative rounded-3xl overflow-hidden backdrop-blur-xl"
+            className="relative rounded-3xl overflow-hidden backdrop-blur-xl min-w-0"
             style={{
-              height: "calc(100vh - 200px)",
-              minHeight: "600px",
+              height: "min(52vh, calc(100dvh - 280px))",
+              minHeight: "280px",
+              maxHeight: "560px",
               borderColor: `${colors.primary}30`,
               borderWidth: 1,
               background: `linear-gradient(to bottom right, ${colors.primary}10, ${colors.primaryDark}10, ${colors.accent}10)`,
@@ -623,11 +631,11 @@ export default function RecyclingMapPage() {
             </div>
 
             {/* Find My Location Button */}
-            <div className="absolute bottom-6 right-6 z-[1000]">
+            <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-[1000] pb-[env(safe-area-inset-bottom,0px)]">
               <button
                 onClick={handleFindLocation}
                 disabled={loadingLocation}
-                className="p-4 rounded-2xl hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-3 sm:p-4 rounded-2xl hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})`,
                 }}
@@ -676,6 +684,7 @@ export default function RecyclingMapPage() {
               style={{ borderColor: colors.border, borderWidth: 1 }}
             ></div>
           </div>
+          </div>
         </div>
       </div>
 
@@ -701,11 +710,30 @@ export default function RecyclingMapPage() {
           border: 1px solid ${colors.border};
         }
         .recycling-popup-card {
-          padding: 16px;
-          min-width: 200px;
+          padding: 12px;
+          min-width: 0;
+          max-width: min(280px, calc(100vw - 48px));
+          max-height: min(60vh, 420px);
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
         }
         .leaflet-container {
           background: transparent;
+        }
+        .leaflet-bottom.leaflet-right {
+          margin-bottom: 4.5rem;
+          margin-right: 0.5rem;
+        }
+        .leaflet-bottom.leaflet-left {
+          margin-bottom: 1rem;
+          margin-left: 0.5rem;
+        }
+        .leaflet-top.leaflet-left,
+        .leaflet-top.leaflet-right {
+          margin-top: 0.5rem;
+        }
+        .leaflet-control-zoom {
+          border: none !important;
         }
         .leaflet-control-attribution {
           background: ${colors.cardBg}cc !important;

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { HelpCard } from "../components/HelpCard";
 import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
@@ -129,7 +130,7 @@ export default function LeaderboardPage() {
 
   return (
     <main
-      className="min-h-screen relative overflow-hidden"
+      className="min-h-screen relative overflow-x-hidden"
       style={{ background: colors.bg, color: colors.text }}
     >
       {/* Animated background orbs */}
@@ -179,8 +180,13 @@ export default function LeaderboardPage() {
         </header>
 
         {/* Main Content */}
-        <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
-          <div className="max-w-4xl mx-auto space-y-8 md:space-y-10">
+        <div className="flex-1 px-3 sm:px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
+          <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 min-w-0">
+            <HelpCard
+              title={messages.help.howToUse}
+              body={messages.help.leaderboard}
+            />
+
             {/* Tabs */}
             <div
               className="relative rounded-2xl backdrop-blur-xl border shadow-xl p-2"

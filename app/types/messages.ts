@@ -122,6 +122,18 @@ export interface Messages {
     deleteAccountSuccess: string;
     theme: string;
     chooseTheme: string;
+    feedbackTitle: string;
+    feedbackPrompt: string;
+    feedbackEmail: string;
+    cityUpdated: string;
+  };
+  help: {
+    howToUse: string;
+    rewards: string;
+    tasks: string;
+    scanWaste: string;
+    leaderboard: string;
+    recyclingMap: string;
   };
   login: {
     title: string;

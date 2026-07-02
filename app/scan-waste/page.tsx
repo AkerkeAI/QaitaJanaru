@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { HelpCard } from "../components/HelpCard";
 import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
@@ -301,7 +302,7 @@ export default function ScanWastePage() {
 
   return (
     <main
-      className="min-h-screen text-white relative overflow-hidden"
+      className="min-h-screen text-white relative overflow-x-hidden"
       style={{ background: colors.bg }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -357,7 +358,14 @@ export default function ScanWastePage() {
           <QrHeaderAction />
         </header>
 
-        <div className="flex-1 px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8">
+        <div className="flex-1 px-3 sm:px-4 pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8 min-w-0">
+          <div className="max-w-4xl mx-auto mb-4 min-w-0">
+            <HelpCard
+              title={messages.help.howToUse}
+              body={messages.help.scanWaste}
+            />
+          </div>
+
           {!selectedImage && loadingState === "idle" && !scanResult && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
