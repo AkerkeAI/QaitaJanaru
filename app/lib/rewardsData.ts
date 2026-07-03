@@ -151,6 +151,11 @@ export const rewardPartners: Partner[] = [
         lng: 51.1805,
       },
     ],
+    stats: {
+      monthlyVisitors: 2100,
+      rewardsRedeemedThisMonth: 587,
+      profileViews: 1234,
+    },
   },
 ];
 

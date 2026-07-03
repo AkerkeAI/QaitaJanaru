@@ -14,7 +14,6 @@ import {
   rewards,
 } from "@/app/lib/rewardsData";
 import {
-  formatDistanceAway,
   formatEcoPointsPrice,
   getLocalizedAddress,
   getLocalizedCityName,
@@ -24,6 +23,8 @@ import {
   getLocalizedReward,
   getPartnerLevelBadge,
 } from "@/app/lib/rewardsLocalization";
+import { useUserLocation } from "@/app/hooks/useUserLocation";
+import { calculateDistanceKm, formatDistanceLabel } from "@/app/lib/geoUtils";
 
 export default function PartnerProfilePage() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function PartnerProfilePage() {
   const [loading, setLoading] = useState(true);
   const { messages } = useLanguage();
   const { colors } = useTheme();
+  const { location: userLocation, permissionGranted } = useUserLocation({ requestOnMount: true });
 
   const partnerId = params.partnerId as string;
   const partner = rewardPartners.find((item) => item.id === partnerId);
@@ -377,13 +379,23 @@ export default function PartnerProfilePage() {
                             {messages.rewards.workingHours}: {location.workingHours}
                           </p>
                         )}
-                        {location.distance && (
-                          <p
-                            className="text-sm mt-1 break-words"
-                            style={{ color: colors.primary }}
-                          >
-                            {formatDistanceAway(location.distance, messages)}
-                          </p>
+                        {permissionGranted && userLocation && location.lat && location.lng && (
+                          (() => {
+                            const distance = calculateDistanceKm(
+                              userLocation.lat,
+                              userLocation.lng,
+                              location.lat,
+                              location.lng
+                            );
+                            return (
+                              <p
+                                className="text-sm mt-1 break-words"
+                                style={{ color: colors.primary }}
+                              >
+                                {formatDistanceLabel(distance)}
+                              </p>
+                            );
+                          })()
                         )}
                       </div>
                       <button
