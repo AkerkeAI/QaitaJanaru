@@ -151,6 +151,7 @@ export const rewardPartners: Partner[] = [
         lng: 51.1805,
       },
     ],
+    phone: "+7 (707) 760-0429",
     stats: {
       monthlyVisitors: 2100,
       rewardsRedeemedThisMonth: 587,
