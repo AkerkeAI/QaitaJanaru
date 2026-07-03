@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class UpdateProfileRequest(BaseModel):
     city: str | None = None
+    full_name: str | None = None
 
 
 class RecyclingMaterialStatsResponse(BaseModel):
@@ -38,6 +39,7 @@ class ProfileResponse(BaseModel):
 
     eco_points: int
     level: int
+    level_progress_percent: int
     streak: int
     total_scans: int
     scans_used_today: int

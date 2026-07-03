@@ -380,7 +380,9 @@ def record_map_visit(user: User) -> None:
     recompute_all_task_progress(user)
 
 
-def claim_task_reward(user: User, task_id: str) -> Tuple[bool, int, str]:
+from app.services.level_service import add_experience_for_daily_task, add_experience_for_weekly_task
+
+def claim_task_reward(user: User, task_id: str, db: Session | None = None) -> Tuple[bool, int, str]:
     _ensure_meta(user)
     sync_task_state(user)
     recompute_all_task_progress(user)
@@ -398,14 +400,19 @@ def claim_task_reward(user: User, task_id: str) -> Tuple[bool, int, str]:
 
     reward = int(TASK_REWARDS.get(task_id, 0))
     user.eco_points = int(user.eco_points or 0) + reward
-    user.level = max(1, user.eco_points // 100 + 1)
     user.claimed_rewards.append(task_id)
+    
+    # Add experience based on task type
+    if task["type"] == "daily":
+        add_experience_for_daily_task(user, task_id, db)
+    elif task["type"] == "weekly":
+        add_experience_for_weekly_task(user, task_id, db)
 
     db_user = user
     return True, int(db_user.eco_points), f"Reward claimed: +{reward}"
 
 
-def auto_claim_completed_tasks(user: User) -> Dict[str, Any]:
+def auto_claim_completed_tasks(user: User, db: Session | None = None) -> Dict[str, Any]:
     _ensure_meta(user)
     sync_task_state(user)
     recompute_all_task_progress(user)
@@ -416,7 +423,7 @@ def auto_claim_completed_tasks(user: User) -> Dict[str, Any]:
 
     for task in DAILY_TASKS + WEEKLY_TASKS:
         task_id = task["id"]
-        if task_id in user.claimed_rewards:
+        if task_id in (user.claimed_rewards or []):
             continue
 
         current = _get_progress(user, task_id)
@@ -431,11 +438,10 @@ def auto_claim_completed_tasks(user: User) -> Dict[str, Any]:
 
         if task["type"] == "daily":
             daily_task_rewards += reward
+            add_experience_for_daily_task(user, task_id, db)
         else:
             weekly_task_rewards += reward
-
-    if claimed_task_ids:
-        user.level = max(1, user.eco_points // 100 + 1)
+            add_experience_for_weekly_task(user, task_id, db)
 
     return {
         "claimed_task_ids": claimed_task_ids,

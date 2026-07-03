@@ -88,6 +88,7 @@ def _serialize_profile(user: User, db: Session) -> ProfileResponse:
         institution=str(getattr(user, "institution", "") or ""),
         eco_points=int(user.eco_points or 0),
         level=int(user.level or 1),
+        level_progress_percent=int(user.level_progress_percent or 0),
         streak=int(user.streak or 0),
         total_scans=int(user.total_scans or 0),
         scans_used_today=int(user.scans_used_today or 0),
@@ -162,6 +163,13 @@ def update_profile(
 
     if payload.city is not None:
         user.city = _validate_city(payload.city)
+        updated = True
+
+    if payload.full_name is not None:
+        normalized_name = payload.full_name.strip()
+        if not normalized_name:
+            raise HTTPException(status_code=400, detail="FULL_NAME_REQUIRED")
+        user.full_name = normalized_name
         updated = True
 
     if not updated:

@@ -115,11 +115,7 @@ async def claim_reward(
     db: Session = Depends(get_db),
 ):
     user = get_user(db, user_id)
-    success, eco_points, message = claim_task_reward(user, request.task_id)
-    if success:
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    success, eco_points, message = claim_task_reward(user, request.task_id, db)
 
     return ClaimRewardResponse(
         success=success,

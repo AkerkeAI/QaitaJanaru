@@ -36,6 +36,9 @@ export default function SettingsPage() {
   const [savingCity, setSavingCity] = useState(false);
   const [citySaveMessage, setCitySaveMessage] = useState("");
   const [citySaveError, setCitySaveError] = useState("");
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState("");
+  const [savingName, setSavingName] = useState(false);
   const { language, messages, setLanguage } = useLanguage();
   const { theme, colors, setTheme } = useTheme();
   const touchStartX = useRef(0);
@@ -142,6 +145,25 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error("Failed to delete account:", error);
+    }
+  };
+
+  const handleSaveName = async () => {
+    const userId = localStorage.getItem("qaitaJanaru_user_id");
+    if (!userId || !tempName.trim()) {
+      return;
+    }
+
+    setSavingName(true);
+    try {
+      const updatedProfile = await updateProfile(userId, { full_name: tempName.trim() });
+      setProfile(updatedProfile);
+      localStorage.setItem("qaitaJanaru_name", updatedProfile.full_name);
+      setIsEditingName(false);
+    } catch (error) {
+      console.error("Failed to update name:", error);
+    } finally {
+      setSavingName(false);
     }
   };
 
@@ -650,9 +672,72 @@ export default function SettingsPage() {
                 >
                   {messages.register.fullName}
                 </p>
-                <p className="text-lg font-semibold break-words">
-                  {profile.full_name}
-                </p>
+                {isEditingName ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={tempName}
+                      onChange={(e) => setTempName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleSaveName();
+                        } else if (e.key === "Escape") {
+                          setIsEditingName(false);
+                          setTempName(profile.full_name);
+                        }
+                      }}
+                      className="w-full px-3 py-2 rounded-xl border bg-transparent outline-none"
+                      style={{
+                        borderColor: colors.border,
+                        color: colors.text,
+                      }}
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveName}
+                        disabled={!tempName.trim() || savingName}
+                        className="flex-1 py-2 rounded-xl font-semibold disabled:opacity-50"
+                        style={{
+                          background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
+                          color: colors.buttonText,
+                        }}
+                      >
+                        {savingName ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditingName(false);
+                          setTempName(profile.full_name);
+                        }}
+                        disabled={savingName}
+                        className="flex-1 py-2 rounded-xl font-semibold border"
+                        style={{
+                          borderColor: colors.border,
+                          color: colors.text,
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-lg font-semibold break-words flex-1">
+                      {profile.full_name}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setTempName(profile.full_name);
+                        setIsEditingName(true);
+                      }}
+                      className="p-2 rounded-xl hover:bg-white/10 transition"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      ✏️
+                    </button>
+                  </div>
+                )}
               </div>
               <div>
                 <p

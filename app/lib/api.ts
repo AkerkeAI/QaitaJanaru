@@ -67,6 +67,7 @@ export interface ProfileResponse {
   institution: string;
   eco_points: number;
   level: number;
+  level_progress_percent: number;
   streak: number;
   total_scans: number;
   scans_used_today: number;

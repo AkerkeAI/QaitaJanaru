@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getProfile, ProfileResponse } from "../lib/api";
+import { getProfile, ProfileResponse, updateProfile } from "../lib/api";
 import { Sidebar } from "../components/Sidebar";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { QrHeaderAction } from "../components/qr/QrHeaderAction";
 import { UserStatusHeader } from "../components/UserStatusHeader";
-import { deriveLevel, getStatusHeaderValues } from "../lib/profileHelpers";
+import { getStatusHeaderValues } from "../lib/profileHelpers";
 
 const MATERIAL_ORDER = [
   "plastic_bottles",
@@ -38,6 +38,11 @@ export default function ProfilePage() {
   const { colors } = useTheme();
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+  
+  // Name editing state
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState("");
+  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -63,6 +68,28 @@ export default function ProfilePage() {
       window.removeEventListener("touchend", handleTouchEnd);
     };
   }, [sidebarOpen]);
+
+  const handleSaveName = async () => {
+    if (!profile || !tempName.trim()) return;
+    
+    setSavingName(true);
+    try {
+      const userId = localStorage.getItem("qaitaJanaru_user_id");
+      if (!userId) {
+        router.push("/login");
+        return;
+      }
+      
+      const updatedProfile = await updateProfile(userId, { full_name: tempName.trim() });
+      setProfile(updatedProfile);
+      localStorage.setItem("qaitaJanaru_name", updatedProfile.full_name);
+      setIsEditingName(false);
+    } catch (err) {
+      console.error("Failed to update name:", err);
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -90,7 +117,7 @@ export default function ProfilePage() {
         localStorage.setItem("qaitaJanaru_streak", String(data.streak || 0));
         localStorage.setItem(
           "qaitaJanaru_level",
-          String(deriveLevel(data.eco_points, data.level)),
+          String(data.level),
         );
         localStorage.setItem(
           "qaitaJanaru_total_scans",
@@ -252,11 +279,6 @@ export default function ProfilePage() {
     );
   }
 
-  const currentLevel = deriveLevel(profile.eco_points, profile.level);
-  const currentXP = profile.eco_points % 100;
-  const levelProgress = currentXP / 100;
-  const pointsToNextLevel = 100 - currentXP;
-
   return (
     <main
       className="min-h-screen relative overflow-hidden"
@@ -348,14 +370,68 @@ export default function ProfilePage() {
                         borderColor: colors.primaryDark,
                       }}
                     >
-                      {currentLevel}
+                      {profile.level}
                     </div>
                   </div>
 
                   <div className="flex-1 text-center md:text-left">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-3 tracking-tight">
-                      {profile.full_name}
-                    </h2>
+                    <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
+                      {isEditingName ? (
+                        <>
+                          <input
+                            type="text"
+                            value={tempName}
+                            onChange={(e) => setTempName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleSaveName();
+                              } else if (e.key === "Escape") {
+                                setIsEditingName(false);
+                                setTempName(profile.full_name);
+                              }
+                            }}
+                            className="text-3xl md:text-4xl font-bold tracking-tight bg-transparent border-b-2 border-current outline-none"
+                            style={{ color: colors.text }}
+                            autoFocus
+                          />
+                          <button
+                            onClick={handleSaveName}
+                            disabled={savingName}
+                            className="p-1 rounded-full hover:bg-white/10 transition"
+                            style={{ color: colors.primary }}
+                          >
+                            ✔️
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsEditingName(false);
+                              setTempName(profile.full_name);
+                            }}
+                            disabled={savingName}
+                            className="p-1 rounded-full hover:bg-white/10 transition"
+                            style={{ color: colors.textSecondary }}
+                          >
+                            ✖️
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+                            {profile.full_name}
+                          </h2>
+                          <button
+                            onClick={() => {
+                              setTempName(profile.full_name);
+                              setIsEditingName(true);
+                            }}
+                            className="p-1 rounded-full hover:bg-white/10 transition"
+                            style={{ color: colors.textSecondary }}
+                          >
+                            ✏️
+                          </button>
+                        </>
+                      )}
+                    </div>
                     <div
                       className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4"
                       style={{ color: colors.textSecondary }}
@@ -438,7 +514,7 @@ export default function ProfilePage() {
                 },
                 {
                   label: messages.profile.level,
-                  value: currentLevel,
+                  value: profile.level,
                   icon: "⭐",
                 },
               ].map((item) => (
@@ -585,9 +661,23 @@ export default function ProfilePage() {
                   className="text-sm"
                   style={{ color: colors.textSecondary }}
                 >
-                  {messages.profile.levelProgress}:{" "}
-                  {Math.round(levelProgress * 100)}% · {pointsToNextLevel}{" "}
-                  {messages.profile.morePointsToReachLevel} {currentLevel + 1}
+                  {messages.profile.levelProgress}: {profile.level_progress_percent}%
+                </div>
+              </div>
+
+              {/* Level Progress Bar */}
+              <div className="mb-6">
+                <div
+                  className="h-3 rounded-full overflow-hidden"
+                  style={{ backgroundColor: `${colors.text}12` }}
+                >
+                  <div
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{
+                      width: `${profile.level_progress_percent}%`,
+                      background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
+                    }}
+                  />
                 </div>
               </div>
 

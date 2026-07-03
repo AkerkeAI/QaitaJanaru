@@ -21,6 +21,8 @@ class User(Base):
 
     eco_points = Column(Integer, default=50)
     level = Column(Integer, default=1)
+    level_progress_percent = Column(Integer, default=0)
+    total_experience = Column(Integer, default=0)
     streak = Column(Integer, default=0)
     total_scans = Column(Integer, default=0)
     last_login_date = Column(Date, nullable=True)
@@ -28,6 +30,9 @@ class User(Base):
     # Task progress fields
     task_progress = Column(JSON, nullable=True)
     claimed_rewards = Column(JSON, nullable=True, default=list)
+    completed_daily_tasks = Column(JSON, nullable=True, default=list)
+    completed_weekly_tasks = Column(JSON, nullable=True, default=list)
+    completed_achievement_chapters = Column(JSON, nullable=True, default=list)
     last_daily_reset = Column(DateTime, nullable=True)
     last_weekly_reset = Column(DateTime, nullable=True)
     current_week_set = Column(String, nullable=True, default="week-set-a")
