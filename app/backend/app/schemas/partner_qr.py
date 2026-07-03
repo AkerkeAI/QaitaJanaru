@@ -38,6 +38,7 @@ class PartnerQrBranchPageResponse(BaseModel):
     city: str
     address: str
     instagram: str
+    phone: str | None = None
     working_hours: str
     lat: float | None = None
     lng: float | None = None

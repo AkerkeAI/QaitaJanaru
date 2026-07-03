@@ -16,6 +16,7 @@ class PartnerQrBranch(Base):
     city = Column(String, nullable=False, index=True)
     address = Column(String, nullable=False)
     instagram = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
     working_hours = Column(String, nullable=True)
     lat = Column(Float, nullable=True)
     lng = Column(Float, nullable=True)

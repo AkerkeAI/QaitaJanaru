@@ -35,6 +35,7 @@ export interface PartnerQrBranchResponse {
   city: string;
   address: string;
   instagram: string;
+  phone: string | null;
   working_hours: string;
   lat: number | null;
   lng: number | null;

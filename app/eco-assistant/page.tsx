@@ -16,6 +16,7 @@ import {
   getRecyclingPoints,
   type RecyclingPoint,
 } from "../lib/recyclingPointsApi";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: number;
@@ -769,9 +770,23 @@ export default function EcoAssistantPage() {
                   color: message.isUser ? "#ffffff" : colors.text,
                 }}
               >
-                <p className="text-sm md:text-base whitespace-pre-wrap">
-                  {message.text}
-                </p>
+                <div className="text-sm md:text-base">
+                  <ReactMarkdown 
+                    components={{
+                      p: ({ ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                      h1: ({ ...props }) => <h1 className="text-2xl font-bold mb-2" {...props} />,
+                      h2: ({ ...props }) => <h2 className="text-xl font-bold mb-2" {...props} />,
+                      h3: ({ ...props }) => <h3 className="text-lg font-semibold mb-1" {...props} />,
+                      ul: ({ ...props }) => <ul className="list-disc pl-5 mb-2" {...props} />,
+                      ol: ({ ...props }) => <ol className="list-decimal pl-5 mb-2" {...props} />,
+                      li: ({ ...props }) => <li className="mb-1" {...props} />,
+                      strong: ({ ...props }) => <strong className="font-bold" {...props} />,
+                      em: ({ ...props }) => <em className="italic" {...props} />,
+                    }}
+                  >
+                    {message.text}
+                  </ReactMarkdown>
+                </div>
 
                 {/* Recycling Points */}
                 {!message.isUser &&

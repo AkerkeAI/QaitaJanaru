@@ -26,6 +26,8 @@ class User(Base):
     streak = Column(Integer, default=0)
     total_scans = Column(Integer, default=0)
     last_login_date = Column(Date, nullable=True)
+    last_seen_at = Column(Date, nullable=True)
+    last_penalty_applied_date = Column(Date, nullable=True)
 
     # Task progress fields
     task_progress = Column(JSON, nullable=True)

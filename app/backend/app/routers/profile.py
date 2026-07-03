@@ -8,7 +8,7 @@ from app.models.scan_history import ScanHistory
 from app.models.user import User
 from app.schemas.profile import ProfileResponse, UpdateProfileRequest
 from app.services.usage_limit_service import sync_usage_limits
-from app.services.user_service import sync_user_level
+from app.services.user_service import sync_user_level, apply_inactivity_penalty
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -139,6 +139,7 @@ def get_profile(
         raise HTTPException(status_code=404, detail="User not found")
 
     parsed_local_date = _parse_local_date(local_date)
+    apply_inactivity_penalty(db, user, parsed_local_date or date.today())
     if parsed_local_date is not None:
         sync_usage_limits(user, parsed_local_date)
         db.add(user)

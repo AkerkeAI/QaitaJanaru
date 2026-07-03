@@ -69,6 +69,7 @@ SEED_PARTNERS: list[dict[str, Any]] = [
             "city": "Aktau",
             "address": "33-181, Inside Dina Hypermarket, Aktau",
             "instagram": "@nagimoko_ice",
+            "phone": "+7 707 760 0429",
             "working_hours": "11:00 - 22:00",
             "lat": 43.6522,
             "lng": 51.1577,
@@ -85,6 +86,7 @@ SEED_PARTNERS: list[dict[str, Any]] = [
             "city": "Aktau",
             "address": "Shopping Center Astana, 15th Microdistrict, Kiosk, Aktau",
             "instagram": "@nagimoko_ice",
+            "phone": "+7 707 760 0429",
             "working_hours": "16:00 - 01:00",
             "lat": 43.6418,
             "lng": 51.1805,
@@ -139,6 +141,7 @@ def _get_or_create_branch(db, partner: PartnerQrPartner, branch_data: dict[str, 
     branch.city = str(branch_data["city"])
     branch.address = str(branch_data["address"])
     branch.instagram = branch_data.get("instagram")
+    branch.phone = branch_data.get("phone")
     branch.working_hours = branch_data.get("working_hours")
     branch.lat = branch_data.get("lat")
     branch.lng = branch_data.get("lng")

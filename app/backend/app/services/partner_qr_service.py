@@ -193,6 +193,7 @@ def get_partner_qr_branch_details(
         "city": str(branch.city),
         "address": str(branch.address),
         "instagram": str(branch.instagram or ""),
+        "phone": str(branch.phone) if branch.phone else None,
         "working_hours": str(branch.working_hours or ""),
         "lat": float(branch.lat) if branch.lat is not None else None,
         "lng": float(branch.lng) if branch.lng is not None else None,

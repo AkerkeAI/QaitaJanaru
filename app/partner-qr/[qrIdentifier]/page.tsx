@@ -282,13 +282,28 @@ export default function PartnerQrPage() {
                 <div className="mt-1 break-words">
                   {branch.working_hours || messages.common.unknown}
                 </div>
-                <div
-                  className="break-words"
-                  style={{ color: colors.textSecondary }}
-                >
-                  {messages.partnerQr.instagram}:{" "}
-                  {branch.instagram || messages.common.unknown}
-                </div>
+                {branch.instagram ? (
+                  <div className="break-words">
+                    <a 
+                      href={`https://instagram.com/${branch.instagram.replace('@', '')}`} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      style={{ color: colors.primary }}
+                    >
+                      @{branch.instagram.replace('@', '')}
+                    </a>
+                  </div>
+                ) : null}
+                {branch.phone ? (
+                  <div className="break-words">
+                    <a 
+                      href={`tel:${branch.phone}`} 
+                      style={{ color: colors.primary }}
+                    >
+                      {branch.phone}
+                    </a>
+                  </div>
+                ) : null}
               </div>
             </div>
 
