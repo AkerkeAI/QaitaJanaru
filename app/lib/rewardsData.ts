@@ -128,7 +128,6 @@ export const rewardPartners: Partner[] = [
     level: "Gold",
     description:
       "This partner supports environmental initiatives and rewards users for recycling through Qaita Janaru.",
-    instagram: "@nagimoko_ice",
     locations: [
       {
         id: "loc-nagi-1",
@@ -152,6 +151,7 @@ export const rewardPartners: Partner[] = [
       },
     ],
     phone: "+7 (707) 760-0429",
+    instagram: "@nagimoko_ice",
     stats: {
       monthlyVisitors: 2100,
       rewardsRedeemedThisMonth: 587,
