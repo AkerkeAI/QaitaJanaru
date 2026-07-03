@@ -20,6 +20,10 @@ interface LeaderboardEntry {
   city?: string;
   title?: string;
   user_id?: number;
+  level?: number;
+  streak?: number;
+  total_scans?: number;
+  user_count?: number;
 }
 
 type TabType = "global" | "cities";
