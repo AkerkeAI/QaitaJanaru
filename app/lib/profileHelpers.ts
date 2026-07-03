@@ -14,7 +14,7 @@ export function deriveLevel(ecoPoints: number | undefined, fallbackLevel?: numbe
 export function getStatusHeaderValues(profile: BasicProfileLike | null) {
   const ecoPoints = profile?.eco_points || 0;
   const streak = profile?.streak || 0;
-  const level = deriveLevel(profile?.eco_points, profile?.level);
+  const level = profile?.level || 1;
 
   return { ecoPoints, streak, level };
 }

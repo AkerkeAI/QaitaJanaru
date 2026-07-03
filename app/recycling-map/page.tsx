@@ -141,19 +141,13 @@ export default function RecyclingMapPage() {
     void loadRecyclingPoints();
   }, [router]);
 
-  // When selectedPointId changes, fly to it and open popup
+  // When selectedPointId changes, fly to it
   useEffect(() => {
     if (!selectedPointId || !mapRef.current) return;
     const point = recyclingPoints.find(p => p.id === selectedPointId);
     if (!point) return;
 
     mapRef.current.flyTo([point.latitude, point.longitude], 15, { duration: 1.5 });
-    
-    setTimeout(() => {
-      if (popupRefs.current[selectedPointId]) {
-        popupRefs.current[selectedPointId].openOn(mapRef.current);
-      }
-    }, 1600);
   }, [selectedPointId, recyclingPoints]);
 
   // Prepare filtered points by category for performance
@@ -466,144 +460,13 @@ export default function RecyclingMapPage() {
                         key={point.id}
                         position={[point.latitude, point.longitude]}
                         icon={createRecyclingMarkerIcon(point.facility_type)}
-                      >
-                        <Popup
-                          ref={(el) => {
-                            if (el) popupRefs.current[point.id] = el;
-                          }}
-                          className="custom-popup"
-                          position={[point.latitude, point.longitude]}
-                        >
-                          <div className="recycling-popup-card">
-                            <div
-                              className="text-lg font-bold mb-1"
-                              style={{ color: colors.text }}
-                            >
-                              {point.name}
-                            </div>
-                            <div
-                              className="text-xs mb-1"
-                              style={{ color: colors.textSecondary }}
-                            >
-                              {messages.recyclingMap.address}:
-                            </div>
-                            <div
-                              className="text-sm mb-1"
-                              style={{ color: colors.text }}
-                            >
-                              {point.address}
-                            </div>
-                            <div
-                              className="text-xs mb-1"
-                              style={{ color: colors.textSecondary }}
-                            >
-                              {messages.recyclingMap.city}:
-                            </div>
-                            <div
-                              className="text-sm mb-1"
-                              style={{ color: colors.text }}
-                            >
-                              {point.city}
-                            </div>
-                            <div
-                              className="text-xs mb-2"
-                              style={{ color: colors.textSecondary }}
-                            >
-                              <div className="font-semibold mb-1">
-                                {messages.recyclingMap.facilityType}:
-                              </div>
-                              <div
-                                className="px-2 py-1 rounded-full text-xs font-medium text-white inline-block"
-                                style={{
-                                  backgroundColor:
-                                    facilityTypeColors[
-                                      point.facility_type as keyof typeof facilityTypeColors
-                                    ] || colors.primary,
-                                }}
-                              >
-                                {translateFacilityType(
-                                  point.facility_type,
-                                  language,
-                                )}
-                              </div>
-                            </div>
-                            <div
-                              className="text-xs mb-2"
-                              style={{ color: colors.textSecondary }}
-                            >
-                              <div className="font-semibold mb-1">
-                                {messages.recyclingMap.wasteType}:
-                              </div>
-                              <div
-                                className="text-xs"
-                                style={{ color: colors.text }}
-                              >
-                                {point.waste_type_translated}
-                              </div>
-                            </div>
-                            <div
-                              className="text-xs mb-3"
-                              style={{ color: colors.textSecondary }}
-                            >
-                              <div className="font-semibold mb-1">
-                                {messages.recyclingMap.description}:
-                              </div>
-                              <div
-                                className="text-xs"
-                                style={{ color: colors.text }}
-                              >
-                                {point.description}
-                              </div>
-                            </div>
-                            {permissionGranted && userLocation ? (
-                              (() => {
-                                const distKm = calculateDistanceKm(
-                                  userLocation[0],
-                                  userLocation[1],
-                                  point.latitude,
-                                  point.longitude
-                                );
-                                const estMinutes = estimateTravelTimeMinutes(distKm);
-
-                                return (
-                                  <div
-                                    className="text-xs mb-3"
-                                    style={{ color: colors.textSecondary }}
-                                  >
-                                    <div className="font-semibold mb-1">
-                                      {messages.recyclingMap.estimatedDistance}:
-                                    </div>
-                                    <div
-                                      className="text-xs"
-                                      style={{ color: colors.text }}
-                                    >
-                                      {formatDistanceLabel(distKm)}
-                                    </div>
-                                    <div className="font-semibold mt-2 mb-1">
-                                      {messages.recyclingMap.estimatedTime}:
-                                    </div>
-                                    <div
-                                      className="text-xs"
-                                      style={{ color: colors.text }}
-                                    >
-                                      {estMinutes} min (approx)
-                                    </div>
-                                  </div>
-                                );
-                              })()
-                            ) : null}
-                            <button
-                              className="w-full px-3 py-2 rounded-lg text-white text-sm font-semibold transition-all duration-200"
-                              style={{
-                                background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
-                              }}
-                              onClick={() => handleBuildRoute(point)}
-                            >
-                              {messages.recyclingMap.buildRoute}
-                            </button>
-                          </div>
-                        </Popup>
-                      </Marker>
+                        eventHandlers={{
+                          click: () => {
+                            setSelectedPointId(point.id);
+                            mapRef.current?.flyTo([point.latitude, point.longitude], 15, { duration: 1.5 });
+                          }
+                        }}
+                      />
                     ))}
                   </MapContainer>
                 )}
@@ -666,6 +529,198 @@ export default function RecyclingMapPage() {
           </div>
         </div>
       </div>
+
+      {/* Bottom Sheet for Recycling Point Details */}
+      {selectedPointId && (() => {
+        const selectedPoint = translatedPoints.find(p => p.id === selectedPointId);
+        if (!selectedPoint) return null;
+
+        return (
+          <div className="fixed inset-x-0 bottom-0 z-[2000] pointer-events-none">
+            <div
+              className="pointer-events-auto"
+              style={{
+                animation: "slideUp 0.3s ease-out forwards"
+              }}
+            >
+              <div
+                className="rounded-t-3xl border-t border-l border-r backdrop-blur-2xl shadow-2xl overflow-hidden"
+                style={{
+                  backgroundColor: colors.cardBg,
+                  borderColor: colors.border
+                }}
+              >
+                {/* Drag indicator */}
+                <div className="flex justify-center pt-3 pb-2">
+                  <div
+                    className="w-12 h-1.5 rounded-full"
+                    style={{ backgroundColor: `${colors.text}30` }}
+                  ></div>
+                </div>
+
+                {/* Content */}
+                <div className="px-4 pb-4 pt-2 max-h-[60vh] overflow-y-auto">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3
+                        className="text-xl font-bold truncate mb-1"
+                        style={{ color: colors.text }}
+                      >
+                        {selectedPoint.name}
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setSelectedPointId(null)}
+                      className="p-2 rounded-full hover:bg-white/10 transition ml-3 flex-shrink-0"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {/* Address */}
+                    <div>
+                      <div
+                        className="text-xs font-semibold mb-1"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        {messages.recyclingMap.address}
+                      </div>
+                      <div className="text-sm" style={{ color: colors.text }}>
+                        {selectedPoint.address}
+                      </div>
+                    </div>
+
+                    {/* City */}
+                    <div>
+                      <div
+                        className="text-xs font-semibold mb-1"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        {messages.recyclingMap.city}
+                      </div>
+                      <div className="text-sm" style={{ color: colors.text }}>
+                        {selectedPoint.city}
+                      </div>
+                    </div>
+
+                    {/* Facility Type */}
+                    <div>
+                      <div
+                        className="text-xs font-semibold mb-1"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        {messages.recyclingMap.facilityType}
+                      </div>
+                      <div
+                        className="px-2 py-1 rounded-full text-xs font-medium text-white inline-block"
+                        style={{
+                          backgroundColor:
+                            facilityTypeColors[
+                              selectedPoint.facility_type as keyof typeof facilityTypeColors
+                            ] || colors.primary,
+                        }}
+                      >
+                        {translateFacilityType(
+                          selectedPoint.facility_type,
+                          language,
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Waste Type */}
+                    <div>
+                      <div
+                        className="text-xs font-semibold mb-1"
+                        style={{ color: colors.textSecondary }}
+                      >
+                        {messages.recyclingMap.wasteType}
+                      </div>
+                      <div className="text-xs" style={{ color: colors.text }}>
+                        {selectedPoint.waste_type_translated}
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    {selectedPoint.description && (
+                      <div>
+                        <div
+                          className="text-xs font-semibold mb-1"
+                          style={{ color: colors.textSecondary }}
+                        >
+                          {messages.recyclingMap.description}
+                        </div>
+                        <div className="text-xs" style={{ color: colors.text }}>
+                          {selectedPoint.description}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Distance and Time */}
+                    {permissionGranted && userLocation ? (
+                      (() => {
+                        const distKm = calculateDistanceKm(
+                          userLocation[0],
+                          userLocation[1],
+                          selectedPoint.latitude,
+                          selectedPoint.longitude
+                        );
+                        const estMinutes = estimateTravelTimeMinutes(distKm);
+
+                        return (
+                          <div>
+                            <div
+                              className="text-xs font-semibold mb-1"
+                              style={{ color: colors.textSecondary }}
+                            >
+                              {messages.recyclingMap.estimatedDistance}
+                            </div>
+                            <div className="text-xs" style={{ color: colors.text }}>
+                              {formatDistanceLabel(distKm)}
+                            </div>
+                            <div
+                              className="text-xs font-semibold mt-2 mb-1"
+                              style={{ color: colors.textSecondary }}
+                            >
+                              {messages.recyclingMap.estimatedTime}
+                            </div>
+                            <div className="text-xs" style={{ color: colors.text }}>
+                              {estMinutes} min (approx)
+                            </div>
+                          </div>
+                        );
+                      })()
+                    ) : null}
+
+                    {/* Build Route Button */}
+                    <button
+                      className="w-full px-4 py-3 rounded-xl text-white text-sm font-semibold transition-all duration-200 mt-2"
+                      style={{
+                        background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
+                      }}
+                      onClick={() => handleBuildRoute(selectedPoint)}
+                    >
+                      {messages.recyclingMap.buildRoute}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      <style jsx global>{`
+        @keyframes slideUp {
+          from {
+            transform: translateY(100%);
+          }
+          to {
+            transform: translateY(0);
+          }
+        }
+      `}</style>
 
       {/* Custom styles for Leaflet */}
       <style jsx global>{`
