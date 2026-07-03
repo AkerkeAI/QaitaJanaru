@@ -83,9 +83,9 @@ export default function RecyclingMapPage() {
   const [recyclingPoints, setRecyclingPoints] = useState<RecyclingPoint[]>([]);
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
+  const [selectedPointId, setSelectedPointId] = useState<number | null>(null);
   const mapRef = useRef<any>(null);
-  const popupRefs = useRef<Record<string, any>>({});
+  const popupRefs = useRef<Record<number, any>>({});
   const { messages, language } = useLanguage();
   const { theme, colors } = useTheme();
   const searchParams = useSearchParams();
