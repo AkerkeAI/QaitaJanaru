@@ -24,7 +24,7 @@ def global_leaderboard(db: Session = Depends(get_db)):
 
     users = (
         db.query(User)
-        .order_by(User.eco_points.desc())
+        .order_by(User.level.desc(), User.eco_points.desc())
         .all()
     )
 
@@ -36,10 +36,14 @@ def global_leaderboard(db: Session = Depends(get_db)):
             "user_id": user.id,
             "full_name": user.full_name,
             "city": user.city,
-            "eco_points": user.eco_points
+            "eco_points": user.eco_points,
+            "level": user.level,
+            "streak": user.streak,
+            "total_scans": user.total_scans
         })
 
     return result
+
 
 @router.get("/cities")
 def city_leaderboard(db: Session = Depends(get_db)):
@@ -47,10 +51,11 @@ def city_leaderboard(db: Session = Depends(get_db)):
     cities = (
         db.query(
             User.city,
-            func.sum(User.eco_points).label("points")
+            func.count(User.id).label("user_count")
         )
+        .filter(User.city.isnot(None))
         .group_by(User.city)
-        .order_by(func.sum(User.eco_points).desc())
+        .order_by(func.count(User.id).desc())
         .all()
     )
 
@@ -60,7 +65,7 @@ def city_leaderboard(db: Session = Depends(get_db)):
         result.append({
             "rank": rank,
             "city": city.city,
-            "eco_points": city.points
+            "user_count": city.user_count
         })
 
     return result
@@ -72,7 +77,7 @@ def city_users_leaderboard(city_name: str, db: Session = Depends(get_db)):
     users = (
         db.query(User)
         .filter(User.city.ilike(city_name))
-        .order_by(User.eco_points.desc())
+        .order_by(User.level.desc(), User.eco_points.desc())
         .all()
     )
 

@@ -282,7 +282,7 @@ export default function CityLeaderboardPage() {
                         {messages.leaderboard.name}
                       </div>
                       <div className="col-span-3 md:col-span-3 text-right">
-                        {messages.leaderboard.points}
+                        Level
                       </div>
                     </div>
 
@@ -326,7 +326,7 @@ export default function CityLeaderboardPage() {
                           </div>
                         </div>
 
-                        {/* Eco Points */}
+                        {/* Level */}
                         <div className="col-span-3 md:col-span-3 flex items-center justify-end">
                           <div
                             className="text-xl font-black"
@@ -336,7 +336,7 @@ export default function CityLeaderboardPage() {
                               WebkitTextFillColor: "transparent",
                             }}
                           >
-                            {entry.eco_points}
+                            {entry.level}
                           </div>
                         </div>
                       </button>

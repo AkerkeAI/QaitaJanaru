@@ -310,7 +310,7 @@ export default function LeaderboardPage() {
                         {messages.leaderboard.name}
                       </div>
                       <div className="col-span-3 md:col-span-3 text-right">
-                        {messages.leaderboard.points}
+                        {activeTab === "global" ? "Level" : "Users"}
                       </div>
                     </div>
 
@@ -364,7 +364,7 @@ export default function LeaderboardPage() {
                             </div>
                           </div>
 
-                          {/* Eco Points */}
+                          {/* Level or User Count */}
                           <div className="col-span-3 md:col-span-3 flex items-center justify-end">
                             <div
                               className="text-xl font-black"
@@ -374,7 +374,7 @@ export default function LeaderboardPage() {
                                 WebkitTextFillColor: "transparent",
                               }}
                             >
-                              {entry.eco_points}
+                              {isGlobal ? (entry.level ?? entry.eco_points) : entry.user_count}
                             </div>
                           </div>
                         </button>

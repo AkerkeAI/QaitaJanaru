@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import {
@@ -17,13 +17,17 @@ import {
   getLocalizedCityName,
   getLocalizedPartnerQrBranch,
   getLocalizedPartnerQrReward,
+  getLocalizedReward,
 } from "../../lib/rewardsLocalization";
+import { useUserLocation } from "../../hooks/useUserLocation";
+import { calculateDistanceKm, formatDistanceLabel } from "../../lib/geoUtils";
 
 export default function PartnerQrPage() {
   const params = useParams<{ qrIdentifier: string }>();
   const router = useRouter();
   const { colors } = useTheme();
   const { messages } = useLanguage();
+  const { location: userLocation, permissionGranted } = useUserLocation({ requestOnMount: true });
 
   const [branch, setBranch] = useState<PartnerQrBranchResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,6 +73,19 @@ export default function PartnerQrPage() {
     );
   }, [branch, messages]);
 
+  const distanceToBranch = useMemo(() => {
+    if (!branch?.lat || !branch?.lng || !permissionGranted || !userLocation) {
+      return null;
+    }
+    const dist = calculateDistanceKm(
+      userLocation.lat,
+      userLocation.lng,
+      branch.lat,
+      branch.lng
+    );
+    return formatDistanceLabel(dist);
+  }, [branch?.lat, branch?.lng, permissionGranted, userLocation]);
+
   const routeUrl = useMemo(() => {
     if (!branch?.lat || !branch?.lng) {
       return null;
@@ -90,6 +107,17 @@ export default function PartnerQrPage() {
       reward.image;
     const ecoPointsRequired =
       catalogReward?.ecoPointsRequired ?? reward.eco_points_required;
+
+    // If catalog reward exists, use its title/description instead of the API's
+    if (catalogReward) {
+      const catalogLocalized = getLocalizedReward(catalogReward, messages);
+      return {
+        title: catalogLocalized.title,
+        description: catalogLocalized.description,
+        image,
+        ecoPointsRequired,
+      };
+    }
 
     return {
       ...localized,
@@ -221,43 +249,48 @@ export default function PartnerQrPage() {
           </div>
 
           <div className="grid gap-3 grid-cols-1 md:grid-cols-2 min-w-0">
-            <div
-              className="rounded-2xl p-4 border min-w-0"
-              style={{ borderColor: colors.border }}
-            >
               <div
-                className="text-xs uppercase tracking-wide"
-                style={{ color: colors.textSecondary }}
+                className="rounded-2xl p-4 border min-w-0"
+                style={{ borderColor: colors.border }}
               >
-                {messages.adminQr.address}
+                <div
+                  className="text-xs uppercase tracking-wide"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {messages.adminQr.address}
+                </div>
+                <div className="mt-1 break-words">
+                  {getLocalizedCityName(branch.city, messages)}
+                </div>
+                <div className="break-words">{branchDisplay.address}</div>
+                {distanceToBranch && (
+                  <div className="mt-2 font-semibold" style={{ color: colors.primary }}>
+                    {distanceToBranch}
+                  </div>
+                )}
               </div>
-              <div className="mt-1 break-words">
-                {getLocalizedCityName(branch.city, messages)}
+              <div
+                className="rounded-2xl p-4 border min-w-0"
+                style={{ borderColor: colors.border }}
+              >
+                <div
+                  className="text-xs uppercase tracking-wide"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {messages.partnerQr.workingHours}
+                </div>
+                <div className="mt-1 break-words">
+                  {branch.working_hours || messages.common.unknown}
+                </div>
+                <div
+                  className="break-words"
+                  style={{ color: colors.textSecondary }}
+                >
+                  {messages.partnerQr.instagram}:{" "}
+                  {branch.instagram || messages.common.unknown}
+                </div>
               </div>
-              <div className="break-words">{branchDisplay.address}</div>
             </div>
-            <div
-              className="rounded-2xl p-4 border min-w-0"
-              style={{ borderColor: colors.border }}
-            >
-              <div
-                className="text-xs uppercase tracking-wide"
-                style={{ color: colors.textSecondary }}
-              >
-                {messages.partnerQr.workingHours}
-              </div>
-              <div className="mt-1 break-words">
-                {branch.working_hours || messages.common.unknown}
-              </div>
-              <div
-                className="break-words"
-                style={{ color: colors.textSecondary }}
-              >
-                {messages.partnerQr.instagram}:{" "}
-                {branch.instagram || messages.common.unknown}
-              </div>
-            </div>
-          </div>
 
           {routeUrl ? (
             <a

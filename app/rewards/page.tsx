@@ -21,6 +21,8 @@ import {
   getLocalizedReward,
   getPartnerLevelBadge,
 } from "@/app/lib/rewardsLocalization";
+import { useUserLocation } from "@/app/hooks/useUserLocation";
+import { calculateDistanceKm, formatDistanceLabel } from "@/app/lib/geoUtils";
 
 const getCategoryLabel = (categoryId: string, fallbackName: string, messages: ReturnType<typeof useLanguage>["messages"]) => {
   const labels: Record<string, string> = {
@@ -46,6 +48,7 @@ export default function RewardsPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const { messages } = useLanguage();
   const { colors } = useTheme();
+  const { location: userLocation, permissionGranted } = useUserLocation({ requestOnMount: true });
 
   const loadData = useCallback(async () => {
     const userId = localStorage.getItem("qaitaJanaru_user_id");
@@ -248,6 +251,25 @@ export default function RewardsPage() {
                       profile?.city,
                     );
                     const localizedReward = getLocalizedReward(reward, messages);
+                    
+                    // Find closest location
+                    let closestDistance: number | null = null;
+                    if (permissionGranted && userLocation) {
+                      for (const loc of providerLocations) {
+                        if (loc.location.lat && loc.location.lng) {
+                          const dist = calculateDistanceKm(
+                            userLocation.lat,
+                            userLocation.lng,
+                            loc.location.lat,
+                            loc.location.lng
+                          );
+                          if (closestDistance === null || dist < closestDistance) {
+                            closestDistance = dist;
+                          }
+                        }
+                      }
+                    }
+                    
                     return (
                       <div
                         key={reward.id}
@@ -284,6 +306,11 @@ export default function RewardsPage() {
                           <div className="text-sm" style={{ color: colors.textSecondary }}>
                             {messages.rewards.partnerLocationsAvailable} {providerLocations.length} {messages.rewards.branches}
                           </div>
+                          {closestDistance !== null && (
+                            <div className="text-sm" style={{ color: colors.textSecondary }}>
+                              ({formatDistanceLabel(closestDistance)})
+                            </div>
+                          )}
                         </div>
                         <button
                           onClick={() => router.push(`/rewards/${reward.id}`)}
