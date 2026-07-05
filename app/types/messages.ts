@@ -367,7 +367,6 @@ export interface Messages {
     processingError: string;
     route: string;
     instagram: string;
-    workingHours: string;
     ecoPointsBalance: string;
     openReceipt: string;
     loginRequired: string;
@@ -705,19 +704,15 @@ export interface Messages {
     address: string;
     cost: string;
     instagram: string;
-    buildRoute: string;
     redeemReward: string;
     noPartnersForReward: string;
-    loading: string;
     rewardNotFound: string;
     backToRewards: string;
-    partnerNotFound: string;
     byPartner: string;
     priceLabel: string;
     ecoPoints: string;
     distanceAway: string;
     defaultPartnerDescription: string;
-    workingHours: string;
     levelGold: string;
     levelSilver: string;
     levelEco: string;
