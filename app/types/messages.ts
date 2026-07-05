@@ -371,6 +371,7 @@ export interface Messages {
     openReceipt: string;
     loginRequired: string;
     backToProfile: string;
+    workingHours: string;
   };
   dailyLimits: {
     scanTitle: string;
