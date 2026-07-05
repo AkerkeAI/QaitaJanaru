@@ -1,5 +1,6 @@
 from app.db.session import Base, SessionLocal, engine
 from app.models.chat_message import ChatMessage  # noqa: F401
+from app.models.partner_qr_analytics import PartnerQrAnalytics  # noqa: F401
 from app.models.partner_qr_branch import PartnerQrBranch  # noqa: F401
 from app.models.partner_qr_branch_reward import PartnerQrBranchReward  # noqa: F401
 from app.models.partner_qr_code import PartnerQrCode  # noqa: F401
@@ -42,6 +43,7 @@ def ensure_database_tables() -> None:
         # Automatic migration for phone authentication fields
         migrate_phone_fields(db)
         migrate_usage_limit_fields(db)
+        migrate_partner_analytics(db)
         seed_recycling_points(db)
         seed_partner_qr_data(db)
     finally:
@@ -110,6 +112,43 @@ def migrate_usage_limit_fields(db) -> None:
 
     except Exception as e:
         print(f"Error during usage limit fields migration: {e}")
+        db.rollback()
+
+
+def migrate_partner_analytics(db) -> None:
+    """
+    Initialize analytics records for existing partners.
+    This is idempotent and safe for both PostgreSQL and SQLite.
+    """
+    try:
+        from app.models.partner_qr_analytics import PartnerQrAnalytics
+        from app.models.partner_qr_partner import PartnerQrPartner
+
+        # Get all existing partners
+        partners = db.query(PartnerQrPartner).all()
+
+        for partner in partners:
+            # Check if analytics record exists
+            analytics = db.query(PartnerQrAnalytics).filter(
+                PartnerQrAnalytics.partner_id == partner.id
+            ).first()
+
+            if not analytics:
+                # Create analytics record for this partner
+                new_analytics = PartnerQrAnalytics(
+                    partner_id=partner.id,
+                    qr_scans=0,
+                    page_visits=0,
+                    route_requests=0
+                )
+                db.add(new_analytics)
+                db.commit()
+                print(f"✓ Created analytics record for partner: {partner.name}")
+
+        print("✅ Partner analytics migration completed")
+
+    except Exception as e:
+        print(f"Error during partner analytics migration: {e}")
         db.rollback()
 
 

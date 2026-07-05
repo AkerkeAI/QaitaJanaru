@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.models.partner_qr_analytics import PartnerQrAnalytics
 from app.models.partner_qr_branch import PartnerQrBranch
 from app.models.partner_qr_branch_reward import PartnerQrBranchReward
 from app.models.partner_qr_code import PartnerQrCode
@@ -117,6 +118,17 @@ def _get_or_create_partner(db, partner_name: str) -> PartnerQrPartner:
     partner = PartnerQrPartner(name=partner_name)
     db.add(partner)
     db.flush()
+    
+    # Create analytics record for new partner
+    analytics = PartnerQrAnalytics(
+        partner_id=partner.id,
+        qr_scans=0,
+        page_visits=0,
+        route_requests=0
+    )
+    db.add(analytics)
+    db.flush()
+    
     return partner
 
 

@@ -669,12 +669,16 @@ export interface Messages {
     partnerProfile: string;
     phone: string;
     website: string;
-    monthlyVisitors: string;
-    rewardsRedeemedThisMonth: string;
-    profileViews: string;
+    qrScans: string;
+    pageVisits: string;
+    routeRequests: string;
     route: string;
     viewDetails: string;
     whereToRedeem: string;
+    workingHours: string;
+    buildRoute: string;
+    loading: string;
+    partnerNotFound: string;
     // Categories
     categoryDrinks: string;
     categoryDesserts: string;

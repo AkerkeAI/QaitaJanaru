@@ -11,6 +11,12 @@ export interface PartnerLocation {
   lng?: number;
 }
 
+export interface PartnerAnalytics {
+  qrScans: number;
+  pageVisits: number;
+  routeRequests: number;
+}
+
 export interface Partner {
   id: string;
   name: string;
@@ -21,11 +27,7 @@ export interface Partner {
   phone?: string;
   website?: string;
   instagram?: string;
-  stats?: {
-    monthlyVisitors: number;
-    rewardsRedeemedThisMonth: number;
-    profileViews: number;
-  };
+  stats?: PartnerAnalytics;
 }
 
 export interface RewardCategory {

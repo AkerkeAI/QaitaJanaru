@@ -26,12 +26,15 @@ import {
 import { useUserLocation } from "@/app/hooks/useUserLocation";
 import { calculateDistanceKm, formatDistanceLabel } from "@/app/lib/geoUtils";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
 export default function PartnerProfilePage() {
   const router = useRouter();
   const params = useParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<{ qrScans: number; pageVisits: number; routeRequests: number } | null>(null);
   const { messages } = useLanguage();
   const { colors } = useTheme();
   const { location: userLocation, permissionGranted } = useUserLocation({ requestOnMount: true });
@@ -58,12 +61,25 @@ export default function PartnerProfilePage() {
     try {
       const profileData = await getProfile(userId);
       setProfile(profileData);
+
+      // Track page visit and fetch analytics
+      if (partnerId) {
+        await fetch(`${API_URL}/api/partner-qr/track-page-visit/${partnerId}`, {
+          method: "POST",
+        });
+
+        const analyticsResponse = await fetch(`${API_URL}/api/partner-qr/analytics/${partnerId}`);
+        if (analyticsResponse.ok) {
+          const analyticsData = await analyticsResponse.json();
+          setAnalytics(analyticsData);
+        }
+      }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, partnerId]);
 
   useEffect(() => {
     loadData();
@@ -84,8 +100,14 @@ export default function PartnerProfilePage() {
     );
   }, [partner, profile?.city]);
 
-  const handleOpenRoute = (lat?: number, lng?: number) => {
+  const handleOpenRoute = async (lat?: number, lng?: number) => {
     if (typeof lat === "number" && typeof lng === "number") {
+      // Track route request
+      if (partner) {
+        await fetch(`${API_URL}/api/partner-qr/track-route-request/${partnerId}`, {
+          method: "POST",
+        });
+      }
       const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
       window.open(url, "_blank", "noopener,noreferrer");
       return;
@@ -232,39 +254,39 @@ export default function PartnerProfilePage() {
                     {partnerDescription}
                   </p>
 
-                  {partner.stats && (
+                  {analytics && (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
                       <div className="text-center rounded-2xl p-3 border min-w-0" style={{ borderColor: colors.border }}>
                         <div className="text-xl sm:text-2xl font-bold">
-                          {partner.stats.monthlyVisitors}
+                          {analytics.qrScans}
                         </div>
                         <div
                           className="text-xs sm:text-sm break-words"
                           style={{ color: colors.textSecondary }}
                         >
-                          {messages.rewards.monthlyVisitors}
+                          {messages.rewards.qrScans}
                         </div>
                       </div>
                       <div className="text-center rounded-2xl p-3 border min-w-0" style={{ borderColor: colors.border }}>
                         <div className="text-xl sm:text-2xl font-bold">
-                          {partner.stats.rewardsRedeemedThisMonth}
+                          {analytics.pageVisits}
                         </div>
                         <div
                           className="text-xs sm:text-sm break-words"
                           style={{ color: colors.textSecondary }}
                         >
-                          {messages.rewards.rewardsRedeemedThisMonth}
+                          {messages.rewards.pageVisits}
                         </div>
                       </div>
                       <div className="text-center rounded-2xl p-3 border min-w-0" style={{ borderColor: colors.border }}>
                         <div className="text-xl sm:text-2xl font-bold">
-                          {partner.stats.profileViews}
+                          {analytics.routeRequests}
                         </div>
                         <div
                           className="text-xs sm:text-sm break-words"
                           style={{ color: colors.textSecondary }}
                         >
-                          {messages.rewards.profileViews}
+                          {messages.rewards.routeRequests}
                         </div>
                       </div>
                     </div>

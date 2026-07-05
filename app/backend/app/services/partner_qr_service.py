@@ -8,6 +8,7 @@ from typing import Any
 
 import segno
 from PIL import Image
+from app.models.partner_qr_analytics import PartnerQrAnalytics
 from app.models.partner_qr_branch import PartnerQrBranch
 from app.models.partner_qr_branch_reward import PartnerQrBranchReward
 from app.models.partner_qr_code import PartnerQrCode
@@ -330,3 +331,82 @@ def build_all_partner_qr_zip(db: Session) -> bytes:
             zip_file.writestr(f"{base_name}.png", qr_png)
     buffer.seek(0)
     return buffer.read()
+
+
+def increment_partner_qr_scans(db: Session, partner_id: int) -> None:
+    """Increment QR scans count for a partner."""
+    analytics = db.query(PartnerQrAnalytics).filter(
+        PartnerQrAnalytics.partner_id == partner_id
+    ).first()
+    
+    if analytics:
+        analytics.qr_scans += 1
+        db.commit()
+    else:
+        # Create analytics record if it doesn't exist
+        new_analytics = PartnerQrAnalytics(
+            partner_id=partner_id,
+            qr_scans=1,
+            page_visits=0,
+            route_requests=0
+        )
+        db.add(new_analytics)
+        db.commit()
+
+
+def increment_partner_page_visits(db: Session, partner_id: int) -> None:
+    """Increment page visits count for a partner."""
+    analytics = db.query(PartnerQrAnalytics).filter(
+        PartnerQrAnalytics.partner_id == partner_id
+    ).first()
+    
+    if analytics:
+        analytics.page_visits += 1
+        db.commit()
+    else:
+        # Create analytics record if it doesn't exist
+        new_analytics = PartnerQrAnalytics(
+            partner_id=partner_id,
+            qr_scans=0,
+            page_visits=1,
+            route_requests=0
+        )
+        db.add(new_analytics)
+        db.commit()
+
+
+def increment_partner_route_requests(db: Session, partner_id: int) -> None:
+    """Increment route requests count for a partner."""
+    analytics = db.query(PartnerQrAnalytics).filter(
+        PartnerQrAnalytics.partner_id == partner_id
+    ).first()
+    
+    if analytics:
+        analytics.route_requests += 1
+        db.commit()
+    else:
+        # Create analytics record if it doesn't exist
+        new_analytics = PartnerQrAnalytics(
+            partner_id=partner_id,
+            qr_scans=0,
+            page_visits=0,
+            route_requests=1
+        )
+        db.add(new_analytics)
+        db.commit()
+
+
+def get_partner_analytics(db: Session, partner_id: int) -> dict[str, int] | None:
+    """Get analytics data for a partner."""
+    analytics = db.query(PartnerQrAnalytics).filter(
+        PartnerQrAnalytics.partner_id == partner_id
+    ).first()
+    
+    if not analytics:
+        return None
+    
+    return {
+        "qr_scans": analytics.qr_scans,
+        "page_visits": analytics.page_visits,
+        "route_requests": analytics.route_requests,
+    }

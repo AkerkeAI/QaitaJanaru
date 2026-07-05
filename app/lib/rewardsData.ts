@@ -63,11 +63,6 @@ export const rewardPartners: Partner[] = [
     phone: "+7 (701) 123-4567",
     website: "https://greencafe.kz",
     instagram: "@greencafe.kz",
-    stats: {
-      monthlyVisitors: 1240,
-      rewardsRedeemedThisMonth: 342,
-      profileViews: 892,
-    },
   },
   {
     id: "partner-2",
@@ -89,11 +84,6 @@ export const rewardPartners: Partner[] = [
     phone: "+7 (725) 987-6543",
     website: "https://ecoshop.kz",
     instagram: "@ecoshop.kz",
-    stats: {
-      monthlyVisitors: 856,
-      rewardsRedeemedThisMonth: 210,
-      profileViews: 543,
-    },
   },
   {
     id: "partner-3",
@@ -115,11 +105,6 @@ export const rewardPartners: Partner[] = [
     phone: "+7 (701) 555-1234",
     website: "https://naturegym.kz",
     instagram: "@naturegym.kz",
-    stats: {
-      monthlyVisitors: 678,
-      rewardsRedeemedThisMonth: 156,
-      profileViews: 432,
-    },
   },
   {
     id: "partner-nagi",
@@ -152,11 +137,6 @@ export const rewardPartners: Partner[] = [
     ],
     phone: "+7 (707) 760-0429",
     instagram: "@nagimoko_ice",
-    stats: {
-      monthlyVisitors: 2100,
-      rewardsRedeemedThisMonth: 587,
-      profileViews: 1234,
-    },
   },
 ];
 
