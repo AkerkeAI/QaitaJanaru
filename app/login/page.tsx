@@ -85,7 +85,7 @@ export default function LoginPage() {
       );
 
       // Store additional profile data for Eco Assistant
-      localStorage.setItem("qaitaJanaru_name", profile.full_name || "Unknown");
+      localStorage.setItem("qaitaJanaru_name", response.full_name || "Unknown");
       localStorage.setItem("qaitaJanaru_city", profile.city || "Unknown");
       localStorage.setItem(
         "qaitaJanaru_achievements_count",
@@ -105,29 +105,10 @@ export default function LoginPage() {
         "qaitaJanaru_total_scans",
         profile.total_scans.toString(),
       );
-      localStorage.setItem("qaitaJanaru_name", profile.full_name || "Unknown");
-      localStorage.setItem("qaitaJanaru_city", profile.city || "Unknown");
-      localStorage.setItem(
-        "qaitaJanaru_achievements_count",
-        (profile.achievements?.length || 0).toString(),
-      );
-      try {
-        const computedLevel = Math.max(
-          1,
-          Math.floor((profile.eco_points || 0) / 100) + 1,
-        );
-        localStorage.setItem("qaitaJanaru_level", computedLevel.toString());
-      } catch (e) {
-        localStorage.setItem("qaitaJanaru_level", profile.level.toString());
-      }
-      localStorage.setItem(
-        "qaitaJanaru_total_scans",
-        profile.total_scans.toString(),
-      );
 
       console.log("=== LOGIN PAGE LOCALSTORAGE DEBUG ===");
       console.log("Stored profile data in localStorage after login:");
-      console.log("qaitaJanaru_name:", profile.full_name);
+      console.log("qaitaJanaru_name:", response.full_name);
       console.log("qaitaJanaru_city:", profile.city);
       console.log("qaitaJanaru_level:", profile.level);
       console.log("=====================================");
@@ -184,7 +165,7 @@ export default function LoginPage() {
       );
 
       // Store additional profile data for Eco Assistant
-      localStorage.setItem("qaitaJanaru_name", profile.full_name || "Unknown");
+      localStorage.setItem("qaitaJanaru_name", response.full_name || "Unknown");
       localStorage.setItem("qaitaJanaru_city", profile.city || "Unknown");
       localStorage.setItem(
         "qaitaJanaru_achievements_count",
@@ -199,6 +180,13 @@ export default function LoginPage() {
         "qaitaJanaru_total_scans",
         profile.total_scans.toString(),
       );
+
+      console.log("=== GOOGLE AUTH LOCALSTORAGE DEBUG ===");
+      console.log("Stored profile data in localStorage after Google login:");
+      console.log("qaitaJanaru_name:", response.full_name);
+      console.log("qaitaJanaru_city:", profile.city);
+      console.log("qaitaJanaru_level:", profile.level);
+      console.log("=====================================");
 
       if (isCityMissing(profile.city)) {
         router.push(`/select-city?next=${encodeURIComponent(nextPath || "/profile")}`);

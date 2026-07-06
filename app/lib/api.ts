@@ -22,6 +22,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   message: string;
   user_id: number;
+  full_name: string;
   eco_points: number;
   streak: number;
 }
@@ -33,6 +34,7 @@ export interface GoogleAuthRequest {
 export interface GoogleAuthResponse {
   message: string;
   user_id: number;
+  full_name: string;
   eco_points: number;
   streak: number;
 }

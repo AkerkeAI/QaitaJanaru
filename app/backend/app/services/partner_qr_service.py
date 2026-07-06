@@ -4,6 +4,7 @@ import io
 import uuid
 import zipfile
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 import segno
@@ -17,15 +18,14 @@ from app.models.partner_qr_partner import PartnerQrPartner
 from app.models.partner_qr_receipt import PartnerQrReceipt
 from app.models.partner_qr_reward import PartnerQrReward
 from app.models.user import User
-from app.services.qr_service import (
-    POSTER_IMAGE_PATH,
-    POSTER_QR_POSITION,
-    POSTER_QR_SIZE,
-)
 from sqlalchemy.orm import Session
 
 PARTNER_QR_BASE_URL = "https://qaita-janaru.vercel.app/partner-qr"
 PARTNER_QR_RECEIPT_TTL_MINUTES = 10
+
+PARTNER_POSTER_IMAGE_PATH = Path(__file__).resolve().parents[4] / "public" / "posters" / "partner-poster.png"
+PARTNER_POSTER_QR_POSITION = (293, 780)
+PARTNER_POSTER_QR_SIZE = 320
 
 
 def build_partner_qr_value(code: PartnerQrCode) -> str:
@@ -51,19 +51,19 @@ def build_partner_qr_png_bytes(code: PartnerQrCode) -> bytes:
 
 
 def build_partner_qr_poster_png_bytes(code: PartnerQrCode) -> bytes:
-    if not POSTER_IMAGE_PATH.exists():
-        raise FileNotFoundError(f"Poster image not found at {POSTER_IMAGE_PATH}")
+    if not PARTNER_POSTER_IMAGE_PATH.exists():
+        raise FileNotFoundError(f"Partner poster image not found at {PARTNER_POSTER_IMAGE_PATH}")
 
     qr_buffer = io.BytesIO(build_partner_qr_png_bytes(code))
     qr_buffer.seek(0)
 
     with Image.open(qr_buffer) as qr_image:
         qr_image = qr_image.convert("RGBA")
-        qr_image = qr_image.resize((POSTER_QR_SIZE, POSTER_QR_SIZE), Image.Resampling.LANCZOS)
+        qr_image = qr_image.resize((PARTNER_POSTER_QR_SIZE, PARTNER_POSTER_QR_SIZE), Image.Resampling.LANCZOS)
 
-        with Image.open(POSTER_IMAGE_PATH) as poster_image:
+        with Image.open(PARTNER_POSTER_IMAGE_PATH) as poster_image:
             poster_image = poster_image.convert("RGBA")
-            poster_image.paste(qr_image, POSTER_QR_POSITION, qr_image)
+            poster_image.paste(qr_image, PARTNER_POSTER_QR_POSITION, qr_image)
             output_buffer = io.BytesIO()
             poster_image.save(output_buffer, format="PNG")
             return output_buffer.getvalue()

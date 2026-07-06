@@ -675,7 +675,6 @@ export interface Messages {
     route: string;
     viewDetails: string;
     whereToRedeem: string;
-    workingHours: string;
     buildRoute: string;
     loading: string;
     partnerNotFound: string;
@@ -714,6 +713,7 @@ export interface Messages {
     ecoPoints: string;
     distanceAway: string;
     defaultPartnerDescription: string;
+    workingHours: string;
     levelGold: string;
     levelSilver: string;
     levelEco: string;

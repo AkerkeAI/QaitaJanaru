@@ -78,6 +78,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     return {
         "message": "Login successful",
         "user_id": db_user.id,
+        "full_name": db_user.full_name,
         "eco_points": db_user.eco_points,
         "streak": db_user.streak,
     }
@@ -194,6 +195,7 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
             return {
                 "message": "Login successful",
                 "user_id": db_user.id,
+                "full_name": db_user.full_name,
                 "eco_points": db_user.eco_points,
                 "streak": db_user.streak,
             }
