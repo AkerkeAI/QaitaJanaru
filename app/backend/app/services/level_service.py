@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from app.models.user import User
 from app.services.task_service import DAILY_TASKS, WEEKLY_TASKS, _get_progress
-from app.db.session import Session
+from sqlalchemy.orm import Session
 
 def _ensure_experience_fields(user: User) -> None:
     if user.completed_daily_tasks is None:
