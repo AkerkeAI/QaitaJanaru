@@ -136,7 +136,7 @@ export function getPartnerQrSvgDownloadUrl(codeId: number): string {
 }
 
 export function getPartnerQrPosterDownloadUrl(codeId: number): string {
-  return `${API_BASE_URL}/api/partner-qr/download/${codeId}/poster.png`;
+  return `${API_BASE_URL}/api/partner-qr/download/${codeId}/partner-poster.png`;
 }
 
 export function getPartnerQrPngDownloadUrl(codeId: number): string {

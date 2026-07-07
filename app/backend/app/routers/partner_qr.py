@@ -75,7 +75,7 @@ async def download_partner_qr_png(code_id: int, db: Session = Depends(get_db)):
     )
 
 
-@router.get("/download/{code_id}/poster.png")
+@router.get("/download/{code_id}/partner-poster.png")
 async def download_partner_qr_poster_png(code_id: int, db: Session = Depends(get_db)):
     code = get_partner_qr_code_by_id(db, code_id)
     if not code:
@@ -93,7 +93,7 @@ async def download_partner_qr_poster_png(code_id: int, db: Session = Depends(get
 
 @router.get("/download/{code_id}/poster.svg")
 async def redirect_partner_qr_poster_svg(code_id: int):
-    return RedirectResponse(url=f"/api/partner-qr/download/{code_id}/poster.png")
+    return RedirectResponse(url=f"/api/partner-qr/download/{code_id}/partner-poster.png")
 
 
 @router.get("/download/all.zip")
