@@ -155,8 +155,9 @@ def migrate_partner_analytics(db) -> None:
 
 def migrate_partner_branch_fields(db) -> None:
     """
-    Add missing columns (phone, working_hours) to partner_qr_branches table.
+    Add missing columns (phone, working_hours) to partner_qr_branches table.   
     This is idempotent and safe for both PostgreSQL and SQLite.
+    Uses engine directly to avoid messing with the ORM session's transaction.
     """
     try:
         inspector = inspect(engine)
@@ -164,8 +165,9 @@ def migrate_partner_branch_fields(db) -> None:
 
         # Add phone column if it doesn't exist
         if 'phone' not in columns:
-            db.execute(text("ALTER TABLE partner_qr_branches ADD COLUMN phone VARCHAR"))
-            db.commit()
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE partner_qr_branches ADD COLUMN phone VARCHAR"))
+                conn.commit()
             print("✓ Added phone column to partner_qr_branches table")
 
         # Refresh inspector after first change
@@ -174,15 +176,15 @@ def migrate_partner_branch_fields(db) -> None:
 
         # Add working_hours column if it doesn't exist
         if 'working_hours' not in columns:
-            db.execute(text("ALTER TABLE partner_qr_branches ADD COLUMN working_hours VARCHAR"))
-            db.commit()
-            print("✓ Added working_hours column to partner_qr_branches table")
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE partner_qr_branches ADD COLUMN working_hours VARCHAR"))
+                conn.commit()
+            print("✓ Added working_hours column to partner_qr_branches table") 
 
         print("✅ Partner branch fields migration completed")
 
     except Exception as e:
         print(f"Error during partner branch fields migration: {e}")
-        db.rollback()
 
 
 app.add_middleware(
