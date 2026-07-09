@@ -44,7 +44,6 @@ def ensure_database_tables() -> None:
         migrate_phone_fields(db)
         migrate_usage_limit_fields(db)
         migrate_partner_analytics(db)
-        migrate_partner_branch_fields(db)
         seed_recycling_points(db)
         seed_partner_qr_data(db)
     finally:
@@ -151,48 +150,6 @@ def migrate_partner_analytics(db) -> None:
     except Exception as e:
         print(f"Error during partner analytics migration: {e}")
         db.rollback()
-
-
-def migrate_partner_branch_fields(db) -> None:
-    """
-    Add missing columns (phone, working_hours) to partner_qr_branches table.   
-    This is idempotent and safe for both PostgreSQL and SQLite.
-    Uses engine directly to avoid messing with the ORM session's transaction.
-    """
-    try:
-        inspector = inspect(engine)
-        table_names = inspector.get_table_names()
-        
-        if 'partner_qr_branches' not in table_names:
-            print("partner_qr_branches table doesn't exist yet, skipping migration (it will be created with all fields by Base.metadata.create_all)")
-            return
-            
-        columns = [col['name'] for col in inspector.get_columns('partner_qr_branches')]
-
-        # Add phone column if it doesn't exist
-        if 'phone' not in columns:
-            with engine.connect() as conn:
-                conn.execute(text("ALTER TABLE partner_qr_branches ADD COLUMN phone VARCHAR"))
-                conn.commit()
-            print("✓ Added phone column to partner_qr_branches table")
-
-        # Refresh inspector after first change
-        inspector = inspect(engine)
-        columns = [col['name'] for col in inspector.get_columns('partner_qr_branches')]
-
-        # Add working_hours column if it doesn't exist
-        if 'working_hours' not in columns:
-            with engine.connect() as conn:
-                conn.execute(text("ALTER TABLE partner_qr_branches ADD COLUMN working_hours VARCHAR"))
-                conn.commit()
-            print("✓ Added working_hours column to partner_qr_branches table") 
-
-        print("✅ Partner branch fields migration completed")
-
-    except Exception as e:
-        print(f"Error during partner branch fields migration: {e}")
-        import traceback
-        print(traceback.format_exc())
 
 
 app.add_middleware(
