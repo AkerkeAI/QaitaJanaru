@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 PARTNER_QR_BASE_URL = "https://qaita-janaru.vercel.app/partner-qr"
 PARTNER_QR_RECEIPT_TTL_MINUTES = 10
 
-PARTNER_POSTER_IMAGE_PATH = Path(__file__).resolve().parents[4] / "public" / "posters" / "partner-poster.png"
+PARTNER_POSTER_IMAGE_PATH = Path(__file__).resolve().parents[4] / "public" / "posters" / "partner-qr-poster.png"
 PARTNER_POSTER_QR_POSITION = (293, 780)
 PARTNER_POSTER_QR_SIZE = 320
 
