@@ -44,6 +44,7 @@ def ensure_database_tables() -> None:
         migrate_phone_fields(db)
         migrate_usage_limit_fields(db)
         migrate_partner_analytics(db)
+        migrate_user_level_fields(db)
         seed_recycling_points(db)
         seed_partner_qr_data(db)
     finally:
@@ -149,6 +150,41 @@ def migrate_partner_analytics(db) -> None:
 
     except Exception as e:
         print(f"Error during partner analytics migration: {e}")
+        db.rollback()
+
+
+def migrate_user_level_fields(db) -> None:
+    """
+    Automatically add level_progress_percent, total_experience, last_penalty_applied_date columns if they don't exist.
+    This is idempotent and safe for both PostgreSQL and SQLite.
+    """
+    try:
+        inspector = inspect(engine)
+        columns = [col["name"] for col in inspector.get_columns("users")]
+
+        if "level_progress_percent" not in columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN level_progress_percent INTEGER DEFAULT 0"))
+            db.commit()
+            print("✓ Added level_progress_percent column to users table")
+
+        inspector = inspect(engine)
+        columns = [col["name"] for col in inspector.get_columns("users")]
+
+        if "total_experience" not in columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN total_experience INTEGER DEFAULT 0"))
+            db.commit()
+            print("✓ Added total_experience column to users table")
+
+        inspector = inspect(engine)
+        columns = [col["name"] for col in inspector.get_columns("users")]
+
+        if "last_penalty_applied_date" not in columns:
+            db.execute(text("ALTER TABLE users ADD COLUMN last_penalty_applied_date DATE"))
+            db.commit()
+            print("✓ Added last_penalty_applied_date column to users table")
+
+    except Exception as e:
+        print(f"Error during user level fields migration: {e}")
         db.rollback()
 
 
