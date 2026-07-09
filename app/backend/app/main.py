@@ -161,6 +161,12 @@ def migrate_partner_branch_fields(db) -> None:
     """
     try:
         inspector = inspect(engine)
+        table_names = inspector.get_table_names()
+        
+        if 'partner_qr_branches' not in table_names:
+            print("partner_qr_branches table doesn't exist yet, skipping migration (it will be created with all fields by Base.metadata.create_all)")
+            return
+            
         columns = [col['name'] for col in inspector.get_columns('partner_qr_branches')]
 
         # Add phone column if it doesn't exist
@@ -185,6 +191,8 @@ def migrate_partner_branch_fields(db) -> None:
 
     except Exception as e:
         print(f"Error during partner branch fields migration: {e}")
+        import traceback
+        print(traceback.format_exc())
 
 
 app.add_middleware(
