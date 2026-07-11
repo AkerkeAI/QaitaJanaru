@@ -44,6 +44,7 @@ def ensure_database_tables() -> None:
         migrate_phone_fields(db)
         migrate_usage_limit_fields(db)
         migrate_partner_analytics(db)
+        migrate_user_level_fields(db)   # ← отсутствует
         seed_recycling_points(db)
         seed_partner_qr_data(db)
     finally:
@@ -151,6 +152,48 @@ def migrate_partner_analytics(db) -> None:
         print(f"Error during partner analytics migration: {e}")
         db.rollback()
 
+def migrate_user_level_fields(db) -> None:
+    """
+    Adds all missing User columns.
+    Safe to run every startup.
+    """
+    try:
+        inspector = inspect(engine)
+        columns = [c["name"] for c in inspector.get_columns("users")]
+
+        fields = [
+            ("last_seen_at", "DATE"),
+            ("last_penalty_applied_date", "DATE"),
+            ("task_progress", "JSON"),
+            ("claimed_rewards", "JSON"),
+            ("completed_daily_tasks", "JSON"),
+            ("completed_weekly_tasks", "JSON"),
+            ("completed_achievement_chapters", "JSON"),
+            ("last_daily_reset", "TIMESTAMP"),
+            ("last_weekly_reset", "TIMESTAMP"),
+            ("current_week_set", "VARCHAR DEFAULT 'week-set-a'"),
+            ("level", "INTEGER DEFAULT 1"),
+            ("level_progress_percent", "INTEGER DEFAULT 0"),
+            ("total_experience", "INTEGER DEFAULT 0"),
+            ("streak", "INTEGER DEFAULT 0"),
+            ("total_scans", "INTEGER DEFAULT 0"),
+            ("eco_points", "INTEGER DEFAULT 50"),
+        ]
+
+        for name, sql_type in fields:
+            if name not in columns:
+                db.execute(
+                    text(f"ALTER TABLE users ADD COLUMN {name} {sql_type}")
+                )
+                db.commit()
+                print(f"✓ Added {name}")
+
+                inspector = inspect(engine)
+                columns = [c["name"] for c in inspector.get_columns("users")]
+
+    except Exception as e:
+        print("Error during user fields migration:", e)
+        db.rollback()
 
 app.add_middleware(
     CORSMiddleware,
