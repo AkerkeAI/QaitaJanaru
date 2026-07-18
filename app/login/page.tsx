@@ -554,20 +554,6 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                {/* Phone Sign-In Button (Coming Soon) */}
-                <button
-                  type="button"
-                  disabled
-                  className="w-full py-3 rounded-xl font-semibold text-sm transition-all opacity-50 cursor-not-allowed"
-                  style={{
-                    background: "rgba(52,211,153,0.1)",
-                    border: "1px solid rgba(52,211,153,0.3)",
-                    color: "#6ee7b7",
-                  }}
-                >
-                  📱 {messages.login.phoneSignIn} (Coming Soon)
-                </button>
-
                 {/* Register link */}
                 <p
                   className="text-center text-xs pt-1"
