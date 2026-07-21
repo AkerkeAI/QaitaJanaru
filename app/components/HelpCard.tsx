@@ -26,7 +26,7 @@ export function HelpCard({ title, body }: HelpCardProps) {
         className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left min-w-0"
         aria-expanded={open}
       >
-        <span className="font-semibold text-sm break-words">{title}</span>
+        <span className="font-semibold text-sm break-words" style={{ color: colors.text }}>{title}</span>
         <span
           className="flex-shrink-0 text-sm"
           style={{ color: colors.textSecondary }}

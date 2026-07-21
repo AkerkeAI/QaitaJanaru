@@ -117,6 +117,11 @@ async def claim_reward(
     user = get_user(db, user_id)
     success, eco_points, message = claim_task_reward(user, request.task_id, db)
 
+    if success:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
     return ClaimRewardResponse(
         success=success,
         eco_points=eco_points,

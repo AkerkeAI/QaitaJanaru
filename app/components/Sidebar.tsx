@@ -109,7 +109,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           style={{ borderColor: colors.border }}
         >
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight">
+            <h2 className="text-2xl font-bold tracking-tight" style={{ color: colors.text }}>
               ♻️ {messages.common.appName}
             </h2>
             <button
