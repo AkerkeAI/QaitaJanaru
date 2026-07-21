@@ -16,7 +16,7 @@ from app.services.password_reset_service import (
     verify_and_upgrade_user_password,
     verify_password_reset_code,
 )
-from app.services.task_service import record_login
+from app.services.task_service import auto_claim_completed_tasks, record_login
 from app.services.user_service import update_streak
 from fastapi import APIRouter, Depends, HTTPException, Request
 from google.oauth2 import id_token
@@ -71,6 +71,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     # Update streak logic
     db_user = update_streak(db, db_user)
     record_login(db_user)
+    auto_claim_completed_tasks(db_user, db)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -188,6 +189,7 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
             # Update streak logic
             db_user = update_streak(db, db_user)
             record_login(db_user)
+            auto_claim_completed_tasks(db_user, db)
             db.add(db_user)
             db.commit()
             db.refresh(db_user)
@@ -215,6 +217,7 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
 
             # Record initial login
             record_login(new_user)
+            auto_claim_completed_tasks(new_user, db)
             db.add(new_user)
             db.commit()
             db.refresh(new_user)
