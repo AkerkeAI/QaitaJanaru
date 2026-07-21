@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from app.models.recycling_point import RecyclingPoint
+from app.models.recycling_submission import RecyclingSubmission
 
 SEED_DATA_PATH = Path(__file__).with_name("recycling_points_seed.json")
 SEED_RECYCLING_POINTS = json.loads(SEED_DATA_PATH.read_text(encoding="utf-8"))
@@ -50,9 +51,15 @@ def seed_recycling_points(db) -> None:
             )
         )
 
+    # Safely delete stale points by first removing any recycling_submissions that reference them
     stale_points = db.query(RecyclingPoint).all()
     for point in stale_points:
         if int(point.id) not in seed_ids:
+            # First delete any recycling_submissions that reference this point
+            db.query(RecyclingSubmission).filter(
+                RecyclingSubmission.recycling_point_id == point.id
+            ).delete()
+            # Then delete the point itself
             db.delete(point)
 
     db.commit()
