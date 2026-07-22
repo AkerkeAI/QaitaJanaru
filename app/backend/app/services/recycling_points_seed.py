@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from app.models.qr_claim import QrClaim
 from app.models.recycling_point import RecyclingPoint
 from app.models.recycling_submission import RecyclingSubmission
 
@@ -51,7 +52,7 @@ def seed_recycling_points(db) -> None:
             )
         )
 
-    # Safely delete stale points by first removing any recycling_submissions that reference them
+    # Safely delete stale points by first removing ALL foreign key references
     stale_points = db.query(RecyclingPoint).all()
     for point in stale_points:
         if int(point.id) not in seed_ids:
@@ -59,7 +60,11 @@ def seed_recycling_points(db) -> None:
             db.query(RecyclingSubmission).filter(
                 RecyclingSubmission.recycling_point_id == point.id
             ).delete()
-            # Then delete the point itself
+            # Then delete any qr_claims that reference this point
+            db.query(QrClaim).filter(
+                QrClaim.recycling_point_id == point.id
+            ).delete()
+            # Finally delete the point itself
             db.delete(point)
 
     db.commit()
