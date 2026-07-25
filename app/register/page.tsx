@@ -7,6 +7,7 @@ import { registerUser, googleAuth, getProfile } from "../lib/api";
 import { languageNames, Language } from "../lib/language";
 import { useLanguage } from "../contexts/LanguageContext";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { RecyclingMiniGame } from "../components/RecyclingMiniGame";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -267,6 +268,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams?.get("next");
+  const isExpoQR = searchParams?.get("expo") === "true";
 
   // ── Form state ──
   const [name,         setName]         = useState("");
@@ -275,6 +277,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error,        setError]        = useState("");
   const [isLoading,    setIsLoading]    = useState(false);
+  const [showMiniGame, setShowMiniGame] = useState(false);
 
   // ── Language state ──
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
@@ -355,6 +358,11 @@ export default function RegisterPage() {
 
   // ── Submit Handler ─────────────────────────────────────────────────────────
 
+  const handleMiniGameComplete = () => {
+    setShowMiniGame(false);
+    router.push(nextPath || "/profile");
+  };
+
   const handleSubmit = async () => {
     setError("");
 
@@ -393,7 +401,12 @@ export default function RegisterPage() {
       console.log("qaitaJanaru_city:", city);
       console.log("=====================================");
 
-      router.push(nextPath || "/profile");
+      // Show mini-game only for Expo QR registrations
+      if (isExpoQR) {
+        setShowMiniGame(true);
+      } else {
+        router.push(nextPath || "/profile");
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : messages.register.registrationError;
 
@@ -902,6 +915,9 @@ export default function RegisterPage() {
           </div>{/* /card */}
         </div>{/* /card wrapper */}
       </main>
+
+      {/* Mini-game overlay for Expo QR registrations */}
+      {showMiniGame && <RecyclingMiniGame onComplete={handleMiniGameComplete} />}
       </>
     </GoogleOAuthProvider>
   );
