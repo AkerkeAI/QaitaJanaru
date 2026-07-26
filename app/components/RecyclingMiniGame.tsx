@@ -79,7 +79,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [currentPosition, setCurrentPosition] = useState({ x: 0, y: 0 });
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -87,6 +88,9 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [leaves, setLeaves] = useState<Array<{ id: number; x: number; y: number; rotation: number; speed: number }>>([]);
   const itemRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const binsRef = useRef<{ [key: string]: DOMRect }>({});
+  const initialPositionRef = useRef({ x: 0, y: 0 });
+  const animationFrameRef = useRef<number>();
 
   const currentItem = WASTE_ITEMS[currentIndex];
   const progress = ((currentIndex) / WASTE_ITEMS.length) * 100;
@@ -142,51 +146,126 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     return () => clearInterval(interval);
   }, [particles]);
 
+  // Get bin positions for collision detection
+  const updateBinPositions = () => {
+    const bins: { [key: string]: DOMRect } = {};
+    BINS.forEach(bin => {
+      const binElement = document.getElementById(`bin-${bin.type}`);
+      if (binElement) {
+        bins[bin.type] = binElement.getBoundingClientRect();
+      }
+    });
+    binsRef.current = bins;
+  };
+
   const handleDragStart = (e: React.PointerEvent) => {
     e.preventDefault();
+    const rect = itemRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    // Calculate offset from touch point to item center
+    const offsetX = e.clientX - rect.left - rect.width / 2;
+    const offsetY = e.clientY - rect.top - rect.height / 2;
+    
+    setDragOffset({ x: offsetX, y: offsetY });
+    initialPositionRef.current = { x: 0, y: 0 };
+    setCurrentPosition({ x: 0, y: 0 });
     setIsDragging(true);
-    setDragPosition({ x: e.clientX, y: e.clientY });
-    if (itemRef.current) {
-      itemRef.current.setPointerCapture(e.pointerId);
-    }
+    
+    // Prevent page scrolling
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    
+    // Update bin positions for collision detection
+    updateBinPositions();
   };
 
   const handleDragMove = (e: React.PointerEvent) => {
     if (!isDragging) return;
     e.preventDefault();
-    setDragPosition({ x: e.clientX, y: e.clientY });
+
+    // Calculate new position relative to initial position
+    const newX = e.clientX - dragOffset.x - (window.innerWidth / 2);
+    const newY = e.clientY - dragOffset.y - (window.innerHeight / 2);
+    
+    setCurrentPosition({ x: newX, y: newY });
   };
 
-  const handleDragEnd = (e: React.PointerEvent, binType?: WasteType) => {
+  const handleDragEnd = (e: React.PointerEvent) => {
     if (!isDragging) return;
     setIsDragging(false);
-    if (itemRef.current) {
-      itemRef.current.releasePointerCapture(e.pointerId);
+    
+    // Restore page scrolling
+    document.body.style.overflow = '';
+    document.body.style.touchAction = '';
+    
+    // Check collision with bins
+    const itemRect = itemRef.current?.getBoundingClientRect();
+    if (!itemRect) return;
+
+    const itemCenter = {
+      x: itemRect.left + itemRect.width / 2,
+      y: itemRect.top + itemRect.height / 2,
+    };
+
+    let droppedOnBin: WasteType | null = null;
+    
+    for (const bin of BINS) {
+      const binRect = binsRef.current[bin.type];
+      if (!binRect) continue;
+
+      // Check if item center is within bin bounds with some padding
+      const padding = 20;
+      if (
+        itemCenter.x >= binRect.left - padding &&
+        itemCenter.x <= binRect.right + padding &&
+        itemCenter.y >= binRect.top - padding &&
+        itemCenter.y <= binRect.bottom + padding
+      ) {
+        droppedOnBin = bin.type;
+        break;
+      }
     }
 
-    if (binType && binType === currentItem.type) {
-      // Correct answer
-      setShowSuccess(true);
-      setScore(score + 1);
-      createParticles(e.clientX, e.clientY);
-      
-      setTimeout(() => {
-        setShowSuccess(false);
-        if (currentIndex < WASTE_ITEMS.length - 1) {
-          setCurrentIndex(currentIndex + 1);
-        } else {
-          setIsComplete(true);
-          setTimeout(() => {
-            onComplete();
-          }, 2000);
+    if (droppedOnBin) {
+      if (droppedOnBin === currentItem.type) {
+        // Correct answer - snap to bin center
+        const binRect = binsRef.current[droppedOnBin];
+        if (binRect) {
+          const binCenterX = binRect.left + binRect.width / 2 - window.innerWidth / 2;
+          const binCenterY = binRect.top + binRect.height / 2 - window.innerHeight / 2;
+          setCurrentPosition({ x: binCenterX, y: binCenterY });
         }
-      }, 1000);
-    } else if (binType) {
-      // Wrong answer
-      setShowError(true);
-      setTimeout(() => {
-        setShowError(false);
-      }, 500);
+        
+        setShowSuccess(true);
+        setScore(score + 1);
+        createParticles(itemCenter.x, itemCenter.y);
+        
+        setTimeout(() => {
+          setShowSuccess(false);
+          if (currentIndex < WASTE_ITEMS.length - 1) {
+            setCurrentIndex(currentIndex + 1);
+            setCurrentPosition({ x: 0, y: 0 });
+          } else {
+            setIsComplete(true);
+            setTimeout(() => {
+              onComplete();
+            }, 2000);
+          }
+        }, 1000);
+      } else {
+        // Wrong bin - shake and return to origin
+        setShowError(true);
+        
+        // Animate back to origin
+        setTimeout(() => {
+          setCurrentPosition({ x: 0, y: 0 });
+          setShowError(false);
+        }, 500);
+      }
+    } else {
+      // Dropped outside - animate back to origin
+      setCurrentPosition({ x: 0, y: 0 });
     }
   };
 
@@ -272,8 +351,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       <div className="relative mb-8 sm:mb-12">
         <div
           ref={itemRef}
-          className={`w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing transition-all duration-200 ${
-            isDragging ? "scale-110 shadow-2xl" : "shadow-xl"
+          className={`w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none ${
+            isDragging ? "scale-110 shadow-2xl z-50" : "shadow-xl"
           } ${
             showSuccess ? "animate-pulse bg-emerald-500/30" : ""
           } ${
@@ -283,17 +362,14 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
             background: "rgba(255, 255, 255, 0.1)",
             backdropFilter: "blur(10px)",
             border: "2px solid rgba(255, 255, 255, 0.2)",
-            transform: isDragging
-              ? `translate(${dragPosition.x - window.innerWidth / 2}px, ${dragPosition.y - window.innerHeight / 2}px)`
-              : "translate(0, 0)",
-            position: isDragging ? "fixed" : "relative",
-            left: isDragging ? dragPosition.x - (isDragging ? 48 : 64) : "auto",
-            top: isDragging ? dragPosition.y - (isDragging ? 48 : 64) : "auto",
+            transform: `translate3d(${currentPosition.x}px, ${currentPosition.y}px, 0)`,
+            transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+            willChange: 'transform',
           }}
           onPointerDown={handleDragStart}
           onPointerMove={handleDragMove}
-          onPointerUp={(e) => handleDragEnd(e)}
-          onPointerCancel={(e) => handleDragEnd(e)}
+          onPointerUp={handleDragEnd}
+          onPointerCancel={handleDragEnd}
         >
           <div 
             className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24"
@@ -308,12 +384,12 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         {BINS.map((bin) => (
           <div
             key={bin.type}
-            className="relative rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer"
+            id={`bin-${bin.type}`}
+            className="relative rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col items-center justify-center transition-all duration-200 hover:scale-105"
             style={{
               background: `${bin.color}20`,
               border: `2px solid ${bin.color}`,
             }}
-            onPointerUp={(e) => handleDragEnd(e, bin.type)}
           >
             {/* Bin SVG */}
             <div 
