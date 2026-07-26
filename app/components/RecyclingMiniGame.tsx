@@ -90,7 +90,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const binsRef = useRef<{ [key: string]: DOMRect }>({});
   const initialPositionRef = useRef({ x: 0, y: 0 });
-  const animationFrameRef = useRef<number>();
 
   const currentItem = WASTE_ITEMS[currentIndex];
   const progress = ((currentIndex) / WASTE_ITEMS.length) * 100;
