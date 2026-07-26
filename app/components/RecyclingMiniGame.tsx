@@ -79,7 +79,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [currentPosition, setCurrentPosition] = useState({ x: 0, y: 0 });
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
@@ -159,17 +158,19 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
   const handleDragStart = (e: React.PointerEvent) => {
     e.preventDefault();
-    const rect = itemRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    // Calculate offset from touch point to item center
-    const offsetX = e.clientX - rect.left - rect.width / 2;
-    const offsetY = e.clientY - rect.top - rect.height / 2;
     
-    setDragOffset({ x: offsetX, y: offsetY });
-    initialPositionRef.current = { x: 0, y: 0 };
-    setCurrentPosition({ x: 0, y: 0 });
+    // Capture pointer immediately to prevent drag interruption
+    if (itemRef.current) {
+      itemRef.current.setPointerCapture(e.pointerId);
+    }
+    
+    // Start dragging instantly - no thresholds
     setIsDragging(true);
+    
+    // Center item under finger immediately
+    const newX = e.clientX - window.innerWidth / 2;
+    const newY = e.clientY - window.innerHeight / 2;
+    setCurrentPosition({ x: newX, y: newY });
     
     // Prevent page scrolling
     document.body.style.overflow = 'hidden';
@@ -183,15 +184,20 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     if (!isDragging) return;
     e.preventDefault();
 
-    // Calculate new position relative to initial position
-    const newX = e.clientX - dragOffset.x - (window.innerWidth / 2);
-    const newY = e.clientY - dragOffset.y - (window.innerHeight / 2);
-    
+    // Update position to keep item centered under finger
+    const newX = e.clientX - window.innerWidth / 2;
+    const newY = e.clientY - window.innerHeight / 2;
     setCurrentPosition({ x: newX, y: newY });
   };
 
   const handleDragEnd = (e: React.PointerEvent) => {
     if (!isDragging) return;
+    
+    // Release pointer capture
+    if (itemRef.current) {
+      itemRef.current.releasePointerCapture(e.pointerId);
+    }
+    
     setIsDragging(false);
     
     // Restore page scrolling
@@ -350,7 +356,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       <div className="relative mb-8 sm:mb-12">
         <div
           ref={itemRef}
-          className={`w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none ${
+          className={`w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none ${
             isDragging ? "scale-110 shadow-2xl z-50" : "shadow-xl"
           } ${
             showSuccess ? "animate-pulse bg-emerald-500/30" : ""
@@ -364,6 +370,10 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
             transform: `translate3d(${currentPosition.x}px, ${currentPosition.y}px, 0)`,
             transition: isDragging ? 'none' : 'transform 0.3s ease-out',
             willChange: 'transform',
+            touchAction: 'none',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTouchCallout: 'none',
           }}
           onPointerDown={handleDragStart}
           onPointerMove={handleDragMove}
