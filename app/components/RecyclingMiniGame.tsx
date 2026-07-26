@@ -20,31 +20,31 @@ const WASTE_ITEMS: WasteItem[] = [
     id: "1", 
     type: "plastic", 
     name: "plastic bottle", 
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2h10"/><path d="M9 2v2"/><path d="M15 2v2"/><path d="M6 4h12v2H6z"/><path d="M8 6v14c0 1 1 2 2 2h4c1 0 2-1 2-2V6"/><path d="M10 10h4"/></svg>` 
+    icon: "/assets/recycling-game/item-plastic-bottle.jpeg" 
   },
   { 
     id: "2", 
     type: "glass", 
     name: "glass bottle", 
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4"/><path d="M12 2v3"/><path d="M8 5h8v2H8z"/><path d="M9 7v13c0 1 1 2 2 2h2c1 0 2-1 2-2V7"/><path d="M10 10h4"/></svg>` 
+    icon: "/assets/recycling-game/item-glass-bottle.jpeg" 
   },
   { 
     id: "3", 
     type: "paper", 
     name: "newspaper", 
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 8h16"/><path d="M4 12h16"/><path d="M4 16h16"/><path d="M8 4v16"/><path d="M12 4v16"/><path d="M16 4v16"/></svg>` 
+    icon: "/assets/recycling-game/item-newspaper.jpeg" 
   },
   { 
     id: "4", 
     type: "organic", 
     name: "banana peel", 
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#a16207" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c-2 0-4 2-4 4v12c0 2 2 4 4 4s4-2 4-4V6c0-2-2-4-4-4z"/><path d="M12 2v16"/><path d="M8 6c0-2 2-2 4-2s4 0 4 2"/></svg>` 
+    icon: "/assets/recycling-game/item-banana-peel.jpeg" 
   },
   { 
     id: "5", 
     type: "paper", 
     name: "cardboard", 
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 8h16"/><path d="M4 12h16"/><path d="M4 16h16"/><path d="M8 4v16"/><path d="M12 4v16"/><path d="M16 4v16"/></svg>` 
+    icon: "/assets/recycling-game/item-cardboard.jpeg" 
   },
 ];
 
@@ -53,25 +53,25 @@ const BINS = [
     type: "plastic" as WasteType, 
     color: "#FBBF24", 
     label: "Plastic", 
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v4"/><path d="M14 11v4"/></svg>` 
+    icon: "/assets/recycling-game/bin-plastic.jpeg" 
   },
   { 
     type: "paper" as WasteType, 
     color: "#3B82F6", 
     label: "Paper", 
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v4"/><path d="M14 11v4"/></svg>` 
+    icon: "/assets/recycling-game/bin-paper.jpeg" 
   },
   { 
     type: "glass" as WasteType, 
     color: "#10B981", 
     label: "Glass", 
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v4"/><path d="M14 11v4"/></svg>` 
+    icon: "/assets/recycling-game/bin-glass.jpeg" 
   },
   { 
     type: "organic" as WasteType, 
     color: "#A16207", 
     label: "Organic", 
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#a16207" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v4"/><path d="M14 11v4"/></svg>` 
+    icon: "/assets/recycling-game/bin-organic.jpg" 
   },
 ];
 
@@ -380,9 +380,13 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           onPointerUp={handleDragEnd}
           onPointerCancel={handleDragEnd}
         >
-          <div 
-            className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24"
-            dangerouslySetInnerHTML={{ __html: currentItem.icon }}
+          <img 
+            src={currentItem.icon} 
+            alt={currentItem.name} 
+            className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain"
+            style={{
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+            }}
           />
         </div>
         <p className="text-center mt-4 text-white font-medium text-sm sm:text-base">{currentItem.name}</p>
@@ -400,10 +404,14 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
               border: `2px solid ${bin.color}`,
             }}
           >
-            {/* Bin SVG */}
-            <div 
-              className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mb-2"
-              dangerouslySetInnerHTML={{ __html: bin.icon }}
+            {/* Bin Image */}
+            <img 
+              src={bin.icon} 
+              alt={bin.label}
+              className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mb-2 object-contain"
+              style={{
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+              }}
             />
             <span className="text-white font-semibold text-sm sm:text-base">{bin.label}</span>
           </div>
