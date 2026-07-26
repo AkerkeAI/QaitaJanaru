@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface RecyclingMiniGameProps {
   onComplete: () => void;
@@ -16,18 +16,63 @@ interface WasteItem {
 }
 
 const WASTE_ITEMS: WasteItem[] = [
-  { id: "1", type: "plastic", name: "plastic bottle", icon: "/assets/recycling-game/item-plastic-bottle.svg" },
-  { id: "2", type: "glass", name: "glass bottle", icon: "/assets/recycling-game/item-glass-bottle.svg" },
-  { id: "3", type: "paper", name: "newspaper", icon: "/assets/recycling-game/item-newspaper.svg" },
-  { id: "4", type: "organic", name: "banana peel", icon: "/assets/recycling-game/item-banana-peel.svg" },
-  { id: "5", type: "paper", name: "cardboard", icon: "/assets/recycling-game/item-cardboard.svg" },
+  { 
+    id: "1", 
+    type: "plastic", 
+    name: "plastic bottle", 
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2h10"/><path d="M9 2v2"/><path d="M15 2v2"/><path d="M6 4h12v2H6z"/><path d="M8 6v14c0 1 1 2 2 2h4c1 0 2-1 2-2V6"/><path d="M10 10h4"/></svg>` 
+  },
+  { 
+    id: "2", 
+    type: "glass", 
+    name: "glass bottle", 
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4"/><path d="M12 2v3"/><path d="M8 5h8v2H8z"/><path d="M9 7v13c0 1 1 2 2 2h2c1 0 2-1 2-2V7"/><path d="M10 10h4"/></svg>` 
+  },
+  { 
+    id: "3", 
+    type: "paper", 
+    name: "newspaper", 
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 8h16"/><path d="M4 12h16"/><path d="M4 16h16"/><path d="M8 4v16"/><path d="M12 4v16"/><path d="M16 4v16"/></svg>` 
+  },
+  { 
+    id: "4", 
+    type: "organic", 
+    name: "banana peel", 
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#a16207" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c-2 0-4 2-4 4v12c0 2 2 4 4 4s4-2 4-4V6c0-2-2-4-4-4z"/><path d="M12 2v16"/><path d="M8 6c0-2 2-2 4-2s4 0 4 2"/></svg>` 
+  },
+  { 
+    id: "5", 
+    type: "paper", 
+    name: "cardboard", 
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 8h16"/><path d="M4 12h16"/><path d="M4 16h16"/><path d="M8 4v16"/><path d="M12 4v16"/><path d="M16 4v16"/></svg>` 
+  },
 ];
 
 const BINS = [
-  { type: "plastic" as WasteType, color: "#FBBF24", label: "Plastic", icon: "/assets/recycling-game/bin-plastic.svg" },
-  { type: "paper" as WasteType, color: "#3B82F6", label: "Paper", icon: "/assets/recycling-game/bin-paper.svg" },
-  { type: "glass" as WasteType, color: "#10B981", label: "Glass", icon: "/assets/recycling-game/bin-glass.svg" },
-  { type: "organic" as WasteType, color: "#A16207", label: "Organic", icon: "/assets/recycling-game/bin-organic.svg" },
+  { 
+    type: "plastic" as WasteType, 
+    color: "#FBBF24", 
+    label: "Plastic", 
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v4"/><path d="M14 11v4"/></svg>` 
+  },
+  { 
+    type: "paper" as WasteType, 
+    color: "#3B82F6", 
+    label: "Paper", 
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v4"/><path d="M14 11v4"/></svg>` 
+  },
+  { 
+    type: "glass" as WasteType, 
+    color: "#10B981", 
+    label: "Glass", 
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v4"/><path d="M14 11v4"/></svg>` 
+  },
+  { 
+    type: "organic" as WasteType, 
+    color: "#A16207", 
+    label: "Organic", 
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="#a16207" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><path d="M10 11v4"/><path d="M14 11v4"/></svg>` 
+  },
 ];
 
 export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
@@ -38,32 +83,92 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; vx: number; vy: number }>>([]);
+  const [leaves, setLeaves] = useState<Array<{ id: number; x: number; y: number; rotation: number; speed: number }>>([]);
+  const itemRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const currentItem = WASTE_ITEMS[currentIndex];
   const progress = ((currentIndex) / WASTE_ITEMS.length) * 100;
 
-  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+  // Initialize falling leaves
+  useEffect(() => {
+    const newLeaves = Array.from({ length: 15 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      rotation: Math.random() * 360,
+      speed: 0.1 + Math.random() * 0.2,
+    }));
+    setLeaves(newLeaves);
+  }, []);
+
+  // Animate leaves
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLeaves(prev => prev.map(leaf => ({
+        ...leaf,
+        y: (leaf.y + leaf.speed) % 100,
+        rotation: (leaf.rotation + 0.5) % 360,
+      })));
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Create particles on correct drop
+  const createParticles = (x: number, y: number) => {
+    const newParticles = Array.from({ length: 12 }, (_, i) => ({
+      id: Date.now() + i,
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 8,
+      vy: (Math.random() - 0.5) * 8,
+    }));
+    setParticles(newParticles);
+    setTimeout(() => setParticles([]), 1000);
+  };
+
+  // Animate particles
+  useEffect(() => {
+    if (particles.length === 0) return;
+    const interval = setInterval(() => {
+      setParticles(prev => prev.map(p => ({
+        ...p,
+        x: p.x + p.vx,
+        y: p.y + p.vy,
+        vy: p.vy + 0.3, // gravity
+      })));
+    }, 16);
+    return () => clearInterval(interval);
+  }, [particles]);
+
+  const handleDragStart = (e: React.PointerEvent) => {
+    e.preventDefault();
     setIsDragging(true);
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-    setDragPosition({ x: clientX, y: clientY });
+    setDragPosition({ x: e.clientX, y: e.clientY });
+    if (itemRef.current) {
+      itemRef.current.setPointerCapture(e.pointerId);
+    }
   };
 
-  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleDragMove = (e: React.PointerEvent) => {
     if (!isDragging) return;
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-    setDragPosition({ x: clientX, y: clientY });
+    e.preventDefault();
+    setDragPosition({ x: e.clientX, y: e.clientY });
   };
 
-  const handleDragEnd = (e: React.MouseEvent | React.TouchEvent, binType: WasteType) => {
+  const handleDragEnd = (e: React.PointerEvent, binType?: WasteType) => {
     if (!isDragging) return;
     setIsDragging(false);
+    if (itemRef.current) {
+      itemRef.current.releasePointerCapture(e.pointerId);
+    }
 
-    if (binType === currentItem.type) {
+    if (binType && binType === currentItem.type) {
       // Correct answer
       setShowSuccess(true);
       setScore(score + 1);
+      createParticles(e.clientX, e.clientY);
       
       setTimeout(() => {
         setShowSuccess(false);
@@ -76,17 +181,13 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           }, 2000);
         }
       }, 1000);
-    } else {
+    } else if (binType) {
       // Wrong answer
       setShowError(true);
       setTimeout(() => {
         setShowError(false);
       }, 500);
     }
-  };
-
-  const handleDragEndOutside = () => {
-    setIsDragging(false);
   };
 
   if (isComplete) {
@@ -109,14 +210,51 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4"
+    <div 
+      ref={containerRef}
+      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 overflow-hidden"
       style={{
         background: "linear-gradient(to bottom right, #064e3b, #166534, #0f766e)",
       }}
     >
+      {/* Falling leaves background */}
+      {leaves.map(leaf => (
+        <div
+          key={leaf.id}
+          className="absolute pointer-events-none opacity-20"
+          style={{
+            left: `${leaf.x}%`,
+            top: `${leaf.y}%`,
+            transform: `rotate(${leaf.rotation}deg)`,
+            transition: 'top 0.05s linear, transform 0.05s linear',
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#22c55e">
+            <path d="M12 2C12 2 8 6 8 10C8 14 12 18 12 22C12 18 16 14 16 10C16 6 12 2 12 2Z" />
+          </svg>
+        </div>
+      ))}
+
+      {/* Particles */}
+      {particles.map(p => (
+        <div
+          key={p.id}
+          className="absolute pointer-events-none"
+          style={{
+            left: `${p.x}px`,
+            top: `${p.y}px`,
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            background: '#22c55e',
+            boxShadow: '0 0 10px #22c55e',
+          }}
+        />
+      ))}
+
       {/* Progress Bar */}
-      <div className="w-full max-w-md mb-8">
-        <div className="h-2 bg-emerald-900/50 rounded-full overflow-hidden">
+      <div className="w-full max-w-2xl mb-4 sm:mb-6">
+        <div className="h-3 sm:h-4 bg-emerald-900/50 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
             style={{ width: `${progress}%` }}
@@ -125,15 +263,16 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       </div>
 
       {/* Title */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">🌍 Help Heal the Planet</h1>
-        <p className="text-emerald-200">Sort the waste into the correct recycling bins.</p>
+      <div className="text-center mb-6 sm:mb-8 px-4">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">🌍 Help Heal the Planet</h1>
+        <p className="text-sm sm:text-base lg:text-lg text-emerald-200">Sort the waste into the correct recycling bins.</p>
       </div>
 
       {/* Waste Item */}
-      <div className="relative mb-12">
+      <div className="relative mb-8 sm:mb-12">
         <div
-          className={`w-32 h-32 rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing transition-all duration-200 ${
+          ref={itemRef}
+          className={`w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing transition-all duration-200 ${
             isDragging ? "scale-110 shadow-2xl" : "shadow-xl"
           } ${
             showSuccess ? "animate-pulse bg-emerald-500/30" : ""
@@ -148,41 +287,40 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
               ? `translate(${dragPosition.x - window.innerWidth / 2}px, ${dragPosition.y - window.innerHeight / 2}px)`
               : "translate(0, 0)",
             position: isDragging ? "fixed" : "relative",
-            left: isDragging ? dragPosition.x - 64 : "auto",
-            top: isDragging ? dragPosition.y - 64 : "auto",
+            left: isDragging ? dragPosition.x - (isDragging ? 48 : 64) : "auto",
+            top: isDragging ? dragPosition.y - (isDragging ? 48 : 64) : "auto",
           }}
-          onMouseDown={handleDragStart}
-          onTouchStart={handleDragStart}
-          onMouseMove={handleDragMove}
-          onTouchMove={handleDragMove}
-          onMouseUp={(e) => handleDragEndOutside()}
-          onTouchEnd={(e) => handleDragEndOutside()}
+          onPointerDown={handleDragStart}
+          onPointerMove={handleDragMove}
+          onPointerUp={(e) => handleDragEnd(e)}
+          onPointerCancel={(e) => handleDragEnd(e)}
         >
-          <img src={currentItem.icon} alt={currentItem.name} className="w-20 h-20" />
+          <div 
+            className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24"
+            dangerouslySetInnerHTML={{ __html: currentItem.icon }}
+          />
         </div>
-        <p className="text-center mt-4 text-white font-medium">{currentItem.name}</p>
+        <p className="text-center mt-4 text-white font-medium text-sm sm:text-base">{currentItem.name}</p>
       </div>
 
       {/* Bins */}
-      <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full max-w-2xl px-4">
         {BINS.map((bin) => (
           <div
             key={bin.type}
-            className="relative rounded-3xl p-6 flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer"
+            className="relative rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer"
             style={{
               background: `${bin.color}20`,
               border: `2px solid ${bin.color}`,
             }}
-            onMouseUp={(e) => handleDragEnd(e, bin.type)}
-            onTouchEnd={(e) => handleDragEnd(e, bin.type)}
+            onPointerUp={(e) => handleDragEnd(e, bin.type)}
           >
             {/* Bin SVG */}
-            <img
-              src={bin.icon}
-              alt={bin.label}
-              className="w-16 h-16 mb-2"
+            <div 
+              className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mb-2"
+              dangerouslySetInnerHTML={{ __html: bin.icon }}
             />
-            <span className="text-white font-semibold">{bin.label}</span>
+            <span className="text-white font-semibold text-sm sm:text-base">{bin.label}</span>
           </div>
         ))}
       </div>
@@ -190,7 +328,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       {/* Success Animation */}
       {showSuccess && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="text-6xl animate-bounce">✓</div>
+          <div className="text-6xl sm:text-8xl animate-bounce">✓</div>
         </div>
       )}
 

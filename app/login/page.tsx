@@ -7,11 +7,13 @@ import { loginUser, getProfile, googleAuth } from "../lib/api";
 import { languageNames, Language } from "../lib/language";
 import { useLanguage } from "../contexts/LanguageContext";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { RecyclingMiniGame } from "../components/RecyclingMiniGame";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams?.get("next");
+  const isExpoQR = searchParams?.get("expo") === "true";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,11 +21,17 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  const [showMiniGame, setShowMiniGame] = useState(false);
   const { language, messages, setLanguage } = useLanguage();
 
   const handleLanguageSelect = (selectedLanguage: Language) => {
     setLanguage(selectedLanguage);
     setShowLanguageMenu(false);
+  };
+
+  const handleMiniGameComplete = () => {
+    setShowMiniGame(false);
+    router.push(nextPath || "/profile");
   };
 
   const INPUT_CLASS =
@@ -113,7 +121,12 @@ export default function LoginPage() {
       console.log("qaitaJanaru_level:", profile.level);
       console.log("=====================================");
 
-      router.push(nextPath || "/profile");
+      // Show mini-game only for Expo QR logins
+      if (isExpoQR) {
+        setShowMiniGame(true);
+      } else {
+        router.push(nextPath || "/profile");
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : messages.login.invalidCredentials;
@@ -191,7 +204,12 @@ export default function LoginPage() {
       if (isCityMissing(profile.city)) {
         router.push(`/select-city?next=${encodeURIComponent(nextPath || "/profile")}`);
       } else {
-        router.push(nextPath || "/profile");
+        // Show mini-game only for Expo QR logins
+        if (isExpoQR) {
+          setShowMiniGame(true);
+        } else {
+          router.push(nextPath || "/profile");
+        }
       }
     } catch (err) {
       const errorMessage =
@@ -561,7 +579,11 @@ export default function LoginPage() {
                 >
                   {messages.login.noAccount}{" "}
                   <Link
-                    href={nextPath ? `/register?next=${encodeURIComponent(nextPath)}` : "/register"}
+                    href={
+                      nextPath 
+                        ? `/register?next=${encodeURIComponent(nextPath)}${isExpoQR ? '&expo=true' : ''}`
+                        : `/register${isExpoQR ? '?expo=true' : ''}`
+                    }
                     prefetch={false}
                     className="font-bold underline underline-offset-2 hover:text-white transition-colors touch-manipulation"
                     style={{ color: "#34d399" }}
@@ -583,6 +605,9 @@ export default function LoginPage() {
             />
           </div>
         </div>
+
+        {/* Mini-game overlay for Expo QR logins */}
+        {showMiniGame && <RecyclingMiniGame onComplete={handleMiniGameComplete} />}
       </main>
     </GoogleOAuthProvider>
   );
