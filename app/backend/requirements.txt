@@ -13,3 +13,5 @@ segno
 google-auth
 google-auth-oauthlib
 Pillow
+alembic
+python-dotenv
