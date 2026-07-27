@@ -752,4 +752,16 @@ export interface Messages {
     saving: string;
     saveError: string;
   };
+  recyclingGame: {
+    introHi: string;
+    introImJana: string;
+    introHelp: string;
+    introHealEarth: string;
+    letsStart: string;
+    helpHealPlanet: string;
+    sortWaste: string;
+    tryAgain: string;
+    greatJob: string;
+    helpedRecycle: string;
+  };
 }

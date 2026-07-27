@@ -780,4 +780,16 @@ export const messages: Messages = {
     weeklyRoute5Title: "Complete 5 recycling routes",
     weeklyRoute5Desc: "Open 5 routes to recycling points this week",
   },
+  recyclingGame: {
+    introHi: "Hi!",
+    introImJana: "I'm Jana 🌱",
+    introHelp: "I'll help you learn how to sort waste correctly.",
+    introHealEarth: "Let's heal the Earth together!",
+    letsStart: "Let's Start",
+    helpHealPlanet: "🌍 Help Heal the Planet",
+    sortWaste: "Sort the waste into the correct recycling bins.",
+    tryAgain: "Try again!",
+    greatJob: "Great job!",
+    helpedRecycle: "You helped recycle the waste correctly.",
+  },
 };

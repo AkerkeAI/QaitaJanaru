@@ -789,4 +789,16 @@ export const messages: Messages = {
     weeklyRoute5Title: "Построить 5 маршрутов переработки",
     weeklyRoute5Desc: "Откройте 5 маршрутов до пунктов переработки за неделю",
   },
+  recyclingGame: {
+    introHi: "Привет!",
+    introImJana: "Я Джана 🌱",
+    introHelp: "Я помогу тебе научиться правильно сортировать отходы.",
+    introHealEarth: "Давайте вместе спасем Землю!",
+    letsStart: "Начнем",
+    helpHealPlanet: "🌍 Помоги спасти планету",
+    sortWaste: "Сортируй отходы в правильные контейнеры для переработки.",
+    tryAgain: "Попробуй еще раз!",
+    greatJob: "Отличная работа!",
+    helpedRecycle: "Ты помог правильно переработать отходы.",
+  },
 };

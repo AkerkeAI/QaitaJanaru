@@ -783,4 +783,16 @@ export const messages: Messages = {
     weeklyRoute5Title: "5 қайта өңдеу маршрутын ашу",
     weeklyRoute5Desc: "Осы аптада қайта өңдеу нүктелеріне 5 маршрут ашыңыз",
   },
+  recyclingGame: {
+    introHi: "Сәлем!",
+    introImJana: "Мен Джана 🌱",
+    introHelp: "Мен қалдықтарды дұрыс сұрыптауды үйретемін.",
+    introHealEarth: "Бірге Жерімізді қорғайық!",
+    letsStart: "Бастайық",
+    helpHealPlanet: "🌍 Жерімізді қорғауға көмектес",
+    sortWaste: "Қалдықтарды дұрыс қайта өңдеу контейнерлеріне сұрыңыз.",
+    tryAgain: "Қайтадан көріңіз!",
+    greatJob: "Жақсы жасадыңыз!",
+    helpedRecycle: "Сіз қалдықтарды дұрыс қайта өңдедіңіз.",
+  },
 };
