@@ -85,6 +85,9 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [isComplete, setIsComplete] = useState(false);
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; vx: number; vy: number }>>([]);
   const [leaves, setLeaves] = useState<Array<{ id: number; x: number; y: number; rotation: number; speed: number }>>([]);
+  const [clouds, setClouds] = useState<Array<{ id: number; x: number; y: number; speed: number; scale: number }>>([]);
+  const [lightParticles, setLightParticles] = useState<Array<{ id: number; x: number; y: number; speed: number; opacity: number }>>([]);
+  const [janaAnimation, setJanaAnimation] = useState<'idle' | 'happy' | 'shake'>('idle');
   const itemRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const binsRef = useRef<{ [key: string]: DOMRect }>({});
@@ -93,25 +96,53 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const currentItem = WASTE_ITEMS[currentIndex];
   const progress = ((currentIndex) / WASTE_ITEMS.length) * 100;
 
-  // Initialize falling leaves
+  // Initialize falling leaves, clouds, and light particles
   useEffect(() => {
-    const newLeaves = Array.from({ length: 15 }, (_, i) => ({
+    const newLeaves = Array.from({ length: 20 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
       rotation: Math.random() * 360,
-      speed: 0.1 + Math.random() * 0.2,
+      speed: 0.05 + Math.random() * 0.1,
     }));
     setLeaves(newLeaves);
+
+    const newClouds = Array.from({ length: 5 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: 5 + Math.random() * 20,
+      speed: 0.01 + Math.random() * 0.02,
+      scale: 0.8 + Math.random() * 0.4,
+    }));
+    setClouds(newClouds);
+
+    const newLightParticles = Array.from({ length: 30 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      speed: 0.02 + Math.random() * 0.05,
+      opacity: 0.3 + Math.random() * 0.4,
+    }));
+    setLightParticles(newLightParticles);
   }, []);
 
-  // Animate leaves
+  // Animate leaves, clouds, and light particles
   useEffect(() => {
     const interval = setInterval(() => {
       setLeaves(prev => prev.map(leaf => ({
         ...leaf,
         y: (leaf.y + leaf.speed) % 100,
-        rotation: (leaf.rotation + 0.5) % 360,
+        x: (leaf.x + Math.sin(Date.now() / 1000 + leaf.id) * 0.02) % 100,
+        rotation: (leaf.rotation + 0.3) % 360,
+      })));
+      setClouds(prev => prev.map(cloud => ({
+        ...cloud,
+        x: (cloud.x + cloud.speed) % 110,
+      })));
+      setLightParticles(prev => prev.map(p => ({
+        ...p,
+        y: (p.y - p.speed + 100) % 100,
+        x: (p.x + Math.sin(Date.now() / 2000 + p.id) * 0.03 + 100) % 100,
       })));
     }, 50);
     return () => clearInterval(interval);
@@ -245,6 +276,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         setShowSuccess(true);
         setScore(score + 1);
         createParticles(itemCenter.x, itemCenter.y);
+        setJanaAnimation('happy');
+        setTimeout(() => setJanaAnimation('idle'), 800);
         
         setTimeout(() => {
           setShowSuccess(false);
@@ -261,6 +294,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       } else {
         // Wrong bin - shake and return to origin
         setShowError(true);
+        setJanaAnimation('shake');
+        setTimeout(() => setJanaAnimation('idle'), 500);
         
         // Animate back to origin
         setTimeout(() => {
@@ -276,15 +311,18 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
   if (isComplete) {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden"
         style={{
-          background: "linear-gradient(to bottom right, #064e3b, #166534, #0f766e)",
+          backgroundImage: "url('/assets/recycling-game/background.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
         }}
       >
-        <div className="text-center space-y-6">
+        <div className="absolute inset-0 bg-black/30" />
+        <div className="relative text-center space-y-6">
           <div className="text-8xl animate-bounce">🎉</div>
-          <h1 className="text-4xl font-bold text-white">Great job!</h1>
-          <p className="text-xl text-emerald-200">
+          <h1 className="text-4xl font-bold text-white drop-shadow-lg">Great job!</h1>
+          <p className="text-xl text-emerald-100 drop-shadow-md">
             You helped recycle the waste correctly.
           </p>
           <div className="text-6xl">♻️</div>
@@ -298,25 +336,69 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       ref={containerRef}
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 overflow-hidden"
       style={{
-        background: "linear-gradient(to bottom right, #064e3b, #166534, #0f766e)",
+        backgroundImage: "url('/assets/recycling-game/background.jpg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
       }}
     >
+      {/* Parallax background overlay */}
+      <div className="absolute inset-0 bg-black/20" />
+      
+      {/* Parallax clouds */}
+      {clouds.map(cloud => (
+        <div
+          key={cloud.id}
+          className="absolute pointer-events-none opacity-40"
+          style={{
+            left: `${cloud.x}%`,
+            top: `${cloud.y}%`,
+            transform: `scale(${cloud.scale})`,
+            transition: 'left 0.1s linear',
+          }}
+        >
+          <svg width="120" height="60" viewBox="0 0 120 60" fill="white">
+            <ellipse cx="60" cy="40" rx="50" ry="20" />
+            <ellipse cx="30" cy="35" rx="25" ry="15" />
+            <ellipse cx="90" cy="35" rx="25" ry="15" />
+            <ellipse cx="50" cy="25" rx="30" ry="18" />
+            <ellipse cx="75" cy="28" rx="22" ry="14" />
+          </svg>
+        </div>
+      ))}
+
       {/* Falling leaves background */}
       {leaves.map(leaf => (
         <div
           key={leaf.id}
-          className="absolute pointer-events-none opacity-20"
+          className="absolute pointer-events-none opacity-30"
           style={{
             left: `${leaf.x}%`,
             top: `${leaf.y}%`,
             transform: `rotate(${leaf.rotation}deg)`,
-            transition: 'top 0.05s linear, transform 0.05s linear',
+            transition: 'top 0.1s ease-out, left 0.1s ease-out, transform 0.1s ease-out',
           }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#22c55e">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#4ade80">
             <path d="M12 2C12 2 8 6 8 10C8 14 12 18 12 22C12 18 16 14 16 10C16 6 12 2 12 2Z" />
           </svg>
         </div>
+      ))}
+
+      {/* Light particles floating upward */}
+      {lightParticles.map(p => (
+        <div
+          key={p.id}
+          className="absolute pointer-events-none rounded-full"
+          style={{
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            width: '4px',
+            height: '4px',
+            background: `rgba(255, 255, 200, ${p.opacity})`,
+            boxShadow: '0 0 8px rgba(255, 255, 200, 0.5)',
+            transition: 'top 0.1s ease-out, left 0.1s ease-out',
+          }}
+        />
       ))}
 
       {/* Particles */}
@@ -335,6 +417,38 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           }}
         />
       ))}
+
+      {/* Jana Character */}
+      <div 
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10"
+        style={{
+          animation: janaAnimation === 'happy' ? 'janaHappy 0.6s ease-out' : 
+                     janaAnimation === 'shake' ? 'janaShake 0.5s ease-in-out' : 'none',
+        }}
+      >
+        <div 
+          className="relative"
+          style={{
+            animation: 'janaIdle 2.5s ease-in-out infinite, janaFloat 3s ease-in-out infinite, janaRotate 4s ease-in-out infinite',
+          }}
+        >
+          <img 
+            src="/assets/recycling-game/jana.png" 
+            alt="Jana"
+            className="h-32 sm:h-40 lg:h-48 object-contain drop-shadow-2xl"
+            style={{
+              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
+            }}
+          />
+          {/* Blink overlay */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              animation: 'janaBlink 5s ease-in-out infinite',
+            }}
+          />
+        </div>
+      </div>
 
       {/* Progress Bar */}
       <div className="w-full max-w-2xl mb-4 sm:mb-6">
@@ -433,6 +547,42 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         }
         .animate-shake {
           animation: shake 0.3s ease-in-out;
+        }
+        
+        @keyframes janaIdle {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.02); }
+        }
+        
+        @keyframes janaFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-3px); }
+        }
+        
+        @keyframes janaRotate {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(2deg); }
+          75% { transform: rotate(-2deg); }
+        }
+        
+        @keyframes janaBlink {
+          0%, 45%, 55%, 100% { opacity: 0; }
+          50% { opacity: 0.3; }
+        }
+        
+        @keyframes janaHappy {
+          0%, 100% { transform: translateY(0) scale(1); }
+          30% { transform: translateY(-15px) scale(1.1); }
+          50% { transform: translateY(-20px) scale(1.15); }
+          70% { transform: translateY(-10px) scale(1.05); }
+        }
+        
+        @keyframes janaShake {
+          0%, 100% { transform: translateX(0) rotate(0deg); }
+          20% { transform: translateX(-8px) rotate(-5deg); }
+          40% { transform: translateX(8px) rotate(5deg); }
+          60% { transform: translateX(-6px) rotate(-3deg); }
+          80% { transform: translateX(6px) rotate(3deg); }
         }
       `}</style>
     </div>
