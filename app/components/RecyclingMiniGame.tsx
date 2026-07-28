@@ -103,6 +103,46 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
   const progress = (processedItems.size / WASTE_ITEMS.length) * 100;
 
+  // Sound effects using Web Audio API
+  const playSound = (type: 'correct' | 'wrong' | 'combo') => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      if (type === 'correct') {
+        // Pleasant pop sound
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+        oscillator.frequency.exponentialRampToValueAtTime(783.99, audioContext.currentTime + 0.1); // G5
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.2);
+      } else if (type === 'wrong') {
+        // Gentle "oops" sound
+        oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.15);
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.2);
+      } else if (type === 'combo') {
+        // Brighter success sound
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(1046.5, audioContext.currentTime + 0.15);
+        gainNode.gain.setValueAtTime(0.35, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      }
+    } catch (error) {
+      console.error('Sound playback failed:', error);
+    }
+  };
+
   // Get localized item name
   const getItemName = (item: WasteItem) => {
     return messages.recyclingGame?.[item.nameKey as keyof typeof messages.recyclingGame] || item.nameKey;
@@ -112,34 +152,40 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   useEffect(() => {
     if (!showIntro && activeItems.length === 0) {
       const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
-      if (availableItems.length > 0) {
+      if (availableItems.length >= 2) {
         const item1 = availableItems[0];
-        const item2 = availableItems.length > 1 ? availableItems[1] : null;
+        const item2 = availableItems[1];
         
-        const newItems = [
-          { item: item1, id: `item-${item1.id}`, position: { x: -60, y: 0 } }
-        ];
-        
-        if (item2) {
-          newItems.push({ item: item2, id: `item-${item2.id}`, position: { x: 60, y: 0 } });
-        }
-        
-        setActiveItems(newItems);
+        setActiveItems([
+          { item: item1, id: `item-${item1.id}`, position: { x: -80, y: 0 } },
+          { item: item2, id: `item-${item2.id}`, position: { x: 80, y: 0 } }
+        ]);
+      } else if (availableItems.length === 1) {
+        // Only one item left - spawn it centered
+        setActiveItems([
+          { item: availableItems[0], id: `item-${availableItems[0].id}`, position: { x: 0, y: 0 } }
+        ]);
       }
     }
   }, [showIntro, processedItems]);
 
-  // Spawn new item when one is removed
+  // Spawn new item when one is removed to maintain exactly 2 items
   const spawnNewItem = () => {
     const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
     if (availableItems.length > 0 && activeItems.length < 2) {
       const newItem = availableItems[0];
-      const offsetX = activeItems.length === 1 ? (activeItems[0].position.x > 0 ? -60 : 60) : (Math.random() > 0.5 ? 60 : -60);
+      
+      // Calculate position to keep items centered
+      let newX = 0;
+      if (activeItems.length === 1) {
+        // If one item exists, place new item on opposite side
+        newX = activeItems[0].position.x > 0 ? -80 : 80;
+      }
       
       setActiveItems(prev => [...prev, { 
         item: newItem, 
         id: `item-${newItem.id}`, 
-        position: { x: offsetX, y: 0 } 
+        position: { x: newX, y: 0 } 
       }]);
     }
   };
@@ -336,6 +382,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         setScore(score + 1);
         createParticles(itemCenter.x, itemCenter.y);
         setJanaState('happy');
+        playSound(score > 0 ? 'combo' : 'correct');
         setTimeout(() => setJanaState('idle'), 1000);
         
         // Mark item as processed and remove it
@@ -361,7 +408,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         setJanaState('sad');
         setShowErrorMessage(true);
         setErrorText(messages.recyclingGame?.tryAgain || 'Try again!');
-        setTimeout(() => setJanaState('idle'), 800);
+        playSound('wrong');
+        setTimeout(() => setJanaState('idle'), 1500);
         setTimeout(() => setShowErrorMessage(false), 1500);
         
         // Animate back to origin
@@ -434,6 +482,24 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         ))}
 
         <div className="relative z-10 flex flex-col items-center justify-center max-w-lg w-full">
+          {/* Speech bubble - Premium chat bubble style */}
+          <div className="bg-gradient-to-br from-emerald-800/80 to-emerald-900/85 backdrop-blur-lg rounded-3xl p-6 sm:p-8 mb-8 shadow-2xl max-w-md border border-emerald-400/40" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
+            <div className="text-center space-y-3">
+              <p className="text-xl sm:text-2xl font-bold text-white">
+                {messages.recyclingGame?.introHi || 'Hi!'}
+              </p>
+              <p className="text-base sm:text-lg text-emerald-100 font-medium">
+                {messages.recyclingGame?.introImJana || "I'm Jana 🌱"}
+              </p>
+              <p className="text-sm sm:text-base text-emerald-200">
+                {messages.recyclingGame?.introHelp || "I'll help you learn how to sort waste correctly."}
+              </p>
+              <p className="text-sm sm:text-base text-emerald-200">
+                {messages.recyclingGame?.introHealEarth || "Let's heal the Earth together!"}
+              </p>
+            </div>
+          </div>
+
           {/* Jana waving */}
           <div className="relative mb-8">
             {/* Shadow under Jana */}
@@ -452,24 +518,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
                 animation: 'janaWave 1.5s ease-in-out infinite',
               }}
             />
-          </div>
-
-          {/* Speech bubble - Premium chat bubble style */}
-          <div className="bg-gradient-to-br from-emerald-800/80 to-emerald-900/85 backdrop-blur-lg rounded-3xl p-6 sm:p-8 mb-8 shadow-2xl max-w-md border border-emerald-400/40" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
-            <div className="text-center space-y-3">
-              <p className="text-xl sm:text-2xl font-bold text-white">
-                {messages.recyclingGame?.introHi || 'Hi!'}
-              </p>
-              <p className="text-base sm:text-lg text-emerald-100 font-medium">
-                {messages.recyclingGame?.introImJana || "I'm Jana 🌱"}
-              </p>
-              <p className="text-sm sm:text-base text-emerald-200">
-                {messages.recyclingGame?.introHelp || "I'll help you learn how to sort waste correctly."}
-              </p>
-              <p className="text-sm sm:text-base text-emerald-200">
-                {messages.recyclingGame?.introHealEarth || "Let's heal the Earth together!"}
-              </p>
-            </div>
           </div>
 
           {/* Start button */}
@@ -635,13 +683,17 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
                        'janaFloat 3s ease-in-out infinite',
           }}
         >
-          <div className="relative" style={{ animation: 'janaBreathe 2.5s ease-in-out infinite' }}>
+          <div className="relative" style={{ 
+            animation: janaState === 'happy' ? 'janaClap 0.6s ease-in-out infinite' :
+                     janaState === 'sad' ? 'janaLower 1s ease-in-out' :
+                     'janaBreathe 2.5s ease-in-out infinite',
+          }}>
             <img 
               src={janaState === 'happy' ? '/assets/recycling-game/jana-happy.png' :
                    janaState === 'sad' ? '/assets/recycling-game/jana-sad.png' :
                    '/assets/recycling-game/jana-idle.png'}
               alt="Jana"
-              className="h-48 sm:h-56 lg:h-64 object-contain drop-shadow-lg transition-opacity duration-300"
+              className="h-56 sm:h-64 lg:h-72 object-contain drop-shadow-lg transition-opacity duration-300"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
               }}
@@ -649,11 +701,11 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
                 console.error('Jana image failed to load:', (e.target as HTMLImageElement).src);
               }}
             />
-            {/* Blink overlay */}
+            {/* Blink overlay - slower for sad state */}
             <div 
               className="absolute inset-0 pointer-events-none"
               style={{
-                animation: 'janaBlink 4s ease-in-out infinite',
+                animation: janaState === 'sad' ? 'janaBlinkSlow 6s ease-in-out infinite' : 'janaBlink 4s ease-in-out infinite',
               }}
             />
           </div>
@@ -661,11 +713,11 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
       </div>
 
-      {/* Error message - Top */}
+      {/* Error message - Floating overlay in center */}
       {showErrorMessage && (
-        <div className="w-full max-w-3xl mb-3 sm:mb-4 z-30">
-          <div className="bg-red-500/80 backdrop-blur-md rounded-2xl px-4 py-2 shadow-xl border border-red-400/50 text-center" style={{ animation: 'bubblePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
-            <p className="text-white font-semibold text-sm sm:text-base">{errorText}</p>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+          <div className="bg-red-500/70 backdrop-blur-md rounded-2xl px-6 py-3 shadow-xl border border-red-400/50 text-center" style={{ animation: 'fadeInOut 1.5s ease-in-out forwards' }}>
+            <p className="text-white font-semibold text-base sm:text-lg">{errorText}</p>
           </div>
         </div>
       )}
@@ -748,7 +800,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           <div
             key={bin.type}
             id={`bin-${bin.type}`}
-            className="relative rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center transition-all duration-200 hover:scale-105"
+            className="relative rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
             style={{
               background: `linear-gradient(135deg, ${bin.color}25, ${bin.color}15)`,
               border: `2px solid ${bin.color}`,
@@ -759,7 +811,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
             <img 
               src={bin.icon} 
               alt={bin.type}
-              className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 object-contain"
+              className="w-14 h-14 sm:w-16 sm:h-16 lg:w-[4.5rem] lg:h-[4.5rem] object-contain"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
               }}
@@ -817,6 +869,13 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       )}
 
       <style>{`
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: scale(0.9); }
+          20% { opacity: 1; transform: scale(1); }
+          80% { opacity: 1; transform: scale(1); }
+          100% { opacity: 0; transform: scale(0.9); }
+        }
+        
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
           25% { transform: translateX(-10px); }
@@ -839,6 +898,23 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         @keyframes janaBlink {
           0%, 45%, 55%, 100% { opacity: 0; }
           50% { opacity: 0.15; }
+        }
+        
+        @keyframes janaBlinkSlow {
+          0%, 48%, 52%, 100% { opacity: 0; }
+          50% { opacity: 0.12; }
+        }
+        
+        @keyframes janaClap {
+          0%, 100% { transform: scaleX(1); }
+          25% { transform: scaleX(1.05) rotate(2deg); }
+          50% { transform: scaleX(1) rotate(0deg); }
+          75% { transform: scaleX(1.05) rotate(-2deg); }
+        }
+        
+        @keyframes janaLower {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(8px); }
         }
         
         @keyframes janaHappyBounce {
