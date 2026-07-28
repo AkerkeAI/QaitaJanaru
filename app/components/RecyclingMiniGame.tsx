@@ -88,7 +88,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [leaves, setLeaves] = useState<Array<{ id: number; x: number; y: number; rotation: number; speed: number }>>([]);
   const [clouds, setClouds] = useState<Array<{ id: number; x: number; y: number; speed: number; scale: number }>>([]);
   const [lightParticles, setLightParticles] = useState<Array<{ id: number; x: number; y: number; speed: number; opacity: number }>>([]);
-  const [butterflies, setButterflies] = useState<Array<{ id: number; x: number; y: number; wingPhase: number; speed: number; direction: number }>>([]);
   const [janaState, setJanaState] = useState<'idle' | 'happy' | 'sad'>('idle');
   const [showIntro, setShowIntro] = useState(true);
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
@@ -130,19 +129,9 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       opacity: 0.25 + Math.random() * 0.35,
     }));
     setLightParticles(newLightParticles);
-
-    const newButterflies = Array.from({ length: 4 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: 30 + Math.random() * 50,
-      wingPhase: Math.random() * Math.PI * 2,
-      speed: 0.02 + Math.random() * 0.03,
-      direction: Math.random() > 0.5 ? 1 : -1,
-    }));
-    setButterflies(newButterflies);
   }, []);
 
-  // Animate leaves, clouds, light particles, and butterflies
+  // Animate leaves, clouds, and light particles
   useEffect(() => {
     const interval = setInterval(() => {
       setLeaves(prev => prev.map(leaf => ({
@@ -159,12 +148,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         ...p,
         y: (p.y - p.speed + 100) % 100,
         x: (p.x + Math.sin(Date.now() / 2500 + p.id) * 0.025 + 100) % 100,
-      })));
-      setButterflies(prev => prev.map(b => ({
-        ...b,
-        x: (b.x + b.speed * b.direction + 100) % 100,
-        y: b.y + Math.sin(Date.now() / 1000 + b.id) * 0.02,
-        wingPhase: (b.wingPhase + 0.15) % (Math.PI * 2),
       })));
     }, 50);
     return () => clearInterval(interval);
@@ -387,58 +370,40 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           </div>
         ))}
 
-        {butterflies.map(b => (
-          <div
-            key={b.id}
-            className="absolute pointer-events-none"
-            style={{
-              left: `${b.x}%`,
-              top: `${b.y}%`,
-              transition: 'left 0.1s ease-out, top 0.1s ease-out',
-            }}
-          >
-            <svg width="30" height="30" viewBox="0 0 30 30" fill="#fbbf24">
-              <ellipse 
-                cx="15" cy="15" rx="12" ry="8" 
-                transform={`rotate(${Math.sin(b.wingPhase) * 30} 15 15)`}
-                opacity="0.8"
-              />
-              <ellipse 
-                cx="15" cy="15" rx="12" ry="8" 
-                transform={`rotate(${-Math.sin(b.wingPhase) * 30} 15 15)`}
-                opacity="0.8"
-              />
-            </svg>
-          </div>
-        ))}
-
         <div className="relative z-10 flex flex-col items-center justify-center max-w-lg w-full">
           {/* Jana waving */}
           <div className="relative mb-8">
+            {/* Shadow under Jana */}
+            <div 
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 sm:w-40 lg:w-48 h-4 bg-black/20 rounded-full blur-md"
+              style={{
+                animation: 'shadowPulse 2.5s ease-in-out infinite',
+              }}
+            />
             <img 
               src="/assets/recycling-game/jana-wave.png" 
               alt="Jana"
-              className="h-48 sm:h-56 lg:h-64 object-contain drop-shadow-2xl"
+              className="h-48 sm:h-56 lg:h-64 object-contain drop-shadow-lg relative z-10"
               style={{
-                filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.4))',
+                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
                 animation: 'janaWave 1.5s ease-in-out infinite',
               }}
             />
           </div>
 
-          {/* Speech bubble */}
-          <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 mb-8 shadow-2xl max-w-md">
+          {/* Speech bubble - Green glass UI */}
+          <div className="bg-emerald-900/70 backdrop-blur-md rounded-3xl p-6 sm:p-8 mb-8 shadow-2xl max-w-md border border-emerald-400/30">
             <div className="text-center space-y-3">
-              <p className="text-xl sm:text-2xl font-bold text-gray-800">
+              <p className="text-xl sm:text-2xl font-bold text-white">
                 {messages.recyclingGame?.introHi || 'Hi!'}
               </p>
-              <p className="text-base sm:text-lg text-gray-700">
+              <p className="text-base sm:text-lg text-emerald-100">
                 {messages.recyclingGame?.introImJana || "I'm Jana 🌱"}
               </p>
-              <p className="text-sm sm:text-base text-gray-600">
+              <p className="text-sm sm:text-base text-emerald-200">
                 {messages.recyclingGame?.introHelp || "I'll help you learn how to sort waste correctly."}
               </p>
-              <p className="text-sm sm:text-base text-gray-600">
+              <p className="text-sm sm:text-base text-emerald-200">
                 {messages.recyclingGame?.introHealEarth || "Let's heal the Earth together!"}
               </p>
             </div>
@@ -557,31 +522,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         />
       ))}
 
-      {/* Butterflies */}
-      {butterflies.map(b => (
-        <div
-          key={b.id}
-          className="absolute pointer-events-none"
-          style={{
-            left: `${b.x}%`,
-            top: `${b.y}%`,
-            transition: 'left 0.1s ease-out, top 0.1s ease-out',
-          }}
-        >
-          <svg width="30" height="30" viewBox="0 0 30 30" fill="#fbbf24">
-            <ellipse 
-              cx="15" cy="15" rx="12" ry="8" 
-              transform={`rotate(${Math.sin(b.wingPhase) * 30} 15 15)`}
-              opacity="0.8"
-            />
-            <ellipse 
-              cx="15" cy="15" rx="12" ry="8" 
-              transform={`rotate(${-Math.sin(b.wingPhase) * 30} 15 15)`}
-              opacity="0.8"
-            />
-          </svg>
-        </div>
-      ))}
 
       {/* Particles */}
       {particles.map(p => (
@@ -600,44 +540,76 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         />
       ))}
 
-      {/* Jana Character - Bottom Left */}
+      {/* Jana Character - On grass with shadow */}
       <div 
-        className="absolute bottom-4 left-4 sm:left-8 z-10"
+        className="absolute bottom-2 left-4 sm:left-8 z-10"
       >
+        {/* Shadow under Jana */}
+        <div 
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 sm:w-24 lg:w-32 h-3 sm:h-4 bg-black/20 rounded-full blur-sm"
+          style={{
+            animation: 'shadowPulse 2.5s ease-in-out infinite',
+          }}
+        />
+        
+        {/* Tiny leaves around Jana */}
+        <div className="absolute -left-4 top-1/2 opacity-40" style={{ animation: 'leafFloat 4s ease-in-out infinite' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#4ade80">
+            <path d="M12 2C12 2 8 6 8 10C8 14 12 18 12 22C12 18 16 14 16 10C16 6 12 2 12 2Z" />
+          </svg>
+        </div>
+        <div className="absolute -right-2 top-1/3 opacity-30" style={{ animation: 'leafFloat 5s ease-in-out infinite 1s' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="#4ade80">
+            <path d="M12 2C12 2 8 6 8 10C8 14 12 18 12 22C12 18 16 14 16 10C16 6 12 2 12 2Z" />
+          </svg>
+        </div>
+
         <div 
           className="relative"
           style={{
             animation: janaState === 'happy' ? 'janaHappyBounce 0.8s ease-out' :
                        janaState === 'sad' ? 'janaSadShake 0.5s ease-in-out' :
-                       'janaIdle 2.5s ease-in-out infinite, janaFloat 3s ease-in-out infinite, janaRotate 4s ease-in-out infinite',
+                       'janaFloat 3s ease-in-out infinite',
           }}
         >
-          <img 
-            src={janaState === 'happy' ? '/assets/recycling-game/jana-happy.png' :
-                 janaState === 'sad' ? '/assets/recycling-game/jana-sad.png' :
-                 '/assets/recycling-game/jana-idle.png'}
-            alt="Jana"
-            className="h-28 sm:h-32 lg:h-40 object-contain drop-shadow-2xl transition-opacity duration-300"
-            style={{
-              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
-            }}
-          />
+          <div className="relative" style={{ animation: 'janaBreathe 2.5s ease-in-out infinite' }}>
+            <img 
+              src={janaState === 'happy' ? '/assets/recycling-game/jana-happy.png' :
+                   janaState === 'sad' ? '/assets/recycling-game/jana-sad.png' :
+                   '/assets/recycling-game/jana-idle.png'}
+              alt="Jana"
+              className="h-28 sm:h-32 lg:h-40 object-contain drop-shadow-lg transition-opacity duration-300"
+              style={{
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+              }}
+              onError={(e) => {
+                console.error('Jana image failed to load:', (e.target as HTMLImageElement).src);
+              }}
+            />
+            {/* Blink overlay */}
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                animation: 'janaBlink 4s ease-in-out infinite',
+              }}
+            />
+          </div>
         </div>
 
-        {/* Speech bubble for wrong answers */}
+        {/* Speech bubble for wrong answers - Glass UI */}
         {showSpeechBubble && (
           <div 
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-2 shadow-xl whitespace-nowrap"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 bg-emerald-900/70 backdrop-blur-md rounded-2xl px-4 py-2 shadow-lg whitespace-nowrap border border-emerald-400/30"
             style={{
               animation: 'bubblePop 0.3s ease-out',
             }}
           >
-            <p className="text-sm sm:text-base font-medium text-gray-800">
+            <p className="text-sm sm:text-base font-medium text-white">
               {speechBubbleText}
             </p>
             {/* Speech bubble tail */}
             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-              <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-white/95" />
+              <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-emerald-900/70" />
             </div>
           </div>
         )}
@@ -653,13 +625,13 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         </div>
       </div>
 
-      {/* Title - Glassmorphism panel */}
+      {/* Title - Green glass eco card */}
       <div className="text-center mb-6 sm:mb-8 px-4">
-        <div className="bg-white/85 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-xl max-w-2xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
+        <div className="bg-emerald-900/60 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-xl max-w-2xl mx-auto border border-emerald-400/20">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
             {messages.recyclingGame?.helpHealPlanet || '🌍 Help Heal the Planet'}
           </h1>
-          <p className="text-sm sm:text-base lg:text-lg text-gray-700">
+          <p className="text-sm sm:text-base lg:text-lg text-emerald-100">
             {messages.recyclingGame?.sortWaste || 'Sort the waste into the correct recycling bins.'}
           </p>
         </div>
@@ -703,7 +675,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
             }}
           />
         </div>
-        <p className="text-center mt-4 text-white font-medium text-sm sm:text-base">{currentItem.name}</p>
+        <p className="text-center mt-4 font-medium text-sm sm:text-base text-emerald-100 bg-emerald-900/50 backdrop-blur-sm rounded-full px-4 py-1 inline-block">{currentItem.name}</p>
       </div>
 
       {/* Bins */}
@@ -732,10 +704,29 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         ))}
       </div>
 
-      {/* Success Animation */}
+      {/* Success Animation - Growing leaf with glow */}
       {showSuccess && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="text-6xl sm:text-8xl animate-bounce">✓</div>
+          <div 
+            className="relative"
+            style={{
+              animation: 'successLeaf 0.8s ease-out forwards',
+            }}
+          >
+            <div className="absolute inset-0 bg-emerald-400/30 blur-xl rounded-full scale-150" />
+            <svg 
+              width="80" height="80" viewBox="0 0 24 24" 
+              fill="#4ade80" 
+              className="relative z-10 drop-shadow-lg"
+            >
+              <path d="M12 2C12 2 8 6 8 10C8 14 12 18 12 22C12 18 16 14 16 10C16 6 12 2 12 2Z" />
+              <path d="M12 6C12 6 10 8 10 10C10 12 12 14 12 16C12 14 14 12 14 10C14 8 12 6 12 6Z" fill="#22c55e" />
+            </svg>
+            {/* Sparkles */}
+            <div className="absolute -top-2 -right-2 w-3 h-3 bg-yellow-300 rounded-full animate-ping" />
+            <div className="absolute -bottom-1 -left-3 w-2 h-2 bg-emerald-300 rounded-full animate-ping" style={{ animationDelay: '0.2s' }} />
+            <div className="absolute top-1/2 -right-4 w-2 h-2 bg-white rounded-full animate-ping" style={{ animationDelay: '0.4s' }} />
+          </div>
         </div>
       )}
 
@@ -749,20 +740,19 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           animation: shake 0.3s ease-in-out;
         }
         
-        @keyframes janaIdle {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.02); }
-        }
-        
         @keyframes janaFloat {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-3px); }
+          50% { transform: translateY(-2px); }
         }
         
-        @keyframes janaRotate {
-          0%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(2deg); }
-          75% { transform: rotate(-2deg); }
+        @keyframes janaBreathe {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.015); }
+        }
+        
+        @keyframes janaBlink {
+          0%, 45%, 55%, 100% { opacity: 0; }
+          50% { opacity: 0.15; }
         }
         
         @keyframes janaHappyBounce {
@@ -778,6 +768,24 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           40% { transform: translateX(6px) rotate(4deg); }
           60% { transform: translateX(-4px) rotate(-2deg); }
           80% { transform: translateX(4px) rotate(2deg); }
+        }
+        
+        @keyframes shadowPulse {
+          0%, 100% { transform: scale(1); opacity: 0.2; }
+          50% { transform: scale(1.05); opacity: 0.25; }
+        }
+        
+        @keyframes leafFloat {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          25% { transform: translateY(-3px) rotate(5deg); }
+          50% { transform: translateY(-5px) rotate(0deg); }
+          75% { transform: translateY(-3px) rotate(-5deg); }
+        }
+        
+        @keyframes successLeaf {
+          0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+          50% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
         
         @keyframes bubblePop {

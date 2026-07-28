@@ -791,7 +791,7 @@ export const messages: Messages = {
   },
   recyclingGame: {
     introHi: "Привет!",
-    introImJana: "Я Джана 🌱",
+    introImJana: "Я Жана 🌱",
     introHelp: "Я помогу тебе научиться правильно сортировать отходы.",
     introHealEarth: "Давайте вместе спасем Землю!",
     letsStart: "Начнем",
