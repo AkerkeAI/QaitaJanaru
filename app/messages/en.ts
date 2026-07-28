@@ -796,5 +796,9 @@ export const messages: Messages = {
     newspaper: "Newspaper",
     bananaPeel: "Banana peel",
     cardboard: "Cardboard",
+    plastic: "Plastic",
+    paper: "Paper",
+    glass: "Glass",
+    organic: "Organic",
   },
 };

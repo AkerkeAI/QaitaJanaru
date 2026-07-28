@@ -768,5 +768,9 @@ export interface Messages {
     newspaper: string;
     bananaPeel: string;
     cardboard: string;
+    plastic: string;
+    paper: string;
+    glass: string;
+    organic: string;
   };
 }

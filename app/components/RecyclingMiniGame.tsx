@@ -77,9 +77,8 @@ const BINS = [
 ];
 
 export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+  const [activeItems, setActiveItems] = useState<Array<{ item: WasteItem; id: string; position: { x: number; y: number } }>>([]);
+  const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
   const [currentPosition, setCurrentPosition] = useState({ x: 0, y: 0 });
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
@@ -92,21 +91,58 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [showIntro, setShowIntro] = useState(true);
   const [showSpeechBubble, setShowSpeechBubble] = useState(false);
   const [speechBubbleText, setSpeechBubbleText] = useState('');
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [errorText, setErrorText] = useState('');
   const { messages } = useLanguage();
-  const itemRef = useRef<HTMLDivElement>(null);
+  const itemRef = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const binsRef = useRef<{ [key: string]: DOMRect }>({});
-  const initialPositionRef = useRef({ x: 0, y: 0 });
+  const initialPositionRef = useRef<{ [key: string]: { x: number; y: number } }>({});
+  const [processedItems, setProcessedItems] = useState<Set<string>>(new Set());
+  const [score, setScore] = useState(0);
 
-  const currentItem = WASTE_ITEMS[currentIndex];
-  const progress = ((currentIndex) / WASTE_ITEMS.length) * 100;
+  const progress = (processedItems.size / WASTE_ITEMS.length) * 100;
 
   // Get localized item name
   const getItemName = (item: WasteItem) => {
     return messages.recyclingGame?.[item.nameKey as keyof typeof messages.recyclingGame] || item.nameKey;
   };
 
-  const currentItemName = getItemName(currentItem);
+  // Spawn two items initially
+  useEffect(() => {
+    if (!showIntro && activeItems.length === 0) {
+      const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
+      if (availableItems.length > 0) {
+        const item1 = availableItems[0];
+        const item2 = availableItems.length > 1 ? availableItems[1] : null;
+        
+        const newItems = [
+          { item: item1, id: `item-${item1.id}`, position: { x: -60, y: 0 } }
+        ];
+        
+        if (item2) {
+          newItems.push({ item: item2, id: `item-${item2.id}`, position: { x: 60, y: 0 } });
+        }
+        
+        setActiveItems(newItems);
+      }
+    }
+  }, [showIntro, processedItems]);
+
+  // Spawn new item when one is removed
+  const spawnNewItem = () => {
+    const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
+    if (availableItems.length > 0 && activeItems.length < 2) {
+      const newItem = availableItems[0];
+      const offsetX = activeItems.length === 1 ? (activeItems[0].position.x > 0 ? -60 : 60) : (Math.random() > 0.5 ? 60 : -60);
+      
+      setActiveItems(prev => [...prev, { 
+        item: newItem, 
+        id: `item-${newItem.id}`, 
+        position: { x: offsetX, y: 0 } 
+      }]);
+    }
+  };
 
   // Initialize falling leaves, clouds, light particles, and butterflies
   useEffect(() => {
@@ -199,21 +235,31 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     binsRef.current = bins;
   };
 
-  const handleDragStart = (e: React.PointerEvent) => {
+  const handleDragStart = (itemId: string, e: React.PointerEvent) => {
     e.preventDefault();
     
-    // Capture pointer immediately to prevent drag interruption
-    if (itemRef.current) {
-      itemRef.current.setPointerCapture(e.pointerId);
-    }
+    const itemElement = itemRef.current[itemId];
+    if (!itemElement) return;
     
-    // Start dragging instantly - no thresholds
-    setIsDragging(true);
+    // Capture pointer immediately to prevent drag interruption
+    itemElement.setPointerCapture(e.pointerId);
+    
+    // Start dragging
+    setDraggingItemId(itemId);
+    
+    // Store initial position
+    const activeItem = activeItems.find(ai => ai.id === itemId);
+    if (activeItem) {
+      initialPositionRef.current[itemId] = { ...activeItem.position };
+    }
     
     // Center item under finger immediately
     const newX = e.clientX - window.innerWidth / 2;
     const newY = e.clientY - window.innerHeight / 2;
-    setCurrentPosition({ x: newX, y: newY });
+    
+    setActiveItems(prev => prev.map(ai => 
+      ai.id === itemId ? { ...ai, position: { x: newX, y: newY } } : ai
+    ));
     
     // Prevent page scrolling
     document.body.style.overflow = 'hidden';
@@ -223,32 +269,40 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     updateBinPositions();
   };
 
-  const handleDragMove = (e: React.PointerEvent) => {
-    if (!isDragging) return;
+  const handleDragMove = (itemId: string, e: React.PointerEvent) => {
+    if (draggingItemId !== itemId) return;
     e.preventDefault();
 
     // Update position to keep item centered under finger
     const newX = e.clientX - window.innerWidth / 2;
     const newY = e.clientY - window.innerHeight / 2;
-    setCurrentPosition({ x: newX, y: newY });
+    
+    setActiveItems(prev => prev.map(ai => 
+      ai.id === itemId ? { ...ai, position: { x: newX, y: newY } } : ai
+    ));
   };
 
-  const handleDragEnd = (e: React.PointerEvent) => {
-    if (!isDragging) return;
+  const handleDragEnd = (itemId: string, e: React.PointerEvent) => {
+    if (draggingItemId !== itemId) return;
+    
+    const itemElement = itemRef.current[itemId];
+    if (!itemElement) return;
     
     // Release pointer capture
-    if (itemRef.current) {
-      itemRef.current.releasePointerCapture(e.pointerId);
-    }
+    itemElement.releasePointerCapture(e.pointerId);
     
-    setIsDragging(false);
+    setDraggingItemId(null);
     
     // Restore page scrolling
     document.body.style.overflow = '';
     document.body.style.touchAction = '';
     
+    // Get the dragged item
+    const activeItem = activeItems.find(ai => ai.id === itemId);
+    if (!activeItem) return;
+    
     // Check collision with bins
-    const itemRect = itemRef.current?.getBoundingClientRect();
+    const itemRect = itemElement.getBoundingClientRect();
     if (!itemRect) return;
 
     const itemCenter = {
@@ -276,53 +330,55 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     }
 
     if (droppedOnBin) {
-      if (droppedOnBin === currentItem.type) {
-        // Correct answer - snap to bin center
-        const binRect = binsRef.current[droppedOnBin];
-        if (binRect) {
-          const binCenterX = binRect.left + binRect.width / 2 - window.innerWidth / 2;
-          const binCenterY = binRect.top + binRect.height / 2 - window.innerHeight / 2;
-          setCurrentPosition({ x: binCenterX, y: binCenterY });
-        }
-        
+      if (droppedOnBin === activeItem.item.type) {
+        // Correct answer
         setShowSuccess(true);
         setScore(score + 1);
         createParticles(itemCenter.x, itemCenter.y);
         setJanaState('happy');
         setTimeout(() => setJanaState('idle'), 1000);
         
+        // Mark item as processed and remove it
+        setProcessedItems(prev => new Set([...prev, activeItem.item.id]));
+        setActiveItems(prev => prev.filter(ai => ai.id !== itemId));
+        
         setTimeout(() => {
           setShowSuccess(false);
-          if (currentIndex < WASTE_ITEMS.length - 1) {
-            setCurrentIndex(currentIndex + 1);
-            setCurrentPosition({ x: 0, y: 0 });
-          } else {
+          // Check if all items processed
+          if (processedItems.size + 1 >= WASTE_ITEMS.length) {
             setIsComplete(true);
             setTimeout(() => {
               onComplete();
             }, 2000);
+          } else {
+            // Spawn new item
+            spawnNewItem();
           }
         }, 1000);
       } else {
         // Wrong bin - shake and return to origin
         setShowError(true);
         setJanaState('sad');
-        setSpeechBubbleText(messages.recyclingGame?.tryAgain || 'Try again!');
-        setShowSpeechBubble(true);
-        setTimeout(() => {
-          setJanaState('idle');
-          setShowSpeechBubble(false);
-        }, 1200);
+        setShowErrorMessage(true);
+        setErrorText(messages.recyclingGame?.tryAgain || 'Try again!');
+        setTimeout(() => setJanaState('idle'), 800);
+        setTimeout(() => setShowErrorMessage(false), 1500);
         
         // Animate back to origin
+        const initialPos = initialPositionRef.current[itemId] || { x: 0, y: 0 };
         setTimeout(() => {
-          setCurrentPosition({ x: 0, y: 0 });
+          setActiveItems(prev => prev.map(ai => 
+            ai.id === itemId ? { ...ai, position: initialPos } : ai
+          ));
           setShowError(false);
         }, 500);
       }
     } else {
       // Dropped outside - animate back to origin
-      setCurrentPosition({ x: 0, y: 0 });
+      const initialPos = initialPositionRef.current[itemId] || { x: 0, y: 0 };
+      setActiveItems(prev => prev.map(ai => 
+        ai.id === itemId ? { ...ai, position: initialPos } : ai
+      ));
     }
   };
 
@@ -585,7 +641,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
                    janaState === 'sad' ? '/assets/recycling-game/jana-sad.png' :
                    '/assets/recycling-game/jana-idle.png'}
               alt="Jana"
-              className="h-40 sm:h-48 lg:h-56 object-contain drop-shadow-lg transition-opacity duration-300"
+              className="h-48 sm:h-56 lg:h-64 object-contain drop-shadow-lg transition-opacity duration-300"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
               }}
@@ -603,25 +659,16 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           </div>
         </div>
 
-        {/* Speech bubble for wrong answers - Premium chat bubble */}
-        {showSpeechBubble && (
-          <div 
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-6 bg-gradient-to-br from-emerald-800/80 to-emerald-900/85 backdrop-blur-lg rounded-2xl px-5 py-3 shadow-2xl whitespace-nowrap border border-emerald-400/40"
-            style={{
-              animation: 'bubblePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(74, 222, 128, 0.1)',
-            }}
-          >
-            <p className="text-sm sm:text-base font-semibold text-white tracking-wide">
-              {speechBubbleText}
-            </p>
-            {/* Speech bubble tail */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-              <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-emerald-800/90" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }} />
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Error message - Top */}
+      {showErrorMessage && (
+        <div className="w-full max-w-3xl mb-3 sm:mb-4 z-30">
+          <div className="bg-red-500/80 backdrop-blur-md rounded-2xl px-4 py-2 shadow-xl border border-red-400/50 text-center" style={{ animation: 'bubblePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
+            <p className="text-white font-semibold text-sm sm:text-base">{errorText}</p>
+          </div>
+        </div>
+      )}
 
       {/* Progress Bar - Top */}
       <div className="w-full max-w-3xl mb-3 sm:mb-4 z-20">
@@ -645,45 +692,54 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         </div>
       </div>
 
-      {/* Waste Item */}
-      <div className="relative mb-4 sm:mb-6 z-20">
-        <div
-          ref={itemRef}
-          className={`w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none ${
-            isDragging ? "scale-110 shadow-2xl z-50" : "shadow-xl"
-          } ${
-            showSuccess ? "animate-pulse bg-emerald-500/30" : ""
-          } ${
-            showError ? "animate-shake bg-red-500/30" : ""
-          }`}
-          style={{
-            background: "rgba(255, 255, 255, 0.1)",
-            backdropFilter: "blur(10px)",
-            border: "2px solid rgba(255, 255, 255, 0.2)",
-            transform: `translate3d(${currentPosition.x}px, ${currentPosition.y}px, 0)`,
-            transition: isDragging ? 'none' : 'transform 0.3s ease-out',
-            willChange: 'transform',
-            touchAction: 'none',
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-            WebkitTouchCallout: 'none',
-          }}
-          onPointerDown={handleDragStart}
-          onPointerMove={handleDragMove}
-          onPointerUp={handleDragEnd}
-          onPointerCancel={handleDragEnd}
-        >
-          <img 
-            src={currentItem.icon} 
-            alt={currentItemName} 
-            className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain"
-            style={{
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-              mixBlendMode: 'multiply',
-            }}
-          />
-        </div>
-        <p className="text-center mt-4 font-semibold text-sm sm:text-base text-white bg-gradient-to-r from-emerald-800/70 to-emerald-900/80 backdrop-blur-md rounded-full px-5 py-2 inline-block border border-emerald-400/30 shadow-lg" style={{ boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' }}>{currentItemName}</p>
+      {/* Waste Items */}
+      <div className="relative mb-4 sm:mb-6 z-20 flex justify-center gap-4">
+        {activeItems.map((activeItem) => {
+          const itemName = getItemName(activeItem.item);
+          const isDraggingThis = draggingItemId === activeItem.id;
+          
+          return (
+            <div key={activeItem.id} className="relative">
+              <div
+                ref={(el) => { itemRef.current[activeItem.id] = el; }}
+                className={`w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none ${
+                  isDraggingThis ? "scale-110 shadow-2xl z-50" : "shadow-xl"
+                } ${
+                  showSuccess ? "animate-pulse bg-emerald-500/30" : ""
+                } ${
+                  showError ? "animate-shake bg-red-500/30" : ""
+                }`}
+                style={{
+                  background: "rgba(255, 255, 255, 0.1)",
+                  backdropFilter: "blur(10px)",
+                  border: "2px solid rgba(255, 255, 255, 0.2)",
+                  transform: `translate3d(${activeItem.position.x}px, ${activeItem.position.y}px, 0)`,
+                  transition: isDraggingThis ? 'none' : 'transform 0.3s ease-out',
+                  willChange: 'transform',
+                  touchAction: 'none',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  WebkitTouchCallout: 'none',
+                }}
+                onPointerDown={(e) => handleDragStart(activeItem.id, e)}
+                onPointerMove={(e) => handleDragMove(activeItem.id, e)}
+                onPointerUp={(e) => handleDragEnd(activeItem.id, e)}
+                onPointerCancel={(e) => handleDragEnd(activeItem.id, e)}
+              >
+                <img 
+                  src={activeItem.item.icon} 
+                  alt={itemName} 
+                  className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain"
+                  style={{
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+                    mixBlendMode: 'multiply',
+                  }}
+                />
+              </div>
+              <p className="text-center mt-4 font-semibold text-sm sm:text-base text-white bg-gradient-to-r from-emerald-800/70 to-emerald-900/80 backdrop-blur-md rounded-full px-5 py-2 inline-block border border-emerald-400/30 shadow-lg" style={{ boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' }}>{itemName}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Bins - Bottom area */}
@@ -702,20 +758,41 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
             {/* Bin Image */}
             <img 
               src={bin.icon} 
-              alt={bin.label}
-              className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 mb-1 object-contain"
+              alt={bin.type}
+              className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 object-contain"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
               }}
             />
-            <span className="text-white font-semibold text-xs sm:text-sm">{bin.label}</span>
           </div>
         ))}
       </div>
 
+      {/* Legend - Lower right corner */}
+      <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-xl p-3 sm:p-4 shadow-xl border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
+        <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#FBBF24' }} />
+            <span className="text-white font-medium">{messages.recyclingGame?.plastic || 'Plastic'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#3B82F6' }} />
+            <span className="text-white font-medium">{messages.recyclingGame?.paper || 'Paper'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#10B981' }} />
+            <span className="text-white font-medium">{messages.recyclingGame?.glass || 'Glass'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#A16207' }} />
+            <span className="text-white font-medium">{messages.recyclingGame?.organic || 'Organic'}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Success Animation - Growing leaf with glow */}
       {showSuccess && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
           <div 
             className="relative"
             style={{

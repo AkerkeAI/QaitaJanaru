@@ -805,5 +805,9 @@ export const messages: Messages = {
     newspaper: "Газета",
     bananaPeel: "Банановая кожура",
     cardboard: "Картон",
+    plastic: "Пластик",
+    paper: "Бумага",
+    glass: "Стекло",
+    organic: "Органика",
   },
 };
