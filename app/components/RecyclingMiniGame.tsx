@@ -12,7 +12,6 @@ type WasteType = "plastic" | "paper" | "glass" | "organic";
 interface WasteItem {
   id: string;
   type: WasteType;
-  name: string;
   nameKey: string;
   icon: string;
 }
@@ -104,7 +103,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
   // Get localized item name
   const getItemName = (item: WasteItem) => {
-    return messages.recyclingGame?.[item.nameKey as keyof typeof messages.recyclingGame] || item.name;
+    return messages.recyclingGame?.[item.nameKey as keyof typeof messages.recyclingGame] || item.nameKey;
   };
 
   const currentItemName = getItemName(currentItem);
@@ -676,7 +675,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         >
           <img 
             src={currentItem.icon} 
-            alt={currentItem.name} 
+            alt={currentItemName} 
             className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain"
             style={{
               filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
