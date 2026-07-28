@@ -763,5 +763,10 @@ export interface Messages {
     tryAgain: string;
     greatJob: string;
     helpedRecycle: string;
+    plasticBottle: string;
+    glassBottle: string;
+    newspaper: string;
+    bananaPeel: string;
+    cardboard: string;
   };
 }

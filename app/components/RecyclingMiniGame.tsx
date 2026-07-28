@@ -13,6 +13,7 @@ interface WasteItem {
   id: string;
   type: WasteType;
   name: string;
+  nameKey: string;
   icon: string;
 }
 
@@ -20,31 +21,31 @@ const WASTE_ITEMS: WasteItem[] = [
   { 
     id: "1", 
     type: "plastic", 
-    name: "plastic bottle", 
+    nameKey: "plasticBottle", 
     icon: "/assets/recycling-game/item-plastic-bottle.png" 
   },
   { 
     id: "2", 
     type: "glass", 
-    name: "glass bottle", 
+    nameKey: "glassBottle", 
     icon: "/assets/recycling-game/item-glass-bottle.png" 
   },
   { 
     id: "3", 
     type: "paper", 
-    name: "newspaper", 
+    nameKey: "newspaper", 
     icon: "/assets/recycling-game/item-newspaper.png" 
   },
   { 
     id: "4", 
     type: "organic", 
-    name: "banana peel", 
+    nameKey: "bananaPeel", 
     icon: "/assets/recycling-game/item-banana-peel.png" 
   },
   { 
     id: "5", 
     type: "paper", 
-    name: "cardboard", 
+    nameKey: "cardboard", 
     icon: "/assets/recycling-game/item-cardboard.png" 
   },
 ];
@@ -100,6 +101,13 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
   const currentItem = WASTE_ITEMS[currentIndex];
   const progress = ((currentIndex) / WASTE_ITEMS.length) * 100;
+
+  // Get localized item name
+  const getItemName = (item: WasteItem) => {
+    return messages.recyclingGame?.[item.nameKey as keyof typeof messages.recyclingGame] || item.name;
+  };
+
+  const currentItemName = getItemName(currentItem);
 
   // Initialize falling leaves, clouds, light particles, and butterflies
   useEffect(() => {
@@ -383,7 +391,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
             <img 
               src="/assets/recycling-game/jana-wave.png" 
               alt="Jana"
-              className="h-48 sm:h-56 lg:h-64 object-contain drop-shadow-lg relative z-10"
+              className="h-64 sm:h-72 lg:h-80 object-contain drop-shadow-lg relative z-10"
               style={{
                 filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
                 animation: 'janaWave 1.5s ease-in-out infinite',
@@ -391,13 +399,13 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
             />
           </div>
 
-          {/* Speech bubble - Green glass UI */}
-          <div className="bg-emerald-900/70 backdrop-blur-md rounded-3xl p-6 sm:p-8 mb-8 shadow-2xl max-w-md border border-emerald-400/30">
+          {/* Speech bubble - Premium chat bubble style */}
+          <div className="bg-gradient-to-br from-emerald-800/80 to-emerald-900/85 backdrop-blur-lg rounded-3xl p-6 sm:p-8 mb-8 shadow-2xl max-w-md border border-emerald-400/40" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
             <div className="text-center space-y-3">
               <p className="text-xl sm:text-2xl font-bold text-white">
                 {messages.recyclingGame?.introHi || 'Hi!'}
               </p>
-              <p className="text-base sm:text-lg text-emerald-100">
+              <p className="text-base sm:text-lg text-emerald-100 font-medium">
                 {messages.recyclingGame?.introImJana || "I'm Jana 🌱"}
               </p>
               <p className="text-sm sm:text-base text-emerald-200">
@@ -455,7 +463,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   return (
     <div 
       ref={containerRef}
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 overflow-hidden"
+      className="fixed inset-0 z-[9999] flex flex-col items-center p-4 sm:p-6 overflow-hidden"
       style={{
         backgroundImage: "url('/assets/recycling-game/background.jpg')",
         backgroundSize: 'cover',
@@ -540,26 +548,26 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         />
       ))}
 
-      {/* Jana Character - On grass with shadow */}
+      {/* Jana Character - Bottom left corner */}
       <div 
-        className="absolute bottom-2 left-4 sm:left-8 z-10"
+        className="absolute bottom-4 left-2 sm:left-4 z-10"
       >
         {/* Shadow under Jana */}
         <div 
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 sm:w-24 lg:w-32 h-3 sm:h-4 bg-black/20 rounded-full blur-sm"
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 sm:w-32 lg:w-40 h-4 sm:h-5 bg-black/20 rounded-full blur-sm"
           style={{
             animation: 'shadowPulse 2.5s ease-in-out infinite',
           }}
         />
         
         {/* Tiny leaves around Jana */}
-        <div className="absolute -left-4 top-1/2 opacity-40" style={{ animation: 'leafFloat 4s ease-in-out infinite' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#4ade80">
+        <div className="absolute -left-6 top-1/2 opacity-40" style={{ animation: 'leafFloat 4s ease-in-out infinite' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#4ade80">
             <path d="M12 2C12 2 8 6 8 10C8 14 12 18 12 22C12 18 16 14 16 10C16 6 12 2 12 2Z" />
           </svg>
         </div>
-        <div className="absolute -right-2 top-1/3 opacity-30" style={{ animation: 'leafFloat 5s ease-in-out infinite 1s' }}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="#4ade80">
+        <div className="absolute -right-4 top-1/3 opacity-30" style={{ animation: 'leafFloat 5s ease-in-out infinite 1s' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#4ade80">
             <path d="M12 2C12 2 8 6 8 10C8 14 12 18 12 22C12 18 16 14 16 10C16 6 12 2 12 2Z" />
           </svg>
         </div>
@@ -578,7 +586,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
                    janaState === 'sad' ? '/assets/recycling-game/jana-sad.png' :
                    '/assets/recycling-game/jana-idle.png'}
               alt="Jana"
-              className="h-28 sm:h-32 lg:h-40 object-contain drop-shadow-lg transition-opacity duration-300"
+              className="h-40 sm:h-48 lg:h-56 object-contain drop-shadow-lg transition-opacity duration-300"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
               }}
@@ -596,28 +604,29 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           </div>
         </div>
 
-        {/* Speech bubble for wrong answers - Glass UI */}
+        {/* Speech bubble for wrong answers - Premium chat bubble */}
         {showSpeechBubble && (
           <div 
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 bg-emerald-900/70 backdrop-blur-md rounded-2xl px-4 py-2 shadow-lg whitespace-nowrap border border-emerald-400/30"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-6 bg-gradient-to-br from-emerald-800/80 to-emerald-900/85 backdrop-blur-lg rounded-2xl px-5 py-3 shadow-2xl whitespace-nowrap border border-emerald-400/40"
             style={{
-              animation: 'bubblePop 0.3s ease-out',
+              animation: 'bubblePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(74, 222, 128, 0.1)',
             }}
           >
-            <p className="text-sm sm:text-base font-medium text-white">
+            <p className="text-sm sm:text-base font-semibold text-white tracking-wide">
               {speechBubbleText}
             </p>
             {/* Speech bubble tail */}
             <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-              <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-emerald-900/70" />
+              <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-emerald-800/90" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }} />
             </div>
           </div>
         )}
       </div>
 
-      {/* Progress Bar */}
-      <div className="w-full max-w-2xl mb-4 sm:mb-6">
-        <div className="h-3 sm:h-4 bg-emerald-900/50 rounded-full overflow-hidden">
+      {/* Progress Bar - Top */}
+      <div className="w-full max-w-3xl mb-3 sm:mb-4 z-20">
+        <div className="h-2 sm:h-3 bg-emerald-900/50 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
             style={{ width: `${progress}%` }}
@@ -625,20 +634,20 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         </div>
       </div>
 
-      {/* Title - Green glass eco card */}
-      <div className="text-center mb-6 sm:mb-8 px-4">
-        <div className="bg-emerald-900/60 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-xl max-w-2xl mx-auto border border-emerald-400/20">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
+      {/* Title - Premium glass eco card */}
+      <div className="text-center mb-4 sm:mb-6 px-4 z-20">
+        <div className="bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-2xl p-3 sm:p-4 shadow-xl max-w-xl mx-auto border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1 tracking-tight">
             {messages.recyclingGame?.helpHealPlanet || '🌍 Help Heal the Planet'}
           </h1>
-          <p className="text-sm sm:text-base lg:text-lg text-emerald-100">
+          <p className="text-xs sm:text-sm lg:text-base text-emerald-100 font-medium">
             {messages.recyclingGame?.sortWaste || 'Sort the waste into the correct recycling bins.'}
           </p>
         </div>
       </div>
 
       {/* Waste Item */}
-      <div className="relative mb-8 sm:mb-12">
+      <div className="relative mb-4 sm:mb-6 z-20">
         <div
           ref={itemRef}
           className={`w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none ${
@@ -675,31 +684,32 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
             }}
           />
         </div>
-        <p className="text-center mt-4 font-medium text-sm sm:text-base text-emerald-100 bg-emerald-900/50 backdrop-blur-sm rounded-full px-4 py-1 inline-block">{currentItem.name}</p>
+        <p className="text-center mt-4 font-semibold text-sm sm:text-base text-white bg-gradient-to-r from-emerald-800/70 to-emerald-900/80 backdrop-blur-md rounded-full px-5 py-2 inline-block border border-emerald-400/30 shadow-lg" style={{ boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' }}>{currentItemName}</p>
       </div>
 
-      {/* Bins */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full max-w-2xl px-4">
+      {/* Bins - Bottom area */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full max-w-xl px-4 mb-4 z-20">
         {BINS.map((bin) => (
           <div
             key={bin.type}
             id={`bin-${bin.type}`}
-            className="relative rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col items-center justify-center transition-all duration-200 hover:scale-105"
+            className="relative rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center transition-all duration-200 hover:scale-105"
             style={{
-              background: `${bin.color}20`,
+              background: `linear-gradient(135deg, ${bin.color}25, ${bin.color}15)`,
               border: `2px solid ${bin.color}`,
+              boxShadow: `0 4px 16px ${bin.color}40, 0 0 0 1px ${bin.color}20`,
             }}
           >
             {/* Bin Image */}
             <img 
               src={bin.icon} 
               alt={bin.label}
-              className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mb-2 object-contain"
+              className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 mb-1 object-contain"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
               }}
             />
-            <span className="text-white font-semibold text-sm sm:text-base">{bin.label}</span>
+            <span className="text-white font-semibold text-xs sm:text-sm">{bin.label}</span>
           </div>
         ))}
       </div>
@@ -763,11 +773,13 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         }
         
         @keyframes janaSadShake {
-          0%, 100% { transform: translateX(0) rotate(0deg); }
-          20% { transform: translateX(-6px) rotate(-4deg); }
-          40% { transform: translateX(6px) rotate(4deg); }
-          60% { transform: translateX(-4px) rotate(-2deg); }
-          80% { transform: translateX(4px) rotate(2deg); }
+          0%, 100% { transform: translateX(0) rotate(0deg) translateY(0); }
+          15% { transform: translateX(-4px) rotate(-3deg) translateY(-2px); }
+          30% { transform: translateX(4px) rotate(3deg) translateY(0); }
+          45% { transform: translateX(-3px) rotate(-2deg) translateY(-1px); }
+          60% { transform: translateX(3px) rotate(2deg) translateY(0); }
+          75% { transform: translateX(-2px) rotate(-1deg); }
+          90% { transform: translateX(2px) rotate(1deg); }
         }
         
         @keyframes shadowPulse {
@@ -789,7 +801,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         }
         
         @keyframes bubblePop {
-          0% { transform: scale(0.8) translateY(10px); opacity: 0; }
+          0% { transform: scale(0.6) translateY(15px); opacity: 0; }
           100% { transform: scale(1) translateY(0); opacity: 1; }
         }
       `}</style>

@@ -791,5 +791,10 @@ export const messages: Messages = {
     tryAgain: "Try again!",
     greatJob: "Great job!",
     helpedRecycle: "You helped recycle the waste correctly.",
+    plasticBottle: "Plastic bottle",
+    glassBottle: "Glass bottle",
+    newspaper: "Newspaper",
+    bananaPeel: "Banana peel",
+    cardboard: "Cardboard",
   },
 };
