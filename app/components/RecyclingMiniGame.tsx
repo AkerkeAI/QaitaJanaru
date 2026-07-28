@@ -100,6 +100,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const initialPositionRef = useRef<{ [key: string]: { x: number; y: number } }>({});
   const [processedItems, setProcessedItems] = useState<Set<string>>(new Set());
   const [score, setScore] = useState(0);
+  const [isSpawning, setIsSpawning] = useState(false);
 
   const progress = (processedItems.size / WASTE_ITEMS.length) * 100;
 
@@ -150,15 +151,16 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
   // Spawn two items initially
   useEffect(() => {
-    if (!showIntro && activeItems.length === 0) {
+    if (!showIntro && activeItems.length === 0 && !isSpawning) {
+      setIsSpawning(true);
       const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
       if (availableItems.length >= 2) {
         const item1 = availableItems[0];
         const item2 = availableItems[1];
         
         setActiveItems([
-          { item: item1, id: `item-${item1.id}`, position: { x: -80, y: 0 } },
-          { item: item2, id: `item-${item2.id}`, position: { x: 80, y: 0 } }
+          { item: item1, id: `item-${item1.id}`, position: { x: -50, y: 0 } },
+          { item: item2, id: `item-${item2.id}`, position: { x: 50, y: 0 } }
         ]);
       } else if (availableItems.length === 1) {
         // Only one item left - spawn it centered
@@ -166,11 +168,15 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           { item: availableItems[0], id: `item-${availableItems[0].id}`, position: { x: 0, y: 0 } }
         ]);
       }
+      setTimeout(() => setIsSpawning(false), 100);
     }
   }, [showIntro, processedItems]);
 
   // Spawn new item when one is removed to maintain exactly 2 items
   const spawnNewItem = () => {
+    if (isSpawning) return;
+    setIsSpawning(true);
+    
     const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
     if (availableItems.length > 0 && activeItems.length < 2) {
       const newItem = availableItems[0];
@@ -179,7 +185,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       let newX = 0;
       if (activeItems.length === 1) {
         // If one item exists, place new item on opposite side
-        newX = activeItems[0].position.x > 0 ? -80 : 80;
+        newX = activeItems[0].position.x > 0 ? -50 : 50;
       }
       
       setActiveItems(prev => [...prev, { 
@@ -188,6 +194,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         position: { x: newX, y: 0 } 
       }]);
     }
+    
+    setTimeout(() => setIsSpawning(false), 100);
   };
 
   // Initialize falling leaves, clouds, light particles, and butterflies
@@ -653,7 +661,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
       {/* Jana Character - Bottom left corner */}
       <div 
-        className="absolute bottom-4 left-2 sm:left-4 z-10"
+        className="absolute bottom-2 left-2 sm:left-4 z-10"
       >
         {/* Shadow under Jana */}
         <div 
