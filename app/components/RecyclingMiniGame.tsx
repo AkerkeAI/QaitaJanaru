@@ -79,7 +79,6 @@ const BINS = [
 export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [activeItems, setActiveItems] = useState<Array<{ item: WasteItem; id: string; position: { x: number; y: number } }>>([]);
   const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
-  const [currentPosition, setCurrentPosition] = useState({ x: 0, y: 0 });
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -89,8 +88,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [lightParticles, setLightParticles] = useState<Array<{ id: number; x: number; y: number; speed: number; opacity: number }>>([]);
   const [janaState, setJanaState] = useState<'idle' | 'happy' | 'sad'>('idle');
   const [showIntro, setShowIntro] = useState(true);
-  const [showSpeechBubble, setShowSpeechBubble] = useState(false);
-  const [speechBubbleText, setSpeechBubbleText] = useState('');
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [errorText, setErrorText] = useState('');
   const { messages } = useLanguage();
@@ -104,6 +101,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const audioContextRef = useRef<AudioContext | null>(null);
   const ambientOscillatorRef = useRef<OscillatorNode | null>(null);
   const ambientGainRef = useRef<GainNode | null>(null);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
 
   const progress = (processedItems.size / WASTE_ITEMS.length) * 100;
 
@@ -111,17 +109,24 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const initAudioContext = () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      setAudioUnlocked(true);
+      startAmbientSound();
     }
     if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
+      audioContextRef.current.resume().then(() => {
+        setAudioUnlocked(true);
+        if (!ambientOscillatorRef.current) {
+          startAmbientSound();
+        }
+      });
     }
   };
 
   // Start ambient sound
   const startAmbientSound = () => {
     try {
-      initAudioContext();
-      if (!audioContextRef.current || ambientOscillatorRef.current) return;
+      if (!audioContextRef.current) return;
+      if (ambientOscillatorRef.current) return;
 
       const ctx = audioContextRef.current;
       const oscillator = ctx.createOscillator();
@@ -131,7 +136,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       oscillator.frequency.setValueAtTime(80, ctx.currentTime); // Low frequency for ambient
       
       gainNode.gain.setValueAtTime(0, ctx.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 2); // Fade in to ~8% volume
+      gainNode.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 2); // Fade in to ~5% volume (quieter)
       
       oscillator.connect(gainNode);
       gainNode.connect(ctx.destination);
@@ -158,20 +163,19 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       oscillator.connect(gainNode);
       gainNode.connect(ctx.destination);
       
-      // Volume at 25% (0.25)
       if (type === 'correct') {
-        // Pleasant pop sound
+        // Pleasant ding sound
         oscillator.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
         oscillator.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.1); // G5
-        gainNode.gain.setValueAtTime(0.25, ctx.currentTime);
+        gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
         oscillator.start(ctx.currentTime);
         oscillator.stop(ctx.currentTime + 0.2);
       } else if (type === 'wrong') {
-        // Gentle "oops" sound
+        // Soft error sound
         oscillator.frequency.setValueAtTime(200, ctx.currentTime);
         oscillator.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.15);
-        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+        gainNode.gain.setValueAtTime(0.12, ctx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
         oscillator.start(ctx.currentTime);
         oscillator.stop(ctx.currentTime + 0.2);
@@ -179,7 +183,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         // Brighter success sound
         oscillator.frequency.setValueAtTime(523.25, ctx.currentTime);
         oscillator.frequency.exponentialRampToValueAtTime(1046.5, ctx.currentTime + 0.15);
-        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNode.gain.setValueAtTime(0.18, ctx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
         oscillator.start(ctx.currentTime);
         oscillator.stop(ctx.currentTime + 0.3);
@@ -198,7 +202,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   useEffect(() => {
     if (!showIntro && activeItems.length === 0 && !isSpawning) {
       setIsSpawning(true);
-      startAmbientSound(); // Start ambient sound when game begins
       
       const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
       
@@ -206,11 +209,15 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       const itemsToSpawn = availableItems.slice(0, 2);
       
       if (itemsToSpawn.length > 0) {
+        // Calculate responsive positions based on viewport width
+        const viewportWidth = window.innerWidth;
+        const itemSpacing = Math.min(viewportWidth * 0.15, 100); // 15% of viewport, max 100px
+        
         const newItems = itemsToSpawn.map((item, index) => ({
           item,
           id: `item-${item.id}`,
           position: { 
-            x: itemsToSpawn.length === 1 ? 0 : (index === 0 ? -40 : 40),
+            x: itemsToSpawn.length === 1 ? 0 : (index === 0 ? -itemSpacing : itemSpacing),
             y: 0 
           }
         }));
@@ -219,7 +226,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       
       setTimeout(() => setIsSpawning(false), 200);
     }
-  }, [showIntro]);
+  }, [showIntro, processedItems]);
 
   // Spawn new item when one is removed to maintain exactly 2 items
   const spawnNewItem = () => {
@@ -230,9 +237,11 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     if (availableItems.length > 0 && activeItems.length < 2) {
       const newItem = availableItems[0];
       
-      // Calculate position to keep items centered
+      // Calculate responsive position to keep items centered
+      const viewportWidth = window.innerWidth;
+      const itemSpacing = Math.min(viewportWidth * 0.15, 100);
       const newX = activeItems.length === 1 
-        ? (activeItems[0].position.x > 0 ? -40 : 40)
+        ? (activeItems[0].position.x > 0 ? -itemSpacing : itemSpacing)
         : 0;
       
       setActiveItems(prev => [...prev, { 
@@ -367,8 +376,13 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     e.preventDefault();
 
     // Update position to keep item centered under finger
-    const newX = e.clientX - window.innerWidth / 2;
-    const newY = e.clientY - window.innerHeight / 2;
+    // Use percentage-based positioning for responsiveness
+    const container = containerRef.current;
+    if (!container) return;
+    
+    const rect = container.getBoundingClientRect();
+    const newX = ((e.clientX - rect.left) / rect.width - 0.5) * 100; // -50 to 50
+    const newY = ((e.clientY - rect.top) / rect.height - 0.5) * 100; // -50 to 50
     
     setActiveItems(prev => prev.map(ai => 
       ai.id === itemId ? { ...ai, position: { x: newX, y: newY } } : ai
@@ -480,12 +494,14 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   // Intro screen
   if (showIntro) {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden"
+      <div 
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden"
         style={{
           backgroundImage: "url('/assets/recycling-game/background.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
+        onClick={initAudioContext}
       >
         <div className="absolute inset-0 bg-black/20" />
         
@@ -569,7 +585,11 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
           {/* Start button */}
           <button
-            onClick={() => setShowIntro(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              initAudioContext();
+              setShowIntro(false);
+            }}
             className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-lg sm:text-xl py-4 px-8 sm:px-12 rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
           >
             {messages.recyclingGame?.letsStart || "Let's Start"}
@@ -613,12 +633,13 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   return (
     <div 
       ref={containerRef}
-      className="fixed inset-0 z-[9999] flex flex-col items-center p-4 sm:p-6 overflow-hidden"
+      className="fixed inset-0 z-[9999] flex flex-col overflow-hidden"
       style={{
         backgroundImage: "url('/assets/recycling-game/background.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
+      onClick={initAudioContext}
     >
       {/* Parallax background overlay */}
       <div className="absolute inset-0 bg-black/20" />
@@ -700,11 +721,12 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
       {/* Jana Character - Bottom left corner */}
       <div 
-        className="absolute bottom-2 left-2 sm:left-4 z-10"
+        className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-10"
+        style={{ height: '150px', width: 'auto' maintainAspectRatio: true }}
       >
         {/* Shadow under Jana */}
         <div 
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-28 sm:w-32 lg:w-40 h-4 sm:h-5 bg-black/20 rounded-full blur-sm"
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 sm:w-28 lg:w-32 h-3 sm:h-4 bg-black/20 rounded-full blur-sm"
           style={{
             animation: 'shadowPulse 2.5s ease-in-out infinite',
           }}
@@ -740,12 +762,17 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
                    janaState === 'sad' ? '/assets/recycling-game/jana-sad.png' :
                    '/assets/recycling-game/jana-idle.png'}
               alt="Jana"
-              className="h-36 sm:h-40 lg:h-44 object-contain drop-shadow-lg transition-opacity duration-300"
+              className="h-full w-auto object-contain drop-shadow-lg transition-opacity duration-300"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                maxHeight: '150px',
               }}
               onError={(e) => {
                 console.error('Jana image failed to load:', (e.target as HTMLImageElement).src);
+                console.error('Jana state:', janaState);
+              }}
+              onLoad={() => {
+                console.log('Jana image loaded successfully:', janaState);
               }}
             />
             {/* Blink overlay - slower for sad state */}
@@ -763,103 +790,116 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       {/* Error message - Floating overlay in center */}
       {showErrorMessage && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-          <div className="bg-red-500/70 backdrop-blur-md rounded-2xl px-6 py-3 shadow-xl border border-red-400/50 text-center" style={{ animation: 'fadeInOut 1.5s ease-in-out forwards' }}>
+          <div className="bg-red-500/80 backdrop-blur-md rounded-2xl px-6 py-3 shadow-xl border border-red-400/50 text-center" style={{ animation: 'fadeInOut 1s ease-in-out forwards' }}>
             <p className="text-white font-semibold text-base sm:text-lg">{errorText}</p>
           </div>
         </div>
       )}
 
       {/* Progress Bar - Top */}
-      <div className="w-full max-w-3xl mb-3 sm:mb-4 z-20">
+      <div className="w-full max-w-3xl mb-2 sm:mb-3 z-20 px-4 sm:px-6">
         <div className="h-2 sm:h-3 bg-emerald-900/50 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
+          <div=            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
       {/* Title - Premium glass eco card */}
-      <div className="text-center mb-4 sm:mb-6 px-4 z-20">
-        <div className="bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-2xl p-3 sm:p-4 shadow-xl max-w-xl mx-auto border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1 tracking-tight">
+      <div className="text-center mb-3 sm:mb-4 px-4 z-20">
+        <div className="bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-2xl p-2 sm:p-3 shadow-xl max-w-xl mx-auto border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
+          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-1 tracking-tight">
             {messages.recyclingGame?.helpHealPlanet || '🌍 Help Heal the Planet'}
           </h1>
-          <p className="text-xs sm:text-sm lg:text-base text-emerald-100 font-medium">
+          <p className="text-xs sm:text-sm text-emerald-100 font-medium">
             {messages.recyclingGame?.sortWaste || 'Sort the waste into the correct recycling bins.'}
           </p>
         </div>
       </div>
 
-      {/* Waste Items */}
-      <div className="relative mb-4 sm:mb-6 z-20 flex justify-center gap-4">
-        {activeItems.map((activeItem) => {
-          const itemName = getItemName(activeItem.item);
-          const isDraggingThis = draggingItemId === activeItem.id;
-          
-          return (
-            <div key={activeItem.id} className="relative">
-              <div
-                ref={(el) => { itemRef.current[activeItem.id] = el; }}
-                className={`w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none ${
-                  isDraggingThis ? "scale-110 shadow-2xl z-50" : "shadow-xl"
-                } ${
-                  showSuccess ? "animate-pulse bg-emerald-500/30" : ""
-                } ${
-                  showError ? "animate-shake bg-red-500/30" : ""
-                }`}
-                style={{
-                  background: "rgba(255, 255, 255, 0.1)",
-                  backdropFilter: "blur(10px)",
-                  border: "2px solid rgba(255, 255, 255, 0.2)",
-                  transform: `translate3d(${activeItem.position.x}px, ${activeItem.position.y}px, 0)`,
-                  transition: isDraggingThis ? 'none' : 'transform 0.3s ease-out',
-                  willChange: 'transform',
-                  touchAction: 'none',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  WebkitTouchCallout: 'none',
-                }}
-                onPointerDown={(e) => handleDragStart(activeItem.id, e)}
-                onPointerMove={(e) => handleDragMove(activeItem.id, e)}
-                onPointerUp={(e) => handleDragEnd(activeItem.id, e)}
-                onPointerCancel={(e) => handleDragEnd(activeItem.id, e)}
-              >
-                <img 
-                  src={activeItem.item.icon} 
-                  alt={itemName} 
-                  className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 object-contain"
+      {/* Waste Items - Centered with responsive positioning */}
+      <div className="relative flex-1 flex items-center justify-center z-20 px-4">
+        <div className="flex justify-center items-center gap-4 sm:gap-6 lg:gap-8" style={{ maxWidth: '90vw' }}>
+          {activeItems.map((activeItem) => {
+            const itemName = getItemName(activeItem.item);
+            const isDraggingThis = draggingItemId === activeItem.id;
+            
+            return (
+              <div key={activeItem.id} className="relative flex flex-col items-center">
+                <div
+                  ref={(el) => { itemRef.current[activeItem.id] = el; }}
+                  className={`rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none ${
+                    isDraggingThis ? "scale-110 shadow-2xl z-50" : "shadow-xl"
+                  } ${
+                    showSuccess ? "animate-pulse bg-emerald-500/30" : ""
+                  } ${
+                    showError ? "animate-shake bg-red-500/30" : ""
+                  }`}
                   style={{
-                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-                    mixBlendMode: 'multiply',
+                    width: 'min(25vw, 120px)',
+                    height: 'min(25vw, 120px)',
+                    minWidth: '80px',
+                    minHeight: '80px',
+                    background: "rgba(255, 255, 255, 0.1)",
+                    backdropFilter: "blur(10px)",
+                    border: "2px solid rgba(255, 255, 255, 0.2)",
+                    transform: isDraggingThis 
+                      ? `translate3d(${activeItem.position.x * (window.innerWidth / 100)}px, ${activeItem.position.y * (window.innerHeight / 100)}px, 0)`
+                      : 'translate3d(0, 0, 0)',
+                    transition: isDraggingThis ? 'none' : 'transform 0.3s ease-out',
+                    willChange: 'transform',
+                    touchAction: 'none',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    WebkitTouchCallout: 'none',
                   }}
-                />
+                  onPointerDown={(e) => handleDragStart(activeItem.id, e)}
+                  onPointerMove={(e) => handleDragMove(activeItem.id, e)}
+                  onPointerUp={(e) => handleDragEnd(activeItem.id, e)}
+                  onPointerCancel={(e) => handleDragEnd(activeItem.id, e)}
+                >
+                  <img 
+                    src={activeItem.item.icon} 
+                    alt={itemName} 
+                    style={{
+                      width: '70%',
+                      height: '70%',
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+                      mixBlendMode: 'multiply',
+                    }}
+                  />
+                </div>
+                <p className="text-center mt-2 sm:mt-3 font-semibold text-xs sm:text-sm text-white bg-gradient-to-r from-emerald-800/70 to-emerald-900/80 backdrop-blur-md rounded-full px-3 py-1 sm:px-4 sm:py-2 border border-emerald-400/30 shadow-lg" style={{ boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' }}>{itemName}</p>
               </div>
-              <p className="text-center mt-4 font-semibold text-sm sm:text-base text-white bg-gradient-to-r from-emerald-800/70 to-emerald-900/80 backdrop-blur-md rounded-full px-5 py-2 inline-block border border-emerald-400/30 shadow-lg" style={{ boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' }}>{itemName}</p>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
-      {/* Bins - Bottom area */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full max-w-xl px-4 mb-4 z-20">
+      {/* Bins - Bottom area with larger icons */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 w-full max-w-2xl px-4 sm:px-6 mb-4 z-20">
         {BINS.map((bin) => (
           <div
             key={bin.type}
             id={`bin-${bin.type}`}
-            className="relative rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+            className="relative rounded-xl sm:rounded-2xl aspect-square flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
             style={{
               background: `linear-gradient(135deg, ${bin.color}25, ${bin.color}15)`,
               border: `2px solid ${bin.color}`,
               boxShadow: `0 4px 16px ${bin.color}40, 0 0 0 1px ${bin.color}20`,
+              minHeight: 'min(18vw, 80px)',
+              maxHeight: '120px',
             }}
           >
-            {/* Bin Image */}
+            {/* Bin Image - 70-80% of container */}
             <img 
               src={bin.icon} 
               alt={bin.type}
-              className="w-14 h-14 sm:w-16 sm:h-16 lg:w-[4.5rem] lg:h-[4.5rem] object-contain"
               style={{
+                width: '75%',
+                height: '75%',
+                objectFit: 'contain',
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
               }}
             />
@@ -868,23 +908,23 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       </div>
 
       {/* Legend - Lower right corner */}
-      <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-xl p-3 sm:p-4 shadow-xl border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
-        <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#FBBF24' }} />
-            <span className="text-white font-medium">{messages.recyclingGame?.plastic || 'Plastic'}</span>
+      <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-xl p-2 sm:p-3 shadow-xl border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
+        <div className="space-y-1 sm:space-y-1.5 text-xs sm:text-xs">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full" style={{ backgroundColor: '#FBBF24' }} />
+            <span className="text-white font-medium text-xs sm:text-sm">{messages.recyclingGame?.plastic || 'Plastic'}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#3B82F6' }} />
-            <span className="text-white font-medium">{messages.recyclingGame?.paper || 'Paper'}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full" style={{ backgroundColor: '#3B82F6' }} />
+            <span className="text-white font-medium text-xs sm:text-sm">{messages.recyclingGame?.paper || 'Paper'}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#10B981' }} />
-            <span className="text-white font-medium">{messages.recyclingGame?.glass || 'Glass'}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full" style={{ backgroundColor: '#10B981' }} />
+            <span className="text-white font-medium text-xs sm:text-sm">{messages.recyclingGame?.glass || 'Glass'}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#A16207' }} />
-            <span className="text-white font-medium">{messages.recyclingGame?.organic || 'Organic'}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full" style={{ backgroundColor: '#A16207' }} />
+            <span className="text-white font-medium text-xs sm:text-sm">{messages.recyclingGame?.organic || 'Organic'}</span>
           </div>
         </div>
       </div>
@@ -918,8 +958,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       <style>{`
         @keyframes fadeInOut {
           0% { opacity: 0; transform: scale(0.9); }
-          20% { opacity: 1; transform: scale(1); }
-          80% { opacity: 1; transform: scale(1); }
+          15% { opacity: 1; transform: scale(1); }
+          85% { opacity: 1; transform: scale(1); }
           100% { opacity: 0; transform: scale(0.9); }
         }
         
