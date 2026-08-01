@@ -722,7 +722,10 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       {/* Jana Character - Bottom left corner */}
       <div 
         className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-10"
-        style={{ height: '150px', width: 'auto' maintainAspectRatio: true }}
+        style={{
+        height: '150px',
+        width: 'auto'
+        }}
       >
         {/* Shadow under Jana */}
         <div 
@@ -799,7 +802,9 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       {/* Progress Bar - Top */}
       <div className="w-full max-w-3xl mb-2 sm:mb-3 z-20 px-4 sm:px-6">
         <div className="h-2 sm:h-3 bg-emerald-900/50 rounded-full overflow-hidden">
-          <div=            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
+         <div
+
+className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
