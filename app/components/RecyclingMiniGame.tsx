@@ -99,9 +99,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [score, setScore] = useState(0);
   const [isSpawning, setIsSpawning] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const ambientOscillatorsRef = useRef<OscillatorNode[]>([]);
-  const ambientGainRef = useRef<GainNode | null>(null);
-  const ambientNoiseRef = useRef<AudioBufferSourceNode | null>(null);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
 
   const progress = (processedItems.size / WASTE_ITEMS.length) * 100;
@@ -111,137 +108,14 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       setAudioUnlocked(true);
-      startAmbientSound();
     }
     if (audioContextRef.current.state === 'suspended') {
       audioContextRef.current.resume().then(() => {
         setAudioUnlocked(true);
-        if (ambientOscillatorsRef.current.length === 0) {
-          startAmbientSound();
-        }
       });
     }
   };
 
-  // Create noise buffer for wind/leaves
-  const createNoiseBuffer = (ctx: AudioContext) => {
-    const bufferSize = ctx.sampleRate * 2; // 2 seconds of noise
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-    return buffer;
-  };
-
-  // Start ambient nature sound
-  const startAmbientSound = () => {
-    try {
-      if (!audioContextRef.current) return;
-      if (ambientOscillatorsRef.current.length > 0) return; // Already playing
-
-      const ctx = audioContextRef.current;
-      const masterGain = ctx.createGain();
-      masterGain.gain.setValueAtTime(0, ctx.currentTime);
-      masterGain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 1); // 15% volume
-      masterGain.connect(ctx.destination);
-      ambientGainRef.current = masterGain;
-
-      const oscillators: OscillatorNode[] = [];
-
-      // Wind - filtered noise
-      const noiseBuffer = createNoiseBuffer(ctx);
-      const noiseSource = ctx.createBufferSource();
-      noiseSource.buffer = noiseBuffer;
-      noiseSource.loop = true;
-      const noiseFilter = ctx.createBiquadFilter();
-      noiseFilter.type = 'lowpass';
-      noiseFilter.frequency.setValueAtTime(200, ctx.currentTime);
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.3, ctx.currentTime);
-      noiseSource.connect(noiseFilter);
-      noiseFilter.connect(noiseGain);
-      noiseGain.connect(masterGain);
-      noiseSource.start();
-      ambientNoiseRef.current = noiseSource;
-
-      // Soft wind drone
-      const windOsc = ctx.createOscillator();
-      windOsc.type = 'sine';
-      windOsc.frequency.setValueAtTime(60, ctx.currentTime);
-      const windGain = ctx.createGain();
-      windGain.gain.setValueAtTime(0.1, ctx.currentTime);
-      windOsc.connect(windGain);
-      windGain.connect(masterGain);
-      windOsc.start();
-      oscillators.push(windOsc);
-
-      // Bird chirps - high frequency intermittent tones
-      const birdOsc = ctx.createOscillator();
-      birdOsc.type = 'sine';
-      birdOsc.frequency.setValueAtTime(2000, ctx.currentTime);
-      const birdGain = ctx.createGain();
-      birdGain.gain.setValueAtTime(0, ctx.currentTime);
-      // Modulate bird sound
-      const birdLFO = ctx.createOscillator();
-      birdLFO.type = 'sine';
-      birdLFO.frequency.setValueAtTime(0.5, ctx.currentTime); // 0.5 Hz for chirping
-      const birdLFOGain = ctx.createGain();
-      birdLFOGain.gain.setValueAtTime(0.05, ctx.currentTime);
-      birdLFO.connect(birdLFOGain);
-      birdLFOGain.connect(birdGain.gain);
-      birdOsc.connect(birdGain);
-      birdGain.connect(masterGain);
-      birdOsc.start();
-      birdLFO.start();
-      oscillators.push(birdOsc, birdLFO);
-
-      // Forest ambience - low frequency rumble
-      const forestOsc = ctx.createOscillator();
-      forestOsc.type = 'sine';
-      forestOsc.frequency.setValueAtTime(40, ctx.currentTime);
-      const forestGain = ctx.createGain();
-      forestGain.gain.setValueAtTime(0.08, ctx.currentTime);
-      forestOsc.connect(forestGain);
-      forestGain.connect(masterGain);
-      forestOsc.start();
-      oscillators.push(forestOsc);
-
-      ambientOscillatorsRef.current = oscillators;
-    } catch (error) {
-      console.error('Ambient sound failed:', error);
-    }
-  };
-
-  // Stop ambient sound
-  const stopAmbientSound = () => {
-    try {
-      ambientOscillatorsRef.current.forEach(osc => {
-        try {
-          osc.stop();
-        } catch (e) {
-          // Ignore if already stopped
-        }
-      });
-      ambientOscillatorsRef.current = [];
-      
-      if (ambientNoiseRef.current) {
-        try {
-          ambientNoiseRef.current.stop();
-        } catch (e) {
-          // Ignore if already stopped
-        }
-        ambientNoiseRef.current = null;
-      }
-      
-      if (ambientGainRef.current) {
-        ambientGainRef.current.disconnect();
-        ambientGainRef.current = null;
-      }
-    } catch (error) {
-      console.error('Stop ambient sound failed:', error);
-    }
-  };
 
   // Sound effects using Web Audio API
   const playSound = (type: 'correct' | 'wrong' | 'combo') => {
@@ -291,88 +165,57 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     return messages.recyclingGame?.[item.nameKey as keyof typeof messages.recyclingGame] || item.nameKey;
   };
 
-  // Spawn two items initially - only once when intro ends
+  // Ensure exactly 2 active items at all times
   useEffect(() => {
-    if (!showIntro && activeItems.length === 0 && !isSpawning) {
+    if (!showIntro && !isSpawning && activeItems.length < 2) {
       setIsSpawning(true);
       
       const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
+      const itemsNeeded = 2 - activeItems.length;
       
-      // Always spawn exactly 2 items - reuse items if not enough unique ones left
-      let itemsToSpawn: WasteItem[];
-      if (availableItems.length >= 2) {
-        itemsToSpawn = availableItems.slice(0, 2);
-      } else if (availableItems.length === 1) {
-        // Only 1 unique item left - reuse it twice
-        itemsToSpawn = [availableItems[0], availableItems[0]];
-      } else {
-        // No unique items left - reuse random items from full list
-        itemsToSpawn = [
-          WASTE_ITEMS[Math.floor(Math.random() * WASTE_ITEMS.length)],
-          WASTE_ITEMS[Math.floor(Math.random() * WASTE_ITEMS.length)]
-        ];
+      let itemsToSpawn: WasteItem[] = [];
+      for (let i = 0; i < itemsNeeded; i++) {
+        if (availableItems.length > 0) {
+          itemsToSpawn.push(availableItems[0]);
+          availableItems.shift();
+        } else {
+          // No unique items left - reuse random item from full list
+          itemsToSpawn.push(WASTE_ITEMS[Math.floor(Math.random() * WASTE_ITEMS.length)]);
+        }
       }
       
       // Calculate responsive positions based on viewport width
       const viewportWidth = window.innerWidth;
-      const itemSpacing = Math.min(viewportWidth * 0.12, 80); // 12% of viewport, max 80px
+      const itemSpacing = Math.min(viewportWidth * 0.12, 80);
       
-      const newItems = itemsToSpawn.map((item, index) => ({
-        item,
-        id: `item-${item.id}-${Date.now()}-${index}`, // Unique ID even for reused items
-        position: { 
-          x: index === 0 ? -itemSpacing : itemSpacing,
-          y: 0 
+      const newItems = itemsToSpawn.map((item, index) => {
+        let newX;
+        if (activeItems.length === 0) {
+          // First item
+          newX = index === 0 ? -itemSpacing : itemSpacing;
+        } else if (activeItems.length === 1) {
+          // Second item - place opposite to existing
+          newX = activeItems[0].position.x > 0 ? -itemSpacing : itemSpacing;
+        } else {
+          newX = 0;
         }
-      }));
-      setActiveItems(newItems);
+        
+        return {
+          item,
+          id: `item-${item.id}-${Date.now()}-${index}`,
+          position: { x: newX, y: 0 }
+        };
+      });
       
+      setActiveItems(prev => [...prev, ...newItems]);
       setTimeout(() => setIsSpawning(false), 200);
     }
-  }, [showIntro, processedItems]);
+  }, [showIntro, activeItems.length, processedItems]);
 
   // Spawn new item when one is removed to maintain exactly 2 items
   const spawnNewItem = () => {
-    if (isSpawning) return;
-    
-    const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
-    
-    // Always spawn to maintain exactly 2 items
-    if (activeItems.length >= 2) return;
-    
-    setIsSpawning(true);
-    
-    let newItem: WasteItem;
-    if (availableItems.length > 0) {
-      newItem = availableItems[0];
-    } else {
-      // No unique items left - reuse random item from full list
-      newItem = WASTE_ITEMS[Math.floor(Math.random() * WASTE_ITEMS.length)];
-    }
-    
-    // Calculate responsive position to keep items centered on same horizontal row
-    const viewportWidth = window.innerWidth;
-    const itemSpacing = Math.min(viewportWidth * 0.12, 80);
-    
-    let newX;
-    if (activeItems.length === 0) {
-      // First item - center
-      newX = 0;
-    } else if (activeItems.length === 1) {
-      // Second item - place opposite to existing item
-      newX = activeItems[0].position.x > 0 ? -itemSpacing : itemSpacing;
-    } else {
-      // Should not reach here due to length check
-      newX = 0;
-    }
-    
-    setActiveItems(prev => [...prev, { 
-      item: newItem, 
-      id: `item-${newItem.id}-${Date.now()}`, // Unique ID for reused items
-      position: { x: newX, y: 0 } 
-    }]);
-    
-    setTimeout(() => setIsSpawning(false), 200);
+    // The useEffect will handle spawning automatically
+    // This function is kept for compatibility but the logic is now in the useEffect
   };
 
   // Initialize falling leaves, clouds, light particles, and butterflies
@@ -575,7 +418,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           setShowSuccess(false);
           // Check if all items processed
           if (processedItems.size + 1 >= WASTE_ITEMS.length) {
-            stopAmbientSound();
             setIsComplete(true);
             setTimeout(() => {
               onComplete();
@@ -760,7 +602,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         backgroundImage: "url('/assets/recycling-game/background.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        paddingTop: '50px',
+        paddingTop: window.innerWidth < 640 ? '10px' : '50px',
       }}
       onClick={initAudioContext}
     >
@@ -842,14 +684,14 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         />
       ))}
 
-      {/* Jana Character - Bottom left corner */}
+      {/* Jana Character - Bottom left corner - Fixed HUD */}
       <div 
-        className="absolute bottom-4 left-4 z-10"
+        className="fixed bottom-4 left-4 z-10"
         style={{
         height: '150px',
         width: 'auto',
         paddingLeft: '16px',
-        paddingBottom: '16px'
+        paddingBottom: '16px',
         }}
       >
         {/* Shadow under Jana */}
@@ -1030,7 +872,7 @@ className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-al
       </div>
 
       {/* Bins - Bottom area with larger icons */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 w-full max-w-2xl px-4 sm:px-6 mb-4 z-20 mx-auto" style={{ marginLeft: '25px' }}>
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 w-full max-w-2xl px-4 sm:px-6 mb-4 z-20 mx-auto" style={{ marginLeft: window.innerWidth < 640 ? '30px' : '0' }}>
         {BINS.map((bin) => (
           <div
             key={bin.type}
@@ -1059,8 +901,8 @@ className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-al
         ))}
       </div>
 
-      {/* Legend - Lower right corner */}
-      <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-xl p-2 sm:p-3 shadow-xl border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
+      {/* Legend - Lower right corner - Fixed HUD */}
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-xl p-2 sm:p-3 shadow-xl border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
         <div className="space-y-1 sm:space-y-1.5 text-xs sm:text-xs">
           <div className="flex items-center gap-1.5 sm:gap-2">
             <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full" style={{ backgroundColor: '#FBBF24' }} />
