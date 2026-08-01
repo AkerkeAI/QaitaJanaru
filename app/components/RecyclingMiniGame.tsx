@@ -867,8 +867,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           </svg>
         </div>
         <div className="absolute -right-4 top-1/3 opacity-30" style={{ animation: 'leafFloat 5s ease-in-out infinite 1s' }}>
-          <sv.
-          idth="16" height="16" viewBox="0 0 24 24" fill="#4ade80">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#4ade80">
             <path d="M12 2C12 2 8 6 8 10C8 14 12 18 12 22C12 18 16 14 16 10C16 6 12 2 12 2Z" />
           </svg>
         </div>
