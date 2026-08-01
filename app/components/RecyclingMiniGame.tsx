@@ -99,8 +99,9 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [score, setScore] = useState(0);
   const [isSpawning, setIsSpawning] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const ambientOscillatorRef = useRef<OscillatorNode | null>(null);
+  const ambientOscillatorsRef = useRef<OscillatorNode[]>([]);
   const ambientGainRef = useRef<GainNode | null>(null);
+  const ambientNoiseRef = useRef<AudioBufferSourceNode | null>(null);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
 
   const progress = (processedItems.size / WASTE_ITEMS.length) * 100;
@@ -115,38 +116,130 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     if (audioContextRef.current.state === 'suspended') {
       audioContextRef.current.resume().then(() => {
         setAudioUnlocked(true);
-        if (!ambientOscillatorRef.current) {
+        if (ambientOscillatorsRef.current.length === 0) {
           startAmbientSound();
         }
       });
     }
   };
 
-  // Start ambient sound
+  // Create noise buffer for wind/leaves
+  const createNoiseBuffer = (ctx: AudioContext) => {
+    const bufferSize = ctx.sampleRate * 2; // 2 seconds of noise
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    return buffer;
+  };
+
+  // Start ambient nature sound
   const startAmbientSound = () => {
     try {
       if (!audioContextRef.current) return;
-      if (ambientOscillatorRef.current) return;
+      if (ambientOscillatorsRef.current.length > 0) return; // Already playing
 
       const ctx = audioContextRef.current;
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(80, ctx.currentTime); // Low frequency for ambient
-      
-      gainNode.gain.setValueAtTime(0, ctx.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 2); // Fade in to ~5% volume (quieter)
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      
-      oscillator.start();
-      
-      ambientOscillatorRef.current = oscillator;
-      ambientGainRef.current = gainNode;
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0, ctx.currentTime);
+      masterGain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 1); // 15% volume
+      masterGain.connect(ctx.destination);
+      ambientGainRef.current = masterGain;
+
+      const oscillators: OscillatorNode[] = [];
+
+      // Wind - filtered noise
+      const noiseBuffer = createNoiseBuffer(ctx);
+      const noiseSource = ctx.createBufferSource();
+      noiseSource.buffer = noiseBuffer;
+      noiseSource.loop = true;
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = 'lowpass';
+      noiseFilter.frequency.setValueAtTime(200, ctx.currentTime);
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.3, ctx.currentTime);
+      noiseSource.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(masterGain);
+      noiseSource.start();
+      ambientNoiseRef.current = noiseSource;
+
+      // Soft wind drone
+      const windOsc = ctx.createOscillator();
+      windOsc.type = 'sine';
+      windOsc.frequency.setValueAtTime(60, ctx.currentTime);
+      const windGain = ctx.createGain();
+      windGain.gain.setValueAtTime(0.1, ctx.currentTime);
+      windOsc.connect(windGain);
+      windGain.connect(masterGain);
+      windOsc.start();
+      oscillators.push(windOsc);
+
+      // Bird chirps - high frequency intermittent tones
+      const birdOsc = ctx.createOscillator();
+      birdOsc.type = 'sine';
+      birdOsc.frequency.setValueAtTime(2000, ctx.currentTime);
+      const birdGain = ctx.createGain();
+      birdGain.gain.setValueAtTime(0, ctx.currentTime);
+      // Modulate bird sound
+      const birdLFO = ctx.createOscillator();
+      birdLFO.type = 'sine';
+      birdLFO.frequency.setValueAtTime(0.5, ctx.currentTime); // 0.5 Hz for chirping
+      const birdLFOGain = ctx.createGain();
+      birdLFOGain.gain.setValueAtTime(0.05, ctx.currentTime);
+      birdLFO.connect(birdLFOGain);
+      birdLFOGain.connect(birdGain.gain);
+      birdOsc.connect(birdGain);
+      birdGain.connect(masterGain);
+      birdOsc.start();
+      birdLFO.start();
+      oscillators.push(birdOsc, birdLFO);
+
+      // Forest ambience - low frequency rumble
+      const forestOsc = ctx.createOscillator();
+      forestOsc.type = 'sine';
+      forestOsc.frequency.setValueAtTime(40, ctx.currentTime);
+      const forestGain = ctx.createGain();
+      forestGain.gain.setValueAtTime(0.08, ctx.currentTime);
+      forestOsc.connect(forestGain);
+      forestGain.connect(masterGain);
+      forestOsc.start();
+      oscillators.push(forestOsc);
+
+      ambientOscillatorsRef.current = oscillators;
     } catch (error) {
       console.error('Ambient sound failed:', error);
+    }
+  };
+
+  // Stop ambient sound
+  const stopAmbientSound = () => {
+    try {
+      ambientOscillatorsRef.current.forEach(osc => {
+        try {
+          osc.stop();
+        } catch (e) {
+          // Ignore if already stopped
+        }
+      });
+      ambientOscillatorsRef.current = [];
+      
+      if (ambientNoiseRef.current) {
+        try {
+          ambientNoiseRef.current.stop();
+        } catch (e) {
+          // Ignore if already stopped
+        }
+        ambientNoiseRef.current = null;
+      }
+      
+      if (ambientGainRef.current) {
+        ambientGainRef.current.disconnect();
+        ambientGainRef.current = null;
+      }
+    } catch (error) {
+      console.error('Stop ambient sound failed:', error);
     }
   };
 
@@ -205,24 +298,34 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       
       const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
       
-      // Always spawn exactly 2 items if available, or 1 if only 1 remains
-      const itemsToSpawn = availableItems.slice(0, 2);
-      
-      if (itemsToSpawn.length > 0) {
-        // Calculate responsive positions based on viewport width
-        const viewportWidth = window.innerWidth;
-        const itemSpacing = Math.min(viewportWidth * 0.12, 80); // 12% of viewport, max 80px
-        
-        const newItems = itemsToSpawn.map((item, index) => ({
-          item,
-          id: `item-${item.id}`,
-          position: { 
-            x: itemsToSpawn.length === 1 ? 0 : (index === 0 ? -itemSpacing : itemSpacing),
-            y: 0 
-          }
-        }));
-        setActiveItems(newItems);
+      // Always spawn exactly 2 items - reuse items if not enough unique ones left
+      let itemsToSpawn: WasteItem[];
+      if (availableItems.length >= 2) {
+        itemsToSpawn = availableItems.slice(0, 2);
+      } else if (availableItems.length === 1) {
+        // Only 1 unique item left - reuse it twice
+        itemsToSpawn = [availableItems[0], availableItems[0]];
+      } else {
+        // No unique items left - reuse random items from full list
+        itemsToSpawn = [
+          WASTE_ITEMS[Math.floor(Math.random() * WASTE_ITEMS.length)],
+          WASTE_ITEMS[Math.floor(Math.random() * WASTE_ITEMS.length)]
+        ];
       }
+      
+      // Calculate responsive positions based on viewport width
+      const viewportWidth = window.innerWidth;
+      const itemSpacing = Math.min(viewportWidth * 0.12, 80); // 12% of viewport, max 80px
+      
+      const newItems = itemsToSpawn.map((item, index) => ({
+        item,
+        id: `item-${item.id}-${Date.now()}-${index}`, // Unique ID even for reused items
+        position: { 
+          x: index === 0 ? -itemSpacing : itemSpacing,
+          y: 0 
+        }
+      }));
+      setActiveItems(newItems);
       
       setTimeout(() => setIsSpawning(false), 200);
     }
@@ -234,15 +337,18 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     
     const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
     
-    // If no items available, don't spawn
-    if (availableItems.length === 0) return;
-    
-    // If we already have 2 items, don't spawn
+    // Always spawn to maintain exactly 2 items
     if (activeItems.length >= 2) return;
     
     setIsSpawning(true);
     
-    const newItem = availableItems[0];
+    let newItem: WasteItem;
+    if (availableItems.length > 0) {
+      newItem = availableItems[0];
+    } else {
+      // No unique items left - reuse random item from full list
+      newItem = WASTE_ITEMS[Math.floor(Math.random() * WASTE_ITEMS.length)];
+    }
     
     // Calculate responsive position to keep items centered on same horizontal row
     const viewportWidth = window.innerWidth;
@@ -262,7 +368,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     
     setActiveItems(prev => [...prev, { 
       item: newItem, 
-      id: `item-${newItem.id}`, 
+      id: `item-${newItem.id}-${Date.now()}`, // Unique ID for reused items
       position: { x: newX, y: 0 } 
     }]);
     
@@ -469,6 +575,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           setShowSuccess(false);
           // Check if all items processed
           if (processedItems.size + 1 >= WASTE_ITEMS.length) {
+            stopAmbientSound();
             setIsComplete(true);
             setTimeout(() => {
               onComplete();
@@ -760,7 +867,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           </svg>
         </div>
         <div className="absolute -right-4 top-1/3 opacity-30" style={{ animation: 'leafFloat 5s ease-in-out infinite 1s' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#4ade80">
+          <sv.
+          idth="16" height="16" viewBox="0 0 24 24" fill="#4ade80">
             <path d="M12 2C12 2 8 6 8 10C8 14 12 18 12 22C12 18 16 14 16 10C16 6 12 2 12 2Z" />
           </svg>
         </div>
@@ -840,7 +948,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       )}
 
       {/* Progress Bar - Top */}
-      <div className="w-full max-w-3xl mb-2 sm:mb-3 z-20 px-4 sm:px-6 mt-4">
+      <div className="w-full max-w-3xl mb-2 sm:mb-3 z-20 px-4 sm:px-6 mt-2">
         <div className="h-2 sm:h-3 bg-emerald-900/50 rounded-full overflow-hidden">
          <div
 
@@ -851,7 +959,7 @@ className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-al
       </div>
 
       {/* Title - Premium glass eco card */}
-      <div className="text-center mb-4 sm:mb-5 px-4 z-20">
+      <div className="text-center mb-3 sm:mb-4 px-4 z-20">
         <div className="bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-2xl p-2 sm:p-3 shadow-xl max-w-xl mx-auto border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
           <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-1 tracking-tight">
             {messages.recyclingGame?.helpHealPlanet || '🌍 Help Heal the Planet'}
@@ -923,7 +1031,7 @@ className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-al
       </div>
 
       {/* Bins - Bottom area with larger icons */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 w-full max-w-2xl px-4 sm:px-6 mb-4 z-20 mx-auto">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 w-full max-w-2xl px-4 sm:px-6 mb-4 z-20 mx-auto" style={{ marginLeft: '25px' }}>
         {BINS.map((bin) => (
           <div
             key={bin.type}
