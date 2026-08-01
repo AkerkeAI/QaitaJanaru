@@ -211,7 +211,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       if (itemsToSpawn.length > 0) {
         // Calculate responsive positions based on viewport width
         const viewportWidth = window.innerWidth;
-        const itemSpacing = Math.min(viewportWidth * 0.15, 100); // 15% of viewport, max 100px
+        const itemSpacing = Math.min(viewportWidth * 0.12, 80); // 12% of viewport, max 80px
         
         const newItems = itemsToSpawn.map((item, index) => ({
           item,
@@ -230,26 +230,41 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
   // Spawn new item when one is removed to maintain exactly 2 items
   const spawnNewItem = () => {
-    if (isSpawning || activeItems.length >= 2) return;
-    setIsSpawning(true);
+    if (isSpawning) return;
     
     const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
-    if (availableItems.length > 0 && activeItems.length < 2) {
-      const newItem = availableItems[0];
-      
-      // Calculate responsive position to keep items centered
-      const viewportWidth = window.innerWidth;
-      const itemSpacing = Math.min(viewportWidth * 0.15, 100);
-      const newX = activeItems.length === 1 
-        ? (activeItems[0].position.x > 0 ? -itemSpacing : itemSpacing)
-        : 0;
-      
-      setActiveItems(prev => [...prev, { 
-        item: newItem, 
-        id: `item-${newItem.id}`, 
-        position: { x: newX, y: 0 } 
-      }]);
+    
+    // If no items available, don't spawn
+    if (availableItems.length === 0) return;
+    
+    // If we already have 2 items, don't spawn
+    if (activeItems.length >= 2) return;
+    
+    setIsSpawning(true);
+    
+    const newItem = availableItems[0];
+    
+    // Calculate responsive position to keep items centered on same horizontal row
+    const viewportWidth = window.innerWidth;
+    const itemSpacing = Math.min(viewportWidth * 0.12, 80);
+    
+    let newX;
+    if (activeItems.length === 0) {
+      // First item - center
+      newX = 0;
+    } else if (activeItems.length === 1) {
+      // Second item - place opposite to existing item
+      newX = activeItems[0].position.x > 0 ? -itemSpacing : itemSpacing;
+    } else {
+      // Should not reach here due to length check
+      newX = 0;
     }
+    
+    setActiveItems(prev => [...prev, { 
+      item: newItem, 
+      id: `item-${newItem.id}`, 
+      position: { x: newX, y: 0 } 
+    }]);
     
     setTimeout(() => setIsSpawning(false), 200);
   };
@@ -638,6 +653,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         backgroundImage: "url('/assets/recycling-game/background.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        paddingTop: '50px',
       }}
       onClick={initAudioContext}
     >
@@ -721,10 +737,12 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
       {/* Jana Character - Bottom left corner */}
       <div 
-        className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-10"
+        className="absolute bottom-4 left-4 z-10"
         style={{
         height: '150px',
-        width: 'auto'
+        width: 'auto',
+        paddingLeft: '16px',
+        paddingBottom: '16px'
         }}
       >
         {/* Shadow under Jana */}
@@ -747,6 +765,22 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           </svg>
         </div>
 
+        {/* Speech bubble for sad state - appears above Jana */}
+        {janaState === 'sad' && (
+          <div 
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20"
+            style={{
+              animation: 'bubblePop 0.3s ease-out forwards',
+            }}
+          >
+            <div className="bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2 shadow-xl border border-emerald-400/30 text-center">
+              <p className="text-sm font-semibold text-emerald-800">{messages.recyclingGame?.tryAgain || 'Try again!'}</p>
+            </div>
+            {/* Bubble tail */}
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/90 backdrop-blur-md border-r border-b border-emerald-400/30 transform rotate-45" />
+          </div>
+        )}
+
         <div 
           className="relative"
           style={{
@@ -768,11 +802,17 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
               className="h-full w-auto object-contain drop-shadow-lg transition-opacity duration-300"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                maxHeight: '150px',
+                height: '150px',
+                width: 'auto',
+                display: 'block',
               }}
               onError={(e) => {
                 console.error('Jana image failed to load:', (e.target as HTMLImageElement).src);
                 console.error('Jana state:', janaState);
+                // Fallback to idle if sad fails to load
+                if (janaState === 'sad') {
+                  (e.target as HTMLImageElement).src = '/assets/recycling-game/jana-idle.png';
+                }
               }}
               onLoad={() => {
                 console.log('Jana image loaded successfully:', janaState);
@@ -792,7 +832,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
       {/* Error message - Floating overlay in center */}
       {showErrorMessage && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[100]">
           <div className="bg-red-500/80 backdrop-blur-md rounded-2xl px-6 py-3 shadow-xl border border-red-400/50 text-center" style={{ animation: 'fadeInOut 1s ease-in-out forwards' }}>
             <p className="text-white font-semibold text-base sm:text-lg">{errorText}</p>
           </div>
@@ -800,7 +840,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       )}
 
       {/* Progress Bar - Top */}
-      <div className="w-full max-w-3xl mb-2 sm:mb-3 z-20 px-4 sm:px-6">
+      <div className="w-full max-w-3xl mb-2 sm:mb-3 z-20 px-4 sm:px-6 mt-4">
         <div className="h-2 sm:h-3 bg-emerald-900/50 rounded-full overflow-hidden">
          <div
 
@@ -811,7 +851,7 @@ className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-al
       </div>
 
       {/* Title - Premium glass eco card */}
-      <div className="text-center mb-3 sm:mb-4 px-4 z-20">
+      <div className="text-center mb-4 sm:mb-5 px-4 z-20">
         <div className="bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-2xl p-2 sm:p-3 shadow-xl max-w-xl mx-auto border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
           <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-1 tracking-tight">
             {messages.recyclingGame?.helpHealPlanet || '🌍 Help Heal the Planet'}
@@ -883,7 +923,7 @@ className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-al
       </div>
 
       {/* Bins - Bottom area with larger icons */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 w-full max-w-2xl px-4 sm:px-6 mb-4 z-20">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 w-full max-w-2xl px-4 sm:px-6 mb-4 z-20 mx-auto">
         {BINS.map((bin) => (
           <div
             key={bin.type}
