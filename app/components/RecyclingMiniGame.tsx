@@ -101,43 +101,88 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [processedItems, setProcessedItems] = useState<Set<string>>(new Set());
   const [score, setScore] = useState(0);
   const [isSpawning, setIsSpawning] = useState(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const ambientOscillatorRef = useRef<OscillatorNode | null>(null);
+  const ambientGainRef = useRef<GainNode | null>(null);
 
   const progress = (processedItems.size / WASTE_ITEMS.length) * 100;
+
+  // Initialize audio context on first user interaction
+  const initAudioContext = () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume();
+    }
+  };
+
+  // Start ambient sound
+  const startAmbientSound = () => {
+    try {
+      initAudioContext();
+      if (!audioContextRef.current || ambientOscillatorRef.current) return;
+
+      const ctx = audioContextRef.current;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(80, ctx.currentTime); // Low frequency for ambient
+      
+      gainNode.gain.setValueAtTime(0, ctx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 2); // Fade in to ~8% volume
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      oscillator.start();
+      
+      ambientOscillatorRef.current = oscillator;
+      ambientGainRef.current = gainNode;
+    } catch (error) {
+      console.error('Ambient sound failed:', error);
+    }
+  };
 
   // Sound effects using Web Audio API
   const playSound = (type: 'correct' | 'wrong' | 'combo') => {
     try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+      initAudioContext();
+      const ctx = audioContextRef.current;
+      if (!ctx) return;
+
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
       
       oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      gainNode.connect(ctx.destination);
       
+      // Volume at 25% (0.25)
       if (type === 'correct') {
         // Pleasant pop sound
-        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
-        oscillator.frequency.exponentialRampToValueAtTime(783.99, audioContext.currentTime + 0.1); // G5
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.2);
+        oscillator.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+        oscillator.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.1); // G5
+        gainNode.gain.setValueAtTime(0.25, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.2);
       } else if (type === 'wrong') {
         // Gentle "oops" sound
-        oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.15);
-        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.2);
+        oscillator.frequency.setValueAtTime(200, ctx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.15);
+        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.2);
       } else if (type === 'combo') {
         // Brighter success sound
-        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(1046.5, audioContext.currentTime + 0.15);
-        gainNode.gain.setValueAtTime(0.35, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.3);
+        oscillator.frequency.setValueAtTime(523.25, ctx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(1046.5, ctx.currentTime + 0.15);
+        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.3);
       }
     } catch (error) {
       console.error('Sound playback failed:', error);
@@ -149,32 +194,36 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     return messages.recyclingGame?.[item.nameKey as keyof typeof messages.recyclingGame] || item.nameKey;
   };
 
-  // Spawn two items initially
+  // Spawn two items initially - only once when intro ends
   useEffect(() => {
     if (!showIntro && activeItems.length === 0 && !isSpawning) {
       setIsSpawning(true);
+      startAmbientSound(); // Start ambient sound when game begins
+      
       const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
-      if (availableItems.length >= 2) {
-        const item1 = availableItems[0];
-        const item2 = availableItems[1];
-        
-        setActiveItems([
-          { item: item1, id: `item-${item1.id}`, position: { x: -50, y: 0 } },
-          { item: item2, id: `item-${item2.id}`, position: { x: 50, y: 0 } }
-        ]);
-      } else if (availableItems.length === 1) {
-        // Only one item left - spawn it centered
-        setActiveItems([
-          { item: availableItems[0], id: `item-${availableItems[0].id}`, position: { x: 0, y: 0 } }
-        ]);
+      
+      // Always spawn exactly 2 items if available, or 1 if only 1 remains
+      const itemsToSpawn = availableItems.slice(0, 2);
+      
+      if (itemsToSpawn.length > 0) {
+        const newItems = itemsToSpawn.map((item, index) => ({
+          item,
+          id: `item-${item.id}`,
+          position: { 
+            x: itemsToSpawn.length === 1 ? 0 : (index === 0 ? -40 : 40),
+            y: 0 
+          }
+        }));
+        setActiveItems(newItems);
       }
-      setTimeout(() => setIsSpawning(false), 100);
+      
+      setTimeout(() => setIsSpawning(false), 200);
     }
-  }, [showIntro, processedItems]);
+  }, [showIntro]);
 
   // Spawn new item when one is removed to maintain exactly 2 items
   const spawnNewItem = () => {
-    if (isSpawning) return;
+    if (isSpawning || activeItems.length >= 2) return;
     setIsSpawning(true);
     
     const availableItems = WASTE_ITEMS.filter(item => !processedItems.has(item.id));
@@ -182,11 +231,9 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       const newItem = availableItems[0];
       
       // Calculate position to keep items centered
-      let newX = 0;
-      if (activeItems.length === 1) {
-        // If one item exists, place new item on opposite side
-        newX = activeItems[0].position.x > 0 ? -50 : 50;
-      }
+      const newX = activeItems.length === 1 
+        ? (activeItems[0].position.x > 0 ? -40 : 40)
+        : 0;
       
       setActiveItems(prev => [...prev, { 
         item: newItem, 
@@ -195,7 +242,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       }]);
     }
     
-    setTimeout(() => setIsSpawning(false), 100);
+    setTimeout(() => setIsSpawning(false), 200);
   };
 
   // Initialize falling leaves, clouds, light particles, and butterflies
@@ -306,14 +353,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     if (activeItem) {
       initialPositionRef.current[itemId] = { ...activeItem.position };
     }
-    
-    // Center item under finger immediately
-    const newX = e.clientX - window.innerWidth / 2;
-    const newY = e.clientY - window.innerHeight / 2;
-    
-    setActiveItems(prev => prev.map(ai => 
-      ai.id === itemId ? { ...ai, position: { x: newX, y: newY } } : ai
-    ));
     
     // Prevent page scrolling
     document.body.style.overflow = 'hidden';
@@ -701,7 +740,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
                    janaState === 'sad' ? '/assets/recycling-game/jana-sad.png' :
                    '/assets/recycling-game/jana-idle.png'}
               alt="Jana"
-              className="h-56 sm:h-64 lg:h-72 object-contain drop-shadow-lg transition-opacity duration-300"
+              className="h-36 sm:h-40 lg:h-44 object-contain drop-shadow-lg transition-opacity duration-300"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
               }}
