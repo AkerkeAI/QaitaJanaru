@@ -812,7 +812,7 @@ className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-al
       </div>
 
       {/* Waste Items - Centered with responsive positioning */}
-      <div className="relative flex-1 flex items-center justify-center z-20 px-4">
+      <div className="relative flex-1 flex items-center justify-center z-20 px-4" style={{ marginTop: window.innerWidth < 640 ? '-35px' : '0' }}>
         <div className="flex justify-center items-center gap-4 sm:gap-6 lg:gap-8" style={{ maxWidth: '90vw' }}>
           {activeItems.map((activeItem) => {
             const itemName = getItemName(activeItem.item);
@@ -882,8 +882,8 @@ className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-al
               background: `linear-gradient(135deg, ${bin.color}25, ${bin.color}15)`,
               border: `2px solid ${bin.color}`,
               boxShadow: `0 4px 16px ${bin.color}40, 0 0 0 1px ${bin.color}20`,
-              minHeight: 'min(18vw, 80px)',
-              maxHeight: '120px',
+              minHeight: window.innerWidth < 640 ? 'min(15vw, 68px)' : 'min(18vw, 80px)',
+              maxHeight: window.innerWidth < 640 ? '102px' : '120px',
             }}
           >
             {/* Bin Image - 70-80% of container */}
