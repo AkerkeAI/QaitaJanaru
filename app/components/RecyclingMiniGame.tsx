@@ -789,7 +789,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       <div
   className="relative z-20 flex flex-col items-center justify-start w-full h-full px-3 sm:px-4 lg:px-6 pt-2 sm:pt-3 lg:pt-4"
   style={{
-    marginTop: "clamp(-20px, -3vh, 0px)"
+    marginTop: "clamp(-10px, -2vh, 5px)"
   }}
 >
         
