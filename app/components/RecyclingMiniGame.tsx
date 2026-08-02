@@ -687,7 +687,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       <div 
         className="fixed bottom-4 left-4 z-10"
         style={{
-          height: '160px',
+          height: '184px',
           width: 'auto',
         }}
       >
@@ -748,7 +748,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
               className="h-full w-auto object-contain drop-shadow-lg transition-opacity duration-300"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                height: '160px',
+                height: '184px',
                 width: 'auto',
                 display: 'block',
               }}
@@ -786,7 +786,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       )}
 
       {/* Main game content - responsive flex column */}
-      <div className="relative z-20 flex flex-col items-center justify-center w-full h-full px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4" style={{ marginTop: '-50px' }}>
+      <div className="relative z-20 flex flex-col items-center justify-center w-full h-full px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4" style={{ marginTop: 'clamp(-50px, -8vh, -20px)' }}>
         
         {/* Progress Bar - Top */}
         <div className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl mb-2 sm:mb-3">
@@ -866,7 +866,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       </div>
 
       {/* Bins - Bottom area with responsive grid */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6 w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20 mx-auto">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-5 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20 mx-auto">
         {BINS.map((bin) => (
           <div
             key={bin.type}
