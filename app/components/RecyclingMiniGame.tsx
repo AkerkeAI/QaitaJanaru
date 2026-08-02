@@ -539,7 +539,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
               <img 
                 src="/assets/recycling-game/jana-wave.png" 
                 alt="Jana"
-                className="h-40 sm:h-48 lg:h-56 xl:h-64 object-contain drop-shadow-lg relative z-10"
+                className="h-52 sm:h-60 lg:h-72 xl:h-64 object-contain drop-shadow-lg relative z-10"
                 style={{
                   filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
                   animation: 'janaWave 1.5s ease-in-out infinite',
@@ -687,7 +687,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       <div 
         className="fixed bottom-4 left-4 z-10"
         style={{
-          height: '220px',
+          height: '255px',
           width: 'auto',
         }}
       >
@@ -748,7 +748,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
               className="h-full w-auto object-contain drop-shadow-lg transition-opacity duration-300"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                height: '220px',
+                height: '255px',
                 width: 'auto',
                 display: 'block',
               }}
@@ -786,7 +786,12 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       )}
 
       {/* Main game content - responsive flex column */}
-      <div className="relative z-20 flex flex-col items-center justify-center w-full h-full px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4" style={{ marginTop: 'clamp(-60px, -10vh, -30px)' }}>
+      <div
+  className="relative z-20 flex flex-col items-center justify-start w-full h-full px-3 sm:px-4 lg:px-6 pt-2 sm:pt-3 lg:pt-4"
+  style={{
+    marginTop: "clamp(-90px,-14vh,-50px)"
+  }}
+>
         
         {/* Progress Bar - Top */}
         <div className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl mb-2 sm:mb-3">
@@ -809,7 +814,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
         {/* Waste Items - Centered with responsive positioning */}
         <div className="flex items-center justify-center w-full mb-2 sm:mb-3">
-          <div className="flex justify-center items-center gap-3 sm:gap-4 lg:gap-6 w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl">
+          <div className="flex justify-center items-center gap-2 sm:gap-3 lg:gap-4 w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl">
           {activeItems.map((activeItem) => {
             const itemName = getItemName(activeItem.item);
             const isDraggingThis = draggingItemId === activeItem.id;
@@ -866,7 +871,10 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       </div>
 
       {/* Bins - Bottom area with responsive grid */}
-      <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:gap-3 w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20 mx-auto">
+      <div className="grid grid-cols-2 gap-1 sm:gap-1.5 lg:gap-2 w-full max-w-[260px]
+sm:max-w-[300px]
+md:max-w-[330px]
+lg:max-w-[360px] px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20 mx-auto">
         {BINS.map((bin) => (
           <div
             key={bin.type}
