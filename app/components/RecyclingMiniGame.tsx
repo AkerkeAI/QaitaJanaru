@@ -685,7 +685,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
       {/* Jana Character - Fixed HUD bottom-left */}
       <div 
-        className="fixed bottom-2 left-4 z-10"
+        className="fixed bottom-0 left-4 z-10"
         style={{
           height: '255px',
           width: 'auto',
@@ -714,7 +714,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         {/* Speech bubble for sad state - appears above Jana */}
         {janaState === 'sad' && (
           <div 
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-6 z-20"
             style={{
               animation: 'bubblePop 0.3s ease-out forwards',
             }}
@@ -813,7 +813,12 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         </div>
 
         {/* Waste Items - Centered with responsive positioning */}
-        <div className="flex items-center justify-center w-full mb-2 sm:mb-3">
+        <div className="flex items-center justify-center w-full mb-2 sm:mb-3"
+
+        style={{
+            transform: "translateY(25px)"
+        }}
+        >
           <div className="flex justify-center items-center gap-2 sm:gap-3 lg:gap-4 w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl">
           {activeItems.map((activeItem) => {
             const itemName = getItemName(activeItem.item);
@@ -890,8 +895,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
               background: `linear-gradient(135deg, ${bin.color}25, ${bin.color}15)`,
               border: `2px solid ${bin.color}`,
               boxShadow: `0 4px 16px ${bin.color}40, 0 0 0 1px ${bin.color}20`,
-              minHeight: 'clamp(72px, 17vw, 95px)',
-              maxHeight: 'clamp(82px, 19vw, 110px)',
+              minHeight: 'clamp(95px, 21vw, 130px)',
+              maxHeight: 'clamp(105px, 23vw, 140px)',
             }}
           >
             {/* Bin Image - 70-80% of container */}
@@ -899,8 +904,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
               src={bin.icon} 
               alt={bin.type}
               style={{
-                width: '75%',
-                height: '75%',
+                width: '80%',
+                height: '80%',
                 objectFit: 'contain',
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
                 mixBlendMode: 'multiply',
