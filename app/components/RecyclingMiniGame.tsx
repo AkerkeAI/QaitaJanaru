@@ -685,7 +685,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
       {/* Jana Character - Fixed HUD bottom-left */}
       <div 
-        className="fixed bottom-4 left-4 z-10"
+        className="fixed bottom-2 left-4 z-10"
         style={{
           height: '255px',
           width: 'auto',
@@ -789,7 +789,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       <div
   className="relative z-20 flex flex-col items-center justify-start w-full h-full px-3 sm:px-4 lg:px-6 pt-2 sm:pt-3 lg:pt-4"
   style={{
-    marginTop: "clamp(-5px, -1vh, 10px)"
+    marginTop: "clamp(0px, 0vh, 15px)"
   }}
 >
         
@@ -855,8 +855,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
                     src={activeItem.item.icon} 
                     alt={itemName} 
                     style={{
-                      width: '70%',
-                      height: '70%',
+                      width: '80%',
+                      height: '80%',
                       objectFit: 'contain',
                       filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
                       mixBlendMode: 'multiply',
@@ -877,7 +877,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         md:max-w-[330px]
         lg:max-w-[360px] px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20 mx-auto"
         style={{
-          marginTop: "15px"
+          marginTop: "35px"
+          transform: "translateX(10px)"
       }}
     >
         {BINS.map((bin) => (
