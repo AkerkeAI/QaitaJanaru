@@ -877,7 +877,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         md:max-w-[330px]
         lg:max-w-[360px] px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20 mx-auto"
         style={{
-          marginTop: "35px"
+          marginTop: "35px",
           transform: "translateX(10px)"
       }}
     >
