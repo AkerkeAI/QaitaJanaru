@@ -789,7 +789,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       <div
   className="relative z-20 flex flex-col items-center justify-start w-full h-full px-3 sm:px-4 lg:px-6 pt-2 sm:pt-3 lg:pt-4"
   style={{
-    marginTop: "clamp(-10px, -2vh, 5px)"
+    marginTop: "clamp(-5px, -1vh, 10px)"
   }}
 >
         
@@ -871,10 +871,15 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       </div>
 
       {/* Bins - Bottom area with responsive grid */}
-      <div className="grid grid-cols-2 gap-1 sm:gap-1.5 lg:gap-2 w-full max-w-[260px]
-sm:max-w-[300px]
-md:max-w-[330px]
-lg:max-w-[360px] px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20 mx-auto">
+      <div 
+        className="grid grid-cols-2 gap-1 sm:gap-1.5 lg:gap-2 w-full max-w-[260px]
+        sm:max-w-[300px]
+        md:max-w-[330px]
+        lg:max-w-[360px] px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20 mx-auto"
+        style={{
+          marginTop: "10px"
+      }}
+    >
         {BINS.map((bin) => (
           <div
             key={bin.type}
@@ -884,8 +889,8 @@ lg:max-w-[360px] px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20 mx-auto">
               background: `linear-gradient(135deg, ${bin.color}25, ${bin.color}15)`,
               border: `2px solid ${bin.color}`,
               boxShadow: `0 4px 16px ${bin.color}40, 0 0 0 1px ${bin.color}20`,
-              minHeight: 'clamp(60px, 15vw, 85px)',
-              maxHeight: 'clamp(70px, 17vw, 100px)',
+              minHeight: 'clamp(72px, 17vw, 95px)',
+              maxHeight: 'clamp(82px, 19vw, 110px)',
             }}
           >
             {/* Bin Image - 70-80% of container */}
