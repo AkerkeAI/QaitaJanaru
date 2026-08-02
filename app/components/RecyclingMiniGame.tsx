@@ -184,9 +184,8 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         }
       }
       
-      // Calculate responsive positions based on viewport width
-      const viewportWidth = window.innerWidth;
-      const itemSpacing = Math.min(viewportWidth * 0.12, 80);
+      // Fixed spacing for items - responsive handled by CSS flex gap
+      const itemSpacing = 60; // Fixed spacing, CSS handles responsiveness
       
       const newItems = itemsToSpawn.map((item, index) => {
         let newX;
@@ -459,7 +458,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   if (showIntro) {
     return (
       <div 
-        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden"
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden"
         style={{
           backgroundImage: "url('/assets/recycling-game/background.jpg')",
           backgroundSize: 'cover',
@@ -508,56 +507,58 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
           </div>
         ))}
 
-        <div className="relative z-10 flex flex-col items-center justify-center max-w-lg w-full">
-          {/* Speech bubble - Premium chat bubble style */}
-          <div className="bg-gradient-to-br from-emerald-800/80 to-emerald-900/85 backdrop-blur-lg rounded-3xl p-6 sm:p-8 mb-8 shadow-2xl max-w-md border border-emerald-400/40" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
-            <div className="text-center space-y-3">
-              <p className="text-xl sm:text-2xl font-bold text-white">
-                {messages.recyclingGame?.introHi || 'Hi!'}
-              </p>
-              <p className="text-base sm:text-lg text-emerald-100 font-medium">
-                {messages.recyclingGame?.introImJana || "I'm Jana 🌱"}
-              </p>
-              <p className="text-sm sm:text-base text-emerald-200">
-                {messages.recyclingGame?.introHelp || "I'll help you learn how to sort waste correctly."}
-              </p>
-              <p className="text-sm sm:text-base text-emerald-200">
-                {messages.recyclingGame?.introHealEarth || "Let's heal the Earth together!"}
-              </p>
+        <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-2xl h-full">
+          <div className="flex flex-col items-center justify-center w-full space-y-3 sm:space-y-4 lg:space-y-6">
+            {/* Speech bubble - Premium chat bubble style */}
+            <div className="bg-gradient-to-br from-emerald-800/80 to-emerald-900/85 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl max-w-md w-full border border-emerald-400/40" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
+              <div className="text-center space-y-2 sm:space-y-3">
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
+                  {messages.recyclingGame?.introHi || 'Hi!'}
+                </p>
+                <p className="text-sm sm:text-base lg:text-lg text-emerald-100 font-medium">
+                  {messages.recyclingGame?.introImJana || "I'm Jana 🌱"}
+                </p>
+                <p className="text-xs sm:text-sm lg:text-base text-emerald-200">
+                  {messages.recyclingGame?.introHelp || "I'll help you learn how to sort waste correctly."}
+                </p>
+                <p className="text-xs sm:text-sm lg:text-base text-emerald-200">
+                  {messages.recyclingGame?.introHealEarth || "Let's heal the Earth together!"}
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Jana waving */}
-          <div className="relative mb-8">
-            {/* Shadow under Jana */}
-            <div 
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 sm:w-40 lg:w-48 h-4 bg-black/20 rounded-full blur-md"
-              style={{
-                animation: 'shadowPulse 2.5s ease-in-out infinite',
-              }}
-            />
-            <img 
-              src="/assets/recycling-game/jana-wave.png" 
-              alt="Jana"
-              className="h-64 sm:h-72 lg:h-80 object-contain drop-shadow-lg relative z-10"
-              style={{
-                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
-                animation: 'janaWave 1.5s ease-in-out infinite',
-              }}
-            />
-          </div>
+            {/* Jana waving */}
+            <div className="relative flex items-center justify-center">
+              {/* Shadow under Jana */}
+              <div 
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 sm:w-32 lg:w-40 h-3 sm:h-4 bg-black/20 rounded-full blur-sm"
+                style={{
+                  animation: 'shadowPulse 2.5s ease-in-out infinite',
+                }}
+              />
+              <img 
+                src="/assets/recycling-game/jana-wave.png" 
+                alt="Jana"
+                className="h-40 sm:h-48 lg:h-56 xl:h-64 object-contain drop-shadow-lg relative z-10"
+                style={{
+                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
+                  animation: 'janaWave 1.5s ease-in-out infinite',
+                }}
+              />
+            </div>
 
-          {/* Start button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              initAudioContext();
-              setShowIntro(false);
-            }}
-            className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-lg sm:text-xl py-4 px-8 sm:px-12 rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
-          >
-            {messages.recyclingGame?.letsStart || "Let's Start"}
-          </button>
+            {/* Start button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                initAudioContext();
+                setShowIntro(false);
+              }}
+              className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-base sm:text-lg lg:text-xl py-3 sm:py-4 px-6 sm:px-8 lg:px-12 rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+            >
+              {messages.recyclingGame?.letsStart || "Let's Start"}
+            </button>
+          </div>
         </div>
 
         <style>{`
@@ -602,7 +603,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         backgroundImage: "url('/assets/recycling-game/background.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        paddingTop: window.innerWidth < 640 ? '10px' : '50px',
       }}
       onClick={initAudioContext}
     >
@@ -666,7 +666,6 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         />
       ))}
 
-
       {/* Particles */}
       {particles.map(p => (
         <div
@@ -684,32 +683,30 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         />
       ))}
 
-      {/* Jana Character - Bottom left corner - Fixed HUD */}
+      {/* Jana Character - Fixed HUD bottom-left */}
       <div 
         className="fixed bottom-4 left-4 z-10"
         style={{
-        height: '150px',
-        width: 'auto',
-        paddingLeft: '16px',
-        paddingBottom: '16px',
+          height: '120px',
+          width: 'auto',
         }}
       >
         {/* Shadow under Jana */}
         <div 
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 sm:w-28 lg:w-32 h-3 sm:h-4 bg-black/20 rounded-full blur-sm"
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 sm:w-24 lg:w-28 h-2 sm:h-3 bg-black/20 rounded-full blur-sm"
           style={{
             animation: 'shadowPulse 2.5s ease-in-out infinite',
           }}
         />
         
         {/* Tiny leaves around Jana */}
-        <div className="absolute -left-6 top-1/2 opacity-40" style={{ animation: 'leafFloat 4s ease-in-out infinite' }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#4ade80">
+        <div className="absolute -left-4 top-1/2 opacity-40" style={{ animation: 'leafFloat 4s ease-in-out infinite' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#4ade80">
             <path d="M12 2C12 2 8 6 8 10C8 14 12 18 12 22C12 18 16 14 16 10C16 6 12 2 12 2Z" />
           </svg>
         </div>
-        <div className="absolute -right-4 top-1/3 opacity-30" style={{ animation: 'leafFloat 5s ease-in-out infinite 1s' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#4ade80">
+        <div className="absolute -right-3 top-1/3 opacity-30" style={{ animation: 'leafFloat 5s ease-in-out infinite 1s' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="#4ade80">
             <path d="M12 2C12 2 8 6 8 10C8 14 12 18 12 22C12 18 16 14 16 10C16 6 12 2 12 2Z" />
           </svg>
         </div>
@@ -722,11 +719,11 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
               animation: 'bubblePop 0.3s ease-out forwards',
             }}
           >
-            <div className="bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2 shadow-xl border border-emerald-400/30 text-center">
-              <p className="text-sm font-semibold text-emerald-800">{messages.recyclingGame?.tryAgain || 'Try again!'}</p>
+            <div className="bg-white/90 backdrop-blur-md rounded-2xl px-3 py-1.5 sm:px-4 sm:py-2 shadow-xl border border-emerald-400/30 text-center">
+              <p className="text-xs sm:text-sm font-semibold text-emerald-800">{messages.recyclingGame?.tryAgain || 'Try again!'}</p>
             </div>
             {/* Bubble tail */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/90 backdrop-blur-md border-r border-b border-emerald-400/30 transform rotate-45" />
+            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 sm:w-4 sm:h-4 bg-white/90 backdrop-blur-md border-r border-b border-emerald-400/30 transform rotate-45" />
           </div>
         )}
 
@@ -751,7 +748,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
               className="h-full w-auto object-contain drop-shadow-lg transition-opacity duration-300"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                height: '150px',
+                height: '120px',
                 width: 'auto',
                 display: 'block',
               }}
@@ -782,38 +779,37 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       {/* Error message - Floating overlay in center */}
       {showErrorMessage && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-[100]">
-          <div className="bg-red-500/80 backdrop-blur-md rounded-2xl px-6 py-3 shadow-xl border border-red-400/50 text-center" style={{ animation: 'fadeInOut 1s ease-in-out forwards' }}>
-            <p className="text-white font-semibold text-base sm:text-lg">{errorText}</p>
+          <div className="bg-red-500/80 backdrop-blur-md rounded-2xl px-4 sm:px-6 py-2 sm:py-3 shadow-xl border border-red-400/50 text-center" style={{ animation: 'fadeInOut 1s ease-in-out forwards' }}>
+            <p className="text-white font-semibold text-sm sm:text-base lg:text-lg">{errorText}</p>
           </div>
         </div>
       )}
 
-      {/* Progress Bar - Top */}
-      <div className="w-full max-w-3xl mb-2 sm:mb-3 z-20 px-4 sm:px-6 mt-2">
-        <div className="h-2 sm:h-3 bg-emerald-900/50 rounded-full overflow-hidden">
-         <div
-
-className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          />
+      {/* Main game content - responsive flex column */}
+      <div className="relative z-20 flex flex-col items-center justify-center w-full h-full px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
+        
+        {/* Progress Bar - Top */}
+        <div className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl mb-2 sm:mb-3">
+          <div className="h-2 sm:h-2.5 lg:h-3 bg-emerald-900/50 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500" style={{ width: `${progress}%` }} />
+          </div>
         </div>
-      </div>
 
-      {/* Title - Premium glass eco card */}
-      <div className="text-center mb-3 sm:mb-4 px-4 z-20">
-        <div className="bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-2xl p-2 sm:p-3 shadow-xl max-w-xl mx-auto border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
-          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-1 tracking-tight">
-            {messages.recyclingGame?.helpHealPlanet || '🌍 Help Heal the Planet'}
-          </h1>
-          <p className="text-xs sm:text-sm text-emerald-100 font-medium">
-            {messages.recyclingGame?.sortWaste || 'Sort the waste into the correct recycling bins.'}
-          </p>
+        {/* Title - Premium glass eco card */}
+        <div className="text-center mb-2 sm:mb-3">
+          <div className="bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-xl sm:rounded-2xl p-2 sm:p-2.5 lg:p-3 shadow-xl max-w-sm sm:max-w-md lg:max-w-xl mx-auto border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
+            <h1 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-white mb-0.5 sm:mb-1 tracking-tight">
+              {messages.recyclingGame?.helpHealPlanet || '🌍 Help Heal the Planet'}
+            </h1>
+            <p className="text-xs sm:text-xs lg:text-sm text-emerald-100 font-medium">
+              {messages.recyclingGame?.sortWaste || 'Sort the waste into the correct recycling bins.'}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Waste Items - Centered with responsive positioning */}
-      <div className="relative flex-1 flex items-center justify-center z-20 px-4" style={{ marginTop: window.innerWidth < 640 ? '-35px' : '0' }}>
-        <div className="flex justify-center items-center gap-4 sm:gap-6 lg:gap-8" style={{ maxWidth: '90vw' }}>
+        {/* Waste Items - Centered with responsive positioning */}
+        <div className="flex items-center justify-center w-full mb-2 sm:mb-3">
+          <div className="flex justify-center items-center gap-3 sm:gap-4 lg:gap-6 w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl">
           {activeItems.map((activeItem) => {
             const itemName = getItemName(activeItem.item);
             const isDraggingThis = draggingItemId === activeItem.id;
@@ -830,10 +826,8 @@ className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-al
                     showError ? "animate-shake bg-red-500/30" : ""
                   }`}
                   style={{
-                    width: 'min(25vw, 120px)',
-                    height: 'min(25vw, 120px)',
-                    minWidth: '80px',
-                    minHeight: '80px',
+                    width: 'clamp(70px, 18vw, 100px)',
+                    height: 'clamp(70px, 18vw, 100px)',
                     background: "rgba(255, 255, 255, 0.1)",
                     backdropFilter: "blur(10px)",
                     border: "2px solid rgba(255, 255, 255, 0.2)",
@@ -864,15 +858,15 @@ className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-al
                     }}
                   />
                 </div>
-                <p className="text-center mt-2 sm:mt-3 font-semibold text-xs sm:text-sm text-white bg-gradient-to-r from-emerald-800/70 to-emerald-900/80 backdrop-blur-md rounded-full px-3 py-1 sm:px-4 sm:py-2 border border-emerald-400/30 shadow-lg" style={{ boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' }}>{itemName}</p>
+                <p className="text-center mt-1.5 sm:mt-2 font-semibold text-xs sm:text-xs lg:text-sm text-white bg-gradient-to-r from-emerald-800/70 to-emerald-900/80 backdrop-blur-md rounded-full px-2 sm:px-3 py-0.5 sm:py-1 border border-emerald-400/30 shadow-lg" style={{ boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' }}>{itemName}</p>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Bins - Bottom area with larger icons */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 w-full max-w-2xl px-4 sm:px-6 mb-4 z-20 mx-auto" style={{ marginLeft: window.innerWidth < 640 ? '30px' : '0' }}>
+      {/* Bins - Bottom area with responsive grid */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 w-full max-w-xl sm:max-w-2xl lg:max-w-3xl px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20 mx-auto">
         {BINS.map((bin) => (
           <div
             key={bin.type}
@@ -882,8 +876,8 @@ className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-al
               background: `linear-gradient(135deg, ${bin.color}25, ${bin.color}15)`,
               border: `2px solid ${bin.color}`,
               boxShadow: `0 4px 16px ${bin.color}40, 0 0 0 1px ${bin.color}20`,
-              minHeight: window.innerWidth < 640 ? 'min(15vw, 68px)' : 'min(18vw, 80px)',
-              maxHeight: window.innerWidth < 640 ? '102px' : '120px',
+              minHeight: 'clamp(60px, 15vw, 85px)',
+              maxHeight: 'clamp(70px, 17vw, 100px)',
             }}
           >
             {/* Bin Image - 70-80% of container */}
@@ -895,13 +889,17 @@ className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-al
                 height: '75%',
                 objectFit: 'contain',
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+                mixBlendMode: 'multiply',
               }}
             />
           </div>
         ))}
       </div>
 
-      {/* Legend - Lower right corner - Fixed HUD */}
+      {/* Close main game content div */}
+      </div>
+
+      {/* Legend - Fixed HUD bottom-right */}
       <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-xl p-2 sm:p-3 shadow-xl border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
         <div className="space-y-1 sm:space-y-1.5 text-xs sm:text-xs">
           <div className="flex items-center gap-1.5 sm:gap-2">
