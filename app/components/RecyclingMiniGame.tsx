@@ -449,7 +449,13 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
         <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-2xl h-full">
           <div className="flex flex-col items-center justify-center w-full space-y-3 sm:space-y-4 lg:space-y-6">
             {/* Speech bubble - Premium chat bubble style */}
-            <div className="bg-gradient-to-br from-emerald-800/80 to-emerald-900/85 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl max-w-md w-full border border-emerald-400/40" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
+            <div
+  className="bg-gradient-to-br from-emerald-800/80 to-emerald-900/85 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl max-w-md w-full border border-emerald-400/40"
+  style={{
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(74, 222, 128, 0.1)',
+    transform: "translateY(-18px)"
+  }}
+>
               <div className="text-center space-y-2 sm:space-y-3">
                 <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white">
                   {messages.recyclingGame?.introHi || 'Hi!'}
@@ -483,7 +489,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
               <img 
                 src="/assets/recycling-game/jana-wave.png" 
                 alt="Jana"
-                className="h-52 sm:h-60 lg:h-72 xl:h-64 object-contain drop-shadow-lg relative z-10"
+                className="h-48 sm:h-56 lg:h-64 xl:h-72 object-contain drop-shadow-lg relative z-10"
                 style={{
                   filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
                   animation: 'janaWave 1.5s ease-in-out infinite',
@@ -823,7 +829,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
       </div>
 
       {/* Bins - Bottom area with responsive grid */}
-      <div className="grid grid-cols-2 gap-0 mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20"
+      <div className="grid grid-cols-2 gap-3 mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20"
        style={{
         marginTop: "40px",
         transform: "translateX(15px)"
