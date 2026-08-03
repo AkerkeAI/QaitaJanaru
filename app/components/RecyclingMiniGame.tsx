@@ -309,18 +309,18 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     binsRef.current = bins;
   };
 
-  const handleDragStart = (itemId: string, e: React.PointerEvent) => {
+    const handleDragStart = (itemId: string, e: React.PointerEvent) => {
     e.preventDefault();
+
+    const itemElement = itemRef.current[itemId];
+    if (!itemElement) return;
 
     const rect = itemElement.getBoundingClientRect();
 
-dragOffset.current = {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top,
-};
-    
-    const itemElement = itemRef.current[itemId];
-    if (!itemElement) return;
+    dragOffset.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+    };
     
     // Capture pointer immediately to prevent drag interruption
     itemElement.setPointerCapture(e.pointerId);
@@ -367,8 +367,6 @@ const newY =
   const handleDragEnd = (itemId: string, e: React.PointerEvent) => {
     if (draggingItemId !== itemId) return;
     
-    const itemElement = itemRef.current[itemId];
-    if (!itemElement) return;
     
     // Release pointer capture
     itemElement.releasePointerCapture(e.pointerId);
