@@ -489,7 +489,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
               <img 
                 src="/assets/recycling-game/jana-wave.png" 
                 alt="Jana"
-                className="h-48 sm:h-56 lg:h-64 xl:h-72 object-contain drop-shadow-lg relative z-10"
+                className="h-52 sm:h-60 lg:h-68 xl:h-76 object-contain drop-shadow-lg relative z-10"
                 style={{
                   filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
                   animation: 'janaWave 1.5s ease-in-out infinite',
