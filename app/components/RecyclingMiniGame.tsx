@@ -467,7 +467,12 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
             </div>
 
             {/* Jana waving */}
-            <div className="relative flex items-center justify-center">
+            <div
+              className="relative flex items-center justify-center"
+              style={{
+                marginTop: "15px"
+              }}
+            >
               {/* Shadow under Jana */}
               <div 
                 className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 sm:w-32 lg:w-40 h-3 sm:h-4 bg-black/20 rounded-full blur-sm"
@@ -663,7 +668,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
         {/* Speech bubble for sad state - appears above Jana */}
         {janaState === 'sad' && (
           <div 
-            className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-6 z-20"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-8 z-20"
             style={{
               animation: 'bubblePop 0.3s ease-out forwards',
             }}
@@ -818,7 +823,12 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
       </div>
 
       {/* Bins - Bottom area with responsive grid */}
-      <div className="grid grid-cols-2 gap-3 mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20">
+      <div className="grid grid-cols-2 gap-2 mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20"
+       style={{
+        marginTop: "20px",
+        transform: "translateX(15px)"
+      }}
+  >
         {BINS.map((bin) => (
           <div
             key={bin.type}
