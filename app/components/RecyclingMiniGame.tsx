@@ -639,7 +639,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
 
       {/* Jana Character - Fixed HUD bottom-left */}
       <div 
-        className="fixed -bottom-4 left-4 z-10"
+        className="fixed -bottom-8 left-4 z-10"
         style={{
           height: '255px',
           width: 'auto',
@@ -668,7 +668,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
         {/* Speech bubble for sad state - appears above Jana */}
         {janaState === 'sad' && (
           <div 
-            className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-8 z-20"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-4 z-20"
             style={{
               animation: 'bubblePop 0.3s ease-out forwards',
             }}
@@ -823,9 +823,9 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
       </div>
 
       {/* Bins - Bottom area with responsive grid */}
-      <div className="grid grid-cols-2 gap-2 mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20"
+      <div className="grid grid-cols-2 gap-1 mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20"
        style={{
-        marginTop: "20px",
+        marginTop: "30px",
         transform: "translateX(15px)"
       }}
   >
