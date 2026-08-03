@@ -100,6 +100,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [isSpawning, setIsSpawning] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
 
   const progress = (processedItems.size / WASTE_ITEMS.length) * 100;
 
@@ -310,6 +311,13 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
 
   const handleDragStart = (itemId: string, e: React.PointerEvent) => {
     e.preventDefault();
+
+    const rect = itemElement.getBoundingClientRect();
+
+dragOffset.current = {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+};
     
     const itemElement = itemRef.current[itemId];
     if (!itemElement) return;
@@ -344,8 +352,12 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
     if (!container) return;
     
     const rect = container.getBoundingClientRect();
-    const newX = ((e.clientX - rect.left) / rect.width - 0.5) * 100; // -50 to 50
-    const newY = ((e.clientY - rect.top) / rect.height - 0.5) * 100; // -50 to 50
+
+const newX =
+((e.clientX - dragOffset.current.x - rect.left) / rect.width) * 100;
+
+const newY =
+((e.clientY - dragOffset.current.y - rect.top) / rect.height) * 100;
     
     setActiveItems(prev => prev.map(ai => 
       ai.id === itemId ? { ...ai, position: { x: newX, y: newY } } : ai
