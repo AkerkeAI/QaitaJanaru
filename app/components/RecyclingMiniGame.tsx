@@ -364,8 +364,12 @@ const newY =
     ));
   };
 
+  
   const handleDragEnd = (itemId: string, e: React.PointerEvent) => {
     if (draggingItemId !== itemId) return;
+
+    const itemElement = itemRef.current[itemId];
+    if (!itemElement) return;
     
     
     // Release pointer capture
