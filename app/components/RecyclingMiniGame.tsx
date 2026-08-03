@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 interface RecyclingMiniGameProps {
-  onComplete: () => void;
+  onComplete?: () => void;
+  isDemo?: boolean;
 }
 
 type WasteType = "plastic" | "paper" | "glass" | "organic";
@@ -76,9 +77,10 @@ const BINS = [
   },
 ];
 
-export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
-  const [activeItems, setActiveItems] = useState<Array<{ item: WasteItem; id: string; position: { x: number; y: number } }>>([]);
+export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniGameProps) {
+  const [activeItems, setActiveItems] = useState<Array<{ item: WasteItem; id: string; x: number; y: number }>>([]);
   const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
+  const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -92,15 +94,20 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const [errorText, setErrorText] = useState('');
   const { messages } = useLanguage();
   const itemRef = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  const containerRef = useRef<HTMLDivElement>(null);
   const binsRef = useRef<{ [key: string]: DOMRect }>({});
-  const initialPositionRef = useRef<{ [key: string]: { x: number; y: number } }>({});
   const [processedItems, setProcessedItems] = useState<Set<string>>(new Set());
   const [score, setScore] = useState(0);
   const [isSpawning, setIsSpawning] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const [audioUnlocked, setAudioUnlocked] = useState(false);
-  const dragOffset = useRef({ x: 0, y: 0 });
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
+
+  const resetGame = useCallback(() => {
+    setIsComplete(false);
+    setProcessedItems(new Set());
+    setActiveItems([]);
+    setScore(0);
+    setShowIntro(true);
+  }, []);
 
   const progress = (processedItems.size / WASTE_ITEMS.length) * 100;
 
@@ -108,12 +115,9 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   const initAudioContext = () => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      setAudioUnlocked(true);
     }
     if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume().then(() => {
-        setAudioUnlocked(true);
-      });
+      audioContextRef.current.resume();
     }
   };
 
@@ -185,38 +189,18 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
         }
       }
       
-      // Fixed spacing for items - responsive handled by CSS flex gap
-      const itemSpacing = 60; // Fixed spacing, CSS handles responsiveness
-      
-      const newItems = itemsToSpawn.map((item, index) => {
-        let newX;
-        if (activeItems.length === 0) {
-          // First item
-          newX = index === 0 ? -itemSpacing : itemSpacing;
-        } else if (activeItems.length === 1) {
-          // Second item - place opposite to existing
-          newX = activeItems[0].position.x > 0 ? -itemSpacing : itemSpacing;
-        } else {
-          newX = 0;
-        }
-        
-        return {
-          item,
-          id: `item-${item.id}-${Date.now()}-${index}`,
-          position: { x: newX, y: 0 }
-        };
-      });
+      const newItems = itemsToSpawn.map((item, index) => ({
+        item,
+        id: `item-${item.id}-${Date.now()}-${index}`,
+        x: 0,
+        y: 0
+      }));
       
       setActiveItems(prev => [...prev, ...newItems]);
       setTimeout(() => setIsSpawning(false), 200);
     }
-  }, [showIntro, activeItems.length, processedItems]);
+  }, [showIntro, activeItems.length, processedItems, isSpawning]);
 
-  // Spawn new item when one is removed to maintain exactly 2 items
-  const spawnNewItem = () => {
-    // The useEffect will handle spawning automatically
-    // This function is kept for compatibility but the logic is now in the useEffect
-  };
 
   // Initialize falling leaves, clouds, light particles, and butterflies
   useEffect(() => {
@@ -298,7 +282,7 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
   }, [particles]);
 
   // Get bin positions for collision detection
-  const updateBinPositions = () => {
+  const updateBinPositions = useCallback(() => {
     const bins: { [key: string]: DOMRect } = {};
     BINS.forEach(bin => {
       const binElement = document.getElementById(`bin-${bin.type}`);
@@ -307,88 +291,51 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       }
     });
     binsRef.current = bins;
-  };
+  }, []);
 
-    const handleDragStart = (itemId: string, e: React.PointerEvent) => {
+  // Clean pointer-based drag handlers
+  const handleDragStart = useCallback((itemId: string, e: React.PointerEvent) => {
     e.preventDefault();
-
     const itemElement = itemRef.current[itemId];
     if (!itemElement) return;
 
     const rect = itemElement.getBoundingClientRect();
-
-    dragOffset.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+    dragOffsetRef.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
     };
     
-    // Capture pointer immediately to prevent drag interruption
-    itemElement.setPointerCapture(e.pointerId);
-    
-    // Start dragging
     setDraggingItemId(itemId);
+    setDragPosition({ x: e.clientX, y: e.clientY });
     
-    // Store initial position
-    const activeItem = activeItems.find(ai => ai.id === itemId);
-    if (activeItem) {
-      initialPositionRef.current[itemId] = { ...activeItem.position };
-    }
-    
-    // Prevent page scrolling
     document.body.style.overflow = 'hidden';
     document.body.style.touchAction = 'none';
     
-    // Update bin positions for collision detection
     updateBinPositions();
-  };
+  }, [updateBinPositions]);
 
-  const handleDragMove = (itemId: string, e: React.PointerEvent) => {
-    if (draggingItemId !== itemId) return;
+  const handleDragMove = useCallback((e: React.PointerEvent) => {
+    if (!draggingItemId) return;
     e.preventDefault();
+    setDragPosition({ x: e.clientX, y: e.clientY });
+  }, [draggingItemId]);
 
-    // Update position to keep item centered under finger
-    // Use percentage-based positioning for responsiveness
-    const container = containerRef.current;
-    if (!container) return;
+  const handleDragEnd = useCallback((e: React.PointerEvent) => {
+    if (!draggingItemId) return;
     
-    const rect = container.getBoundingClientRect();
-
-const newX =
-((e.clientX - dragOffset.current.x - rect.left) / rect.width) * 100;
-
-const newY =
-((e.clientY - dragOffset.current.y - rect.top) / rect.height) * 100;
-    
-    setActiveItems(prev => prev.map(ai => 
-      ai.id === itemId ? { ...ai, position: { x: newX, y: newY } } : ai
-    ));
-  };
-
-  
-  const handleDragEnd = (itemId: string, e: React.PointerEvent) => {
-    if (draggingItemId !== itemId) return;
-
-    const itemElement = itemRef.current[itemId];
+    const itemElement = itemRef.current[draggingItemId];
     if (!itemElement) return;
     
-    
-    // Release pointer capture
-    itemElement.releasePointerCapture(e.pointerId);
-    
     setDraggingItemId(null);
+    setDragPosition(null);
     
-    // Restore page scrolling
     document.body.style.overflow = '';
     document.body.style.touchAction = '';
     
-    // Get the dragged item
-    const activeItem = activeItems.find(ai => ai.id === itemId);
+    const activeItem = activeItems.find(ai => ai.id === draggingItemId);
     if (!activeItem) return;
     
-    // Check collision with bins
     const itemRect = itemElement.getBoundingClientRect();
-    if (!itemRect) return;
-
     const itemCenter = {
       x: itemRect.left + itemRect.width / 2,
       y: itemRect.top + itemRect.height / 2,
@@ -400,7 +347,6 @@ const newY =
       const binRect = binsRef.current[bin.type];
       if (!binRect) continue;
 
-      // Check if item center is within bin bounds with some padding
       const padding = 20;
       if (
         itemCenter.x >= binRect.left - padding &&
@@ -415,7 +361,6 @@ const newY =
 
     if (droppedOnBin) {
       if (droppedOnBin === activeItem.item.type) {
-        // Correct answer
         setShowSuccess(true);
         setScore(score + 1);
         createParticles(itemCenter.x, itemCenter.y);
@@ -423,25 +368,19 @@ const newY =
         playSound(score > 0 ? 'combo' : 'correct');
         setTimeout(() => setJanaState('idle'), 1000);
         
-        // Mark item as processed and remove it
         setProcessedItems(prev => new Set([...prev, activeItem.item.id]));
-        setActiveItems(prev => prev.filter(ai => ai.id !== itemId));
+        setActiveItems(prev => prev.filter(ai => ai.id !== draggingItemId));
         
         setTimeout(() => {
           setShowSuccess(false);
-          // Check if all items processed
           if (processedItems.size + 1 >= WASTE_ITEMS.length) {
             setIsComplete(true);
-            setTimeout(() => {
-              onComplete();
-            }, 2000);
-          } else {
-            // Spawn new item
-            spawnNewItem();
+            if (onComplete) {
+              setTimeout(() => onComplete(), 2000);
+            }
           }
         }, 1000);
       } else {
-        // Wrong bin - shake and return to origin
         setShowError(true);
         setJanaState('sad');
         setShowErrorMessage(true);
@@ -449,24 +388,10 @@ const newY =
         playSound('wrong');
         setTimeout(() => setJanaState('idle'), 1500);
         setTimeout(() => setShowErrorMessage(false), 1500);
-        
-        // Animate back to origin
-        const initialPos = initialPositionRef.current[itemId] || { x: 0, y: 0 };
-        setTimeout(() => {
-          setActiveItems(prev => prev.map(ai => 
-            ai.id === itemId ? { ...ai, position: initialPos } : ai
-          ));
-          setShowError(false);
-        }, 500);
+        setTimeout(() => setShowError(false), 500);
       }
-    } else {
-      // Dropped outside - animate back to origin
-      const initialPos = initialPositionRef.current[itemId] || { x: 0, y: 0 };
-      setActiveItems(prev => prev.map(ai => 
-        ai.id === itemId ? { ...ai, position: initialPos } : ai
-      ));
     }
-  };
+  }, [draggingItemId, activeItems, score, processedItems, isDemo, onComplete, messages, playSound, createParticles]);
 
   // Intro screen
   if (showIntro) {
@@ -604,6 +529,14 @@ const newY =
             {messages.recyclingGame?.helpedRecycle || 'You helped recycle the waste correctly.'}
           </p>
           <div className="text-6xl">♻️</div>
+          {isDemo && (
+            <button
+              onClick={resetGame}
+              className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-lg py-3 px-8 rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+            >
+              Play Again
+            </button>
+          )}
         </div>
       </div>
     );
@@ -611,7 +544,6 @@ const newY =
 
   return (
     <div 
-      ref={containerRef}
       className="fixed inset-0 z-[9999] flex flex-col overflow-hidden"
       style={{
         backgroundImage: "url('/assets/recycling-game/background.jpg')",
@@ -619,6 +551,9 @@ const newY =
         backgroundPosition: 'center',
       }}
       onClick={initAudioContext}
+      onPointerMove={handleDragMove}
+      onPointerUp={handleDragEnd}
+      onPointerCancel={handleDragEnd}
     >
       {/* Parallax background overlay */}
       <div className="absolute inset-0 bg-black/20" />
@@ -699,7 +634,7 @@ const newY =
 
       {/* Jana Character - Fixed HUD bottom-left */}
       <div 
-        className="fixed -bottom-2 left-4 z-10"
+        className="fixed -bottom-4 left-4 z-10"
         style={{
           height: '255px',
           width: 'auto',
@@ -800,12 +735,7 @@ const newY =
       )}
 
       {/* Main game content - responsive flex column */}
-      <div
-  className="relative z-20 flex flex-col items-center justify-start w-full h-full px-3 sm:px-4 lg:px-6 pt-2 sm:pt-3 lg:pt-4"
-  style={{
-    marginTop: "clamp(0px, 0vh, 15px)"
-  }}
->
+      <div className="relative z-20 flex flex-col items-center justify-start w-full h-full px-3 sm:px-4 lg:px-6 pt-2 sm:pt-3 lg:pt-4">
         
         {/* Progress Bar - Top */}
         <div className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl mb-2 sm:mb-3">
@@ -827,16 +757,14 @@ const newY =
         </div>
 
         {/* Waste Items - Centered with responsive positioning */}
-        <div className="flex items-center justify-center w-full mb-2 sm:mb-3"
-
-        style={{
-            transform: "translateY(25px)"
-        }}
-        >
+        <div className="flex items-center justify-center w-full mb-2 sm:mb-3" style={{ transform: "translateY(25px)" }}>
           <div className="flex justify-center items-center gap-2 sm:gap-3 lg:gap-4 w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl">
           {activeItems.map((activeItem) => {
             const itemName = getItemName(activeItem.item);
             const isDraggingThis = draggingItemId === activeItem.id;
+            const position = isDraggingThis && dragPosition 
+              ? { x: dragPosition.x - dragOffsetRef.current.x, y: dragPosition.y - dragOffsetRef.current.y }
+              : { x: activeItem.x, y: activeItem.y };
             
             return (
               <div key={activeItem.id} className="relative flex flex-col items-center">
@@ -855,20 +783,20 @@ const newY =
                     background: "rgba(255, 255, 255, 0.1)",
                     backdropFilter: "blur(10px)",
                     border: "2px solid rgba(255, 255, 255, 0.2)",
-                    transform: isDraggingThis 
-                      ? `translate3d(${activeItem.position.x * (window.innerWidth / 100)}px, ${activeItem.position.y * (window.innerHeight / 100)}px, 0)`
-                      : 'translate3d(0, 0, 0)',
+                    position: isDraggingThis ? 'fixed' : 'relative',
+                    left: isDraggingThis ? position.x : 'auto',
+                    top: isDraggingThis ? position.y : 'auto',
+                    transform: isDraggingThis ? 'translate(-50%, -50%)' : 'none',
                     transition: isDraggingThis ? 'none' : 'transform 0.3s ease-out',
-                    willChange: 'transform',
                     touchAction: 'none',
                     userSelect: 'none',
                     WebkitUserSelect: 'none',
                     WebkitTouchCallout: 'none',
                   }}
                   onPointerDown={(e) => handleDragStart(activeItem.id, e)}
-                  onPointerMove={(e) => handleDragMove(activeItem.id, e)}
-                  onPointerUp={(e) => handleDragEnd(activeItem.id, e)}
-                  onPointerCancel={(e) => handleDragEnd(activeItem.id, e)}
+                  onPointerMove={handleDragMove}
+                  onPointerUp={handleDragEnd}
+                  onPointerCancel={handleDragEnd}
                 >
                   <img 
                     src={activeItem.item.icon} 
@@ -890,32 +818,7 @@ const newY =
       </div>
 
       {/* Bins - Bottom area with responsive grid */}
-      <div
-        className="
-          grid
-          grid-cols-2
-          lg:grid-cols-4
-          gap-2
-          sm:gap-3
-          lg:gap-4
-          w-full
-          max-w-[300px]
-          sm:max-w-[360px]
-          md:max-w-[500px]
-          lg:max-w-[900px]
-          px-3
-          sm:px-4
-          lg:px-6
-          mb-2
-          sm:mb-3
-          z-20
-          mx-auto
-        "
-        style={{
-          marginTop: "35px",
-          transform: "translateX(10px)",
-        }}
-      >
+      <div className="grid grid-cols-2 gap-3 mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20">
         {BINS.map((bin) => (
           <div
             key={bin.type}
