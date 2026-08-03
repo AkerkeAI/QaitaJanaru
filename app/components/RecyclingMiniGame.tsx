@@ -876,16 +876,32 @@ export function RecyclingMiniGame({ onComplete }: RecyclingMiniGameProps) {
       </div>
 
       {/* Bins - Bottom area with responsive grid */}
-      <div 
-        className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4" w-full max-w-[300px]
-        sm:max-w-[360px]
-        md:max-w-[500px]
-        lg:max-w-[900px] px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20 mx-auto"
+      <div
+        className="
+          grid
+          grid-cols-2
+          lg:grid-cols-4
+          gap-2
+          sm:gap-3
+          lg:gap-4
+          w-full
+          max-w-[300px]
+          sm:max-w-[360px]
+          md:max-w-[500px]
+          lg:max-w-[900px]
+          px-3
+          sm:px-4
+          lg:px-6
+          mb-2
+          sm:mb-3
+          z-20
+          mx-auto
+        "
         style={{
           marginTop: "35px",
-          transform: "translateX(10px)"
-      }}
-    >
+          transform: "translateX(10px)",
+        }}
+      >
         {BINS.map((bin) => (
           <div
             key={bin.type}
