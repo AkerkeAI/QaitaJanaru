@@ -645,7 +645,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
 
       {/* Jana Character - Fixed HUD bottom-left */}
       <div 
-        className="fixed -bottom-12 left-4 md:-bottom-4 z-10"
+        className="fixed -bottom-12 left-4 md:-bottom-8 z-10"
         style={{
           height: '255px',
           width: 'auto',
@@ -653,7 +653,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
       >
         {/* Shadow under Jana */}
         <div 
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 sm:w-24 lg:w-28 h-2 sm:h-3 bg-black/20 rounded-full blur-sm"
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-20 sm:w-24 md:w-28 lg:w-28 h-2 sm:h-3 bg-black/20 rounded-full blur-sm"
           style={{
             animation: 'shadowPulse 2.5s ease-in-out infinite',
           }}
@@ -705,7 +705,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
                    janaState === 'sad' ? '/assets/recycling-game/jana-sad.png' :
                    '/assets/recycling-game/jana-idle.png'}
               alt="Jana"
-              className="h-full w-auto object-contain drop-shadow-lg transition-opacity duration-300 md:h-[320px]"
+              className="h-full w-auto object-contain drop-shadow-lg transition-opacity duration-300 md:h-[300px]"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
                 height: '255px',
@@ -746,17 +746,17 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
       )}
 
       {/* Main game content - responsive flex column */}
-      <div className="relative z-20 flex flex-col items-center justify-center w-full h-full px-3 sm:px-4 md:px-6 lg:px-6 pt-2 sm:pt-3 md:pt-4 lg:pt-4">
+      <div className="relative z-20 flex flex-col items-center justify-start w-full h-full px-3 sm:px-4 md:px-5 lg:px-6 pt-2 sm:pt-3 md:pt-2 lg:pt-4">
         
         {/* Progress Bar - Top */}
-        <div className="w-full max-w-2xl sm:max-w-3xl md:max-w-4xl lg:max-w-4xl mb-2 sm:mb-2 md:mb-3">
+        <div className="w-full max-w-2xl sm:max-w-3xl md:max-w-3xl lg:max-w-4xl mb-2 sm:mb-3 md:mb-2">
           <div className="h-2 sm:h-2.5 md:h-3 lg:h-3 bg-emerald-900/50 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
         </div>
 
         {/* Title - Premium glass eco card */}
-        <div className="text-center mb-2 sm:mb-2 md:mb-3">
+        <div className="text-center mb-2 sm:mb-3 md:mb-2">
           <div className="bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-xl sm:rounded-2xl md:rounded-2xl p-2 sm:p-2.5 md:p-3 lg:p-3 shadow-xl max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
             <h1 className="text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl font-bold text-white mb-0.5 sm:mb-1 tracking-tight">
               {messages.recyclingGame?.helpHealPlanet || '🌍 Help Heal the Planet'}
@@ -768,8 +768,8 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
         </div>
 
         {/* Waste Items - Centered with responsive positioning */}
-        <div className="flex items-center justify-center w-full mb-2 sm:mb-2 md:mb-6" style={{ transform: "translateY(25px)" }}>
-          <div className="flex justify-center items-center gap-2 sm:gap-3 md:gap-6 lg:gap-4 w-full max-w-2xl sm:max-w-3xl md:max-w-5xl lg:max-w-4xl">
+        <div className="flex items-center justify-center w-full mb-2 sm:mb-3 md:mb-2" style={{ transform: "translateY(25px)" }}>
+          <div className="flex justify-center items-center gap-2 sm:gap-3 md:gap-4 lg:gap-4 w-full max-w-2xl sm:max-w-3xl md:max-w-3xl lg:max-w-4xl">
           {activeItems.map((activeItem) => {
             const itemName = getItemName(activeItem.item);
             const isDraggingThis = draggingItemId === activeItem.id;
@@ -781,7 +781,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
               <div key={activeItem.id} className="relative flex flex-col items-center">
                 <div
                   ref={(el) => { itemRef.current[activeItem.id] = el; }}
-                  className={`rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none md:w-[130px] md:h-[130px] ${
+                  className={`rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none md:w-[110px] md:h-[110px] ${
                     isDraggingThis ? "scale-110 shadow-2xl z-50" : "shadow-xl"
                   } ${
                     showSuccess ? "animate-pulse bg-emerald-500/30" : ""
@@ -821,7 +821,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
                     }}
                   />
                 </div>
-                <p className="text-center mt-1.5 sm:mt-2 font-semibold text-xs sm:text-xs lg:text-sm text-white bg-gradient-to-r from-emerald-800/70 to-emerald-900/80 backdrop-blur-md rounded-full px-2 sm:px-3 py-0.5 sm:py-1 border border-emerald-400/30 shadow-lg" style={{ boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' }}>{itemName}</p>
+                <p className="text-center mt-1.5 sm:mt-2 md:mt-2 font-semibold text-xs sm:text-xs md:text-sm lg:text-sm text-white bg-gradient-to-r from-emerald-800/70 to-emerald-900/80 backdrop-blur-md rounded-full px-2 sm:px-3 md:px-3 py-0.5 sm:py-1 md:py-1 border border-emerald-400/30 shadow-lg" style={{ boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' }}>{itemName}</p>
               </div>
             );
           })}
@@ -829,12 +829,17 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
       </div>
 
       {/* Bins - Bottom area with responsive grid */}
-      <div className="grid grid-cols-2 gap-3 md:gap-5 mx-auto w-full max-w-xs sm:max-w-sm md:max-w-3xl lg:max-w-lg px-3 sm:px-4 md:px-8 lg:px-6 mb-2 sm:mb-2 md:mb-4 z-20">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 mx-auto w-full max-w-xs sm:max-w-sm md:max-w-lg lg:max-w-lg px-3 sm:px-4 md:px-5 lg:px-6 mb-2 sm:mb-3 md:mb-2 z-20"
+       style={{
+        marginTop: "40px",
+        transform: "translateX(15px)"
+      }}
+  >
         {BINS.map((bin) => (
           <div
             key={bin.type}
             id={`bin-${bin.type}`}
-            className="relative rounded-xl sm:rounded-2xl md:rounded-2xl aspect-square flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 md:min-h-[150px] md:max-h-[160px]"
+            className="relative rounded-xl sm:rounded-2xl md:rounded-2xl aspect-square flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 md:min-h-[140px] md:max-h-[150px]"
             style={{
               background: `linear-gradient(135deg, ${bin.color}25, ${bin.color}15)`,
               border: `2px solid ${bin.color}`,
