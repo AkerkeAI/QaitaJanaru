@@ -645,7 +645,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
 
       {/* Jana Character - Fixed HUD bottom-left */}
       <div 
-        className="fixed -bottom-12 left-4 z-10"
+        className="fixed -bottom-12 left-4 md:-bottom-8 z-10"
         style={{
           height: '255px',
           width: 'auto',
@@ -705,7 +705,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
                    janaState === 'sad' ? '/assets/recycling-game/jana-sad.png' :
                    '/assets/recycling-game/jana-idle.png'}
               alt="Jana"
-              className="h-full w-auto object-contain drop-shadow-lg transition-opacity duration-300"
+              className="h-full w-auto object-contain drop-shadow-lg transition-opacity duration-300 md:h-[300px]"
               style={{
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
                 height: '255px',
@@ -746,30 +746,30 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
       )}
 
       {/* Main game content - responsive flex column */}
-      <div className="relative z-20 flex flex-col items-center justify-start w-full h-full px-3 sm:px-4 lg:px-6 pt-2 sm:pt-3 lg:pt-4">
+      <div className="relative z-20 flex flex-col items-center justify-center w-full h-full px-3 sm:px-4 md:px-6 lg:px-6 pt-2 sm:pt-3 md:pt-4 lg:pt-4">
         
         {/* Progress Bar - Top */}
-        <div className="w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl mb-2 sm:mb-3">
-          <div className="h-2 sm:h-2.5 lg:h-3 bg-emerald-900/50 rounded-full overflow-hidden">
+        <div className="w-full max-w-2xl sm:max-w-3xl md:max-w-4xl lg:max-w-4xl mb-2 sm:mb-2 md:mb-3">
+          <div className="h-2 sm:h-2.5 md:h-3 lg:h-3 bg-emerald-900/50 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
         </div>
 
         {/* Title - Premium glass eco card */}
-        <div className="text-center mb-2 sm:mb-3">
-          <div className="bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-xl sm:rounded-2xl p-2 sm:p-2.5 lg:p-3 shadow-xl max-w-sm sm:max-w-md lg:max-w-xl mx-auto border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
-            <h1 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-white mb-0.5 sm:mb-1 tracking-tight">
+        <div className="text-center mb-2 sm:mb-2 md:mb-3">
+          <div className="bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-xl sm:rounded-2xl md:rounded-2xl p-2 sm:p-2.5 md:p-3 lg:p-3 shadow-xl max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
+            <h1 className="text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl font-bold text-white mb-0.5 sm:mb-1 tracking-tight">
               {messages.recyclingGame?.helpHealPlanet || '🌍 Help Heal the Planet'}
             </h1>
-            <p className="text-xs sm:text-xs lg:text-sm text-emerald-100 font-medium">
+            <p className="text-xs sm:text-xs md:text-sm lg:text-sm text-emerald-100 font-medium">
               {messages.recyclingGame?.sortWaste || 'Sort the waste into the correct recycling bins.'}
             </p>
           </div>
         </div>
 
         {/* Waste Items - Centered with responsive positioning */}
-        <div className="flex items-center justify-center w-full mb-2 sm:mb-3" style={{ transform: "translateY(25px)" }}>
-          <div className="flex justify-center items-center gap-2 sm:gap-3 lg:gap-4 w-full max-w-2xl sm:max-w-3xl lg:max-w-4xl">
+        <div className="flex items-center justify-center w-full mb-2 sm:mb-2 md:mb-3" style={{ transform: "translateY(25px)" }}>
+          <div className="flex justify-center items-center gap-2 sm:gap-3 md:gap-4 lg:gap-4 w-full max-w-2xl sm:max-w-3xl md:max-w-4xl lg:max-w-4xl">
           {activeItems.map((activeItem) => {
             const itemName = getItemName(activeItem.item);
             const isDraggingThis = draggingItemId === activeItem.id;
@@ -781,7 +781,7 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
               <div key={activeItem.id} className="relative flex flex-col items-center">
                 <div
                   ref={(el) => { itemRef.current[activeItem.id] = el; }}
-                  className={`rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none ${
+                  className={`rounded-3xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none select-none md:w-[110px] md:h-[110px] ${
                     isDraggingThis ? "scale-110 shadow-2xl z-50" : "shadow-xl"
                   } ${
                     showSuccess ? "animate-pulse bg-emerald-500/30" : ""
@@ -829,17 +829,12 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
       </div>
 
       {/* Bins - Bottom area with responsive grid */}
-      <div className="grid grid-cols-2 gap-3 mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-3 sm:px-4 lg:px-6 mb-2 sm:mb-3 z-20"
-       style={{
-        marginTop: "40px",
-        transform: "translateX(15px)"
-      }}
-  >
+      <div className="grid grid-cols-2 gap-3 md:gap-4 mx-auto w-full max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-lg px-3 sm:px-4 md:px-6 lg:px-6 mb-2 sm:mb-2 md:mb-3 z-20">
         {BINS.map((bin) => (
           <div
             key={bin.type}
             id={`bin-${bin.type}`}
-            className="relative rounded-xl sm:rounded-2xl aspect-square flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+            className="relative rounded-xl sm:rounded-2xl md:rounded-2xl aspect-square flex flex-col items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
             style={{
               background: `linear-gradient(135deg, ${bin.color}25, ${bin.color}15)`,
               border: `2px solid ${bin.color}`,
@@ -868,23 +863,23 @@ export function RecyclingMiniGame({ onComplete, isDemo = false }: RecyclingMiniG
       </div>
 
       {/* Legend - Fixed HUD bottom-right */}
-      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-20 bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-xl p-2 sm:p-3 shadow-xl border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
-        <div className="space-y-1 sm:space-y-1.5 text-xs sm:text-xs">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full" style={{ backgroundColor: '#FBBF24' }} />
-            <span className="text-white font-medium text-xs sm:text-sm">{messages.recyclingGame?.plastic || 'Plastic'}</span>
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 md:bottom-4 md:right-4 z-20 bg-gradient-to-br from-emerald-800/75 to-emerald-900/80 backdrop-blur-lg rounded-xl p-2 sm:p-3 md:p-2 shadow-xl border border-emerald-400/30" style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(74, 222, 128, 0.1)' }}>
+        <div className="space-y-1 sm:space-y-1.5 md:space-y-1 text-xs sm:text-xs md:text-xs">
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-1.5">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 md:w-3 md:h-3 rounded-full" style={{ backgroundColor: '#FBBF24' }} />
+            <span className="text-white font-medium text-xs sm:text-sm md:text-xs">{messages.recyclingGame?.plastic || 'Plastic'}</span>
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full" style={{ backgroundColor: '#3B82F6' }} />
-            <span className="text-white font-medium text-xs sm:text-sm">{messages.recyclingGame?.paper || 'Paper'}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-1.5">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 md:w-3 md:h-3 rounded-full" style={{ backgroundColor: '#3B82F6' }} />
+            <span className="text-white font-medium text-xs sm:text-sm md:text-xs">{messages.recyclingGame?.paper || 'Paper'}</span>
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full" style={{ backgroundColor: '#10B981' }} />
-            <span className="text-white font-medium text-xs sm:text-sm">{messages.recyclingGame?.glass || 'Glass'}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-1.5">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 md:w-3 md:h-3 rounded-full" style={{ backgroundColor: '#10B981' }} />
+            <span className="text-white font-medium text-xs sm:text-sm md:text-xs">{messages.recyclingGame?.glass || 'Glass'}</span>
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full" style={{ backgroundColor: '#A16207' }} />
-            <span className="text-white font-medium text-xs sm:text-sm">{messages.recyclingGame?.organic || 'Organic'}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-1.5">
+            <div className="w-3 h-3 sm:w-4 sm:h-4 md:w-3 md:h-3 rounded-full" style={{ backgroundColor: '#A16207' }} />
+            <span className="text-white font-medium text-xs sm:text-sm md:text-xs">{messages.recyclingGame?.organic || 'Organic'}</span>
           </div>
         </div>
       </div>
