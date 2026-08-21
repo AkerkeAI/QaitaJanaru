@@ -71,7 +71,7 @@ export const messages: Messages = {
     streakNotificationXDays: "Тамаша! {count}-күндік серия сақталды!",
     recyclingSummary: "Қайта өңдеу қорытындысы",
     totalRecyclingActions: "Қайта өңдеу әрекеттерінің жалпы саны",
-    totalEcoPointsEarned: "Жиналған Эко-ұпайлар",
+    totalEcoPointsEarned: "Жиналған эко-ұпайлар",
     materialsRecycled: "Қайта өңделген материалдар",
     recyclingDistribution: "Қайта өңдеу үлесі",
     recentActivity: "Соңғы белсенділік",
