@@ -156,15 +156,7 @@ export default function LeaderboardPage() {
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header with hamburger menu */}
         <header className="flex items-center justify-between gap-3 p-4 md:p-6 lg:p-8 flex-shrink-0">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group"
-            style={{
-              backgroundColor: colors.cardBg,
-              borderColor: colors.border,
-            }}
-            aria-label="Open menu"
-          >
+          <button onClick={() => setSidebarOpen(true)} className="p-3 rounded-2xl app-card hover:scale-105 transition-all duration-300 shadow group" aria-label="Open menu">
             <svg
               className="w-6 h-6 group-hover:text-white transition-colors"
               fill="none"
@@ -192,13 +184,7 @@ export default function LeaderboardPage() {
             />
 
             {/* Tabs */}
-            <div
-              className="relative rounded-2xl backdrop-blur-xl border shadow-xl p-2"
-              style={{
-                backgroundColor: colors.cardBg,
-                borderColor: colors.border,
-              }}
-            >
+            <div className="relative rounded-2xl p-2 app-card">
               <div className="flex flex-wrap gap-2">
                 {tabs.map((tab) => (
                   <button
@@ -226,76 +212,23 @@ export default function LeaderboardPage() {
             </div>
 
             {/* Leaderboard Card */}
-            <div
-              className="relative rounded-[32px] backdrop-blur-2xl border shadow-2xl overflow-hidden"
-              style={{
-                backgroundColor: colors.cardBg,
-                borderColor: colors.border,
-              }}
-            >
-              {/* Card gradient overlay */}
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})`,
-                }}
-              ></div>
-
+            <div className="relative rounded-[32px] app-card overflow-hidden">
               <div className="relative p-6 md:p-8">
                 {loading ? (
-                  <div className="flex flex-col items-center justify-center py-20">
-                    <div
-                      className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-t-transparent mb-6"
-                      style={{
-                        borderColor: `${colors.primary} ${colors.primary} ${colors.primary} transparent`,
-                      }}
-                    ></div>
-                    <p
-                      className="text-lg"
-                      style={{ color: colors.textSecondary }}
-                    >
-                      {messages.leaderboard.loading}
-                    </p>
-                  </div>
+                    <div className="flex flex-col items-center justify-center py-20">
+                      <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent mb-6" style={{ borderColor: `${colors.primary} ${colors.primary} transparent transparent` }} />
+                      <p className="text-lg app-muted">{messages.leaderboard.loading}</p>
+                    </div>
                 ) : error ? (
                   <div className="flex flex-col items-center justify-center py-20">
-                    <div
-                      className="w-20 h-20 mb-6 rounded-full flex items-center justify-center text-4xl"
-                      style={{ backgroundColor: `${colors.danger}20` }}
-                    >
-                      ❌
-                    </div>
-                    <p
-                      className="text-lg mb-4"
-                      style={{ color: colors.danger }}
-                    >
-                      {error}
-                    </p>
-                    <button
-                      onClick={() => fetchLeaderboard(activeTab)}
-                      className="px-6 py-3 rounded-xl font-bold hover:brightness-110 transition"
-                      style={{
-                        background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
-                        color: colors.buttonText,
-                      }}
-                    >
-                      {messages.leaderboard.retry}
-                    </button>
+                    <div className="w-20 h-20 mb-6 rounded-full flex items-center justify-center text-4xl bg-[rgba(239,68,68,0.08)]">❌</div>
+                    <p className="text-lg text-[var(--danger,#ef4444)]">{error}</p>
+                    <button onClick={() => fetchLeaderboard(activeTab)} className="px-6 py-3 rounded-xl font-bold app-btn-primary mt-4">{messages.leaderboard.retry}</button>
                   </div>
                 ) : leaderboard.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20">
-                    <div
-                      className="w-20 h-20 mb-6 rounded-full flex items-center justify-center text-4xl"
-                      style={{ backgroundColor: `${colors.primary}20` }}
-                    >
-                      🏆
-                    </div>
-                    <p
-                      className="text-lg"
-                      style={{ color: colors.textSecondary }}
-                    >
-                      {messages.leaderboard.noDataAvailable}
-                    </p>
+                    <div className="w-20 h-20 mb-6 rounded-full flex items-center justify-center text-4xl bg-[rgba(16,185,129,0.06)]">🏆</div>
+                    <p className="text-lg app-muted">{messages.leaderboard.noDataAvailable}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">

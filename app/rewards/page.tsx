@@ -146,11 +146,7 @@ export default function RewardsPage() {
         <header className="flex items-center justify-between gap-3 p-4 md:p-6 lg:p-8 flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-3 rounded-2xl backdrop-blur-xl border hover:scale-105 transition-all duration-300 shadow-lg group"
-            style={{
-              backgroundColor: colors.cardBg,
-              borderColor: colors.border,
-            }}
+            className="p-3 rounded-2xl app-card hover:scale-105 transition-all duration-300 shadow group"
             aria-label="Open menu"
           >
             <svg
@@ -172,13 +168,10 @@ export default function RewardsPage() {
         </header>
 
         <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
-          <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 min-w-0">
+            <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 min-w-0">
             <h1 className="text-3xl font-bold break-words">{messages.rewards.title}</h1>
 
-            <HelpCard
-              title={messages.help.howToUse}
-              body={messages.help.rewards}
-            />
+            <HelpCard title={messages.help.howToUse} body={messages.help.rewards} />
 
             <div className="flex gap-2 p-1 rounded-2xl min-w-0" style={{ backgroundColor: `${colors.text}10` }}>
               <button
@@ -217,12 +210,8 @@ export default function RewardsPage() {
                       selectedCategoryId === category.id ? "shadow-lg" : ""
                     }`}
                     style={{
-                      backgroundColor: selectedCategoryId === category.id
-                        ? colors.cardBg
-                        : "transparent",
-                      color: selectedCategoryId === category.id
-                        ? colors.primary
-                        : colors.textSecondary,
+                      backgroundColor: selectedCategoryId === category.id ? 'white' : 'transparent',
+                      color: selectedCategoryId === category.id ? 'var(--qaita-green)' : colors.textSecondary,
                     }}
                   >
                     {getCategoryLabel(category.id, `${category.icon} ${category.name}`, messages)}
@@ -234,15 +223,9 @@ export default function RewardsPage() {
             {activeTab === "rewards" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredRewards.length === 0 ? (
-                  <div
-                    className="col-span-full rounded-3xl p-8 text-center backdrop-blur-xl border"
-                    style={{
-                      backgroundColor: colors.cardBg,
-                      borderColor: colors.border,
-                    }}
-                  >
+                  <div className="col-span-full rounded-3xl p-8 text-center app-card">
                     <div className="text-5xl mb-4">🎁</div>
-                    <p style={{ color: colors.textSecondary }}>{messages.rewards.noRewardsAvailable}</p>
+                    <p className="app-muted">{messages.rewards.noRewardsAvailable}</p>
                   </div>
                 ) : (
                   filteredRewards.map((reward) => {
@@ -271,15 +254,7 @@ export default function RewardsPage() {
                     }
                     
                     return (
-                      <div
-                        key={reward.id}
-                        className="group relative rounded-3xl p-6 transition-all duration-300 hover:scale-[1.02] backdrop-blur-xl border shadow-lg cursor-pointer"
-                        style={{
-                          backgroundColor: colors.cardBg,
-                          borderColor: colors.border,
-                        }}
-                        onClick={() => router.push(`/rewards/${reward.id}`)}
-                      >
+                      <div key={reward.id} className="group relative rounded-3xl p-6 transition-all duration-300 hover:scale-[1.02] app-card cursor-pointer" onClick={() => router.push(`/rewards/${reward.id}`)}>
                         <div className="text-5xl mb-4">{reward.image}</div>
                         <h3 className="text-xl font-bold mb-2 break-words">
                           {localizedReward.title}
@@ -312,16 +287,7 @@ export default function RewardsPage() {
                             </div>
                           )}
                         </div>
-                        <button
-                          onClick={() => router.push(`/rewards/${reward.id}`)}
-                          className="w-full py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95"
-                          style={{
-                            background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
-                            color: colors.buttonText,
-                          }}
-                        >
-                          {messages.rewards.viewReward}
-                        </button>
+                        <button onClick={() => router.push(`/rewards/${reward.id}`)} className="w-full py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95 app-btn-primary">{messages.rewards.viewReward}</button>
                       </div>
                     );
                   })
@@ -332,15 +298,9 @@ export default function RewardsPage() {
             {activeTab === "partners" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredPartners.length === 0 ? (
-                  <div
-                    className="col-span-full rounded-3xl p-8 text-center backdrop-blur-xl border"
-                    style={{
-                      backgroundColor: colors.cardBg,
-                      borderColor: colors.border,
-                    }}
-                  >
+                  <div className="col-span-full rounded-3xl p-8 text-center app-card">
                     <div className="text-5xl mb-4">🤝</div>
-                    <p style={{ color: colors.textSecondary }}>{messages.rewards.noPartnersAvailable}</p>
+                    <p className="app-muted">{messages.rewards.noPartnersAvailable}</p>
                   </div>
                 ) : (
                   filteredPartners.map((partner) => {
@@ -349,15 +309,7 @@ export default function RewardsPage() {
                       messages,
                     );
                     return (
-                    <div
-                      key={partner.id}
-                      className="group relative rounded-3xl p-6 transition-all duration-300 hover:scale-[1.02] backdrop-blur-xl border shadow-lg cursor-pointer min-w-0"
-                      style={{
-                        backgroundColor: colors.cardBg,
-                        borderColor: colors.border,
-                      }}
-                      onClick={() => router.push(`/rewards/partner/${partner.id}`)}
-                    >
+                    <div key={partner.id} className="group relative rounded-3xl p-6 transition-all duration-300 hover:scale-[1.02] app-card cursor-pointer min-w-0" onClick={() => router.push(`/rewards/partner/${partner.id}`)}>
                       <div className="flex items-start gap-4 min-w-0">
                         <div className="text-5xl flex-shrink-0">{partner.logo}</div>
                         <div className="flex-1 min-w-0">
@@ -389,7 +341,7 @@ export default function RewardsPage() {
                           </div>
                         </div>
                       </div>
-                    </div>
+                      </div>
                     );
                   })
                 )}

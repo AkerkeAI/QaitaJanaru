@@ -284,17 +284,10 @@ export default function ProfilePage() {
       className="min-h-screen relative overflow-hidden"
       style={{ background: colors.bg, color: colors.text }}
     >
+      {/* Background orbs are intentionally muted for white-first design */}
       <div
-        className="fixed top-0 right-0 w-[500px] h-[500px] rounded-full blur-[120px] animate-pulse"
-        style={{ backgroundColor: `${colors.primary}20` }}
-      />
-      <div
-        className="fixed bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[100px] animate-pulse delay-1000"
-        style={{ backgroundColor: `${colors.accent}20` }}
-      />
-      <div
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full blur-[80px] animate-pulse delay-500"
-        style={{ backgroundColor: `${colors.primary}10` }}
+        className="fixed top-0 right-0 w-[400px] h-[400px] rounded-full blur-[80px]"
+        style={{ backgroundColor: `${colors.primary}08` }}
       />
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -330,21 +323,7 @@ export default function ProfilePage() {
 
         <div className="flex-1 px-4 pb-8 md:px-6 md:pb-12 lg:px-8 lg:pb-16">
           <div className="max-w-6xl mx-auto space-y-8 md:space-y-10">
-            <div
-              className="relative rounded-[32px] backdrop-blur-2xl border shadow-2xl overflow-hidden"
-              style={{
-                backgroundColor: colors.cardBg,
-                borderColor: colors.border,
-              }}
-            >
-              <div
-                className="absolute inset-0 opacity-30"
-                style={{
-                  background: `linear-gradient(to bottom right, ${colors.primary}, ${colors.accent})`,
-                }}
-              />
-
-              <div className="relative p-6 md:p-8 lg:p-10">
+            <div className="relative app-card overflow-hidden p-6 md:p-8 lg:p-10">
                 <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
                   <div className="relative shrink-0">
                     <div
@@ -474,78 +453,45 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="shrink-0 text-center md:text-right">
-                    <div
-                      className="text-4xl md:text-5xl font-black"
-                      style={{
-                        background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
-                        WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                      }}
-                    >
-                      {profile.eco_points}
-                    </div>
-                    <div
-                      className="text-sm md:text-base font-medium"
-                      style={{ color: colors.textSecondary }}
-                    >
-                      {messages.profile.ecoPoints}
-                    </div>
+                    <div className="text-4xl md:text-5xl font-black text-[var(--qaita-green)]">{profile.eco_points}</div>
+                    <div className="text-sm md:text-base font-medium app-muted">{messages.profile.ecoPoints}</div>
                   </div>
                 </div>
               </div>
             </div>
-
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              {[
-                {
-                  label: messages.profile.totalRecyclingActions,
-                  value: profile.analytics.total_recycling_actions,
-                  icon: "♻️",
-                },
-                {
-                  label: messages.profile.totalEcoPointsEarned,
-                  value: profile.analytics.total_eco_points_earned,
-                  icon: "🌱",
-                },
-                {
-                  label: messages.profile.streak,
-                  value: profile.streak,
-                  icon: "🔥",
-                },
-                {
-                  label: messages.profile.level,
-                  value: profile.level,
-                  icon: "⭐",
-                },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-3xl p-5 md:p-6 backdrop-blur-xl border shadow-xl"
-                  style={{
-                    backgroundColor: colors.cardBg,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <div className="text-2xl mb-3">{item.icon}</div>
-                  <div className="text-3xl font-bold mb-1">{item.value}</div>
-                  <div
-                    className="text-sm leading-snug"
-                    style={{ color: colors.textSecondary }}
-                  >
-                    {item.label}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                {[
+                  {
+                    label: messages.profile.totalRecyclingActions,
+                    value: profile.analytics.total_recycling_actions,
+                    icon: "♻️",
+                  },
+                  {
+                    label: messages.profile.totalEcoPointsEarned,
+                    value: profile.analytics.total_eco_points_earned,
+                    icon: "🌱",
+                  },
+                  {
+                    label: messages.profile.streak,
+                    value: profile.streak,
+                    icon: "🔥",
+                  },
+                  {
+                    label: messages.profile.level,
+                    value: profile.level,
+                    icon: "⭐",
+                  },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-3xl p-5 md:p-6 app-card">
+                    <div className="text-2xl mb-3">{item.icon}</div>
+                    <div className="text-3xl font-bold mb-1">{item.value}</div>
+                    <div className="text-sm leading-snug app-muted">{item.label}</div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <section
-                className="rounded-3xl p-6 md:p-8 border shadow-2xl"
-                style={{
-                  backgroundColor: colors.cardBg,
-                  borderColor: colors.border,
-                }}
-              >
+              <section className="rounded-3xl p-6 md:p-8 app-card">
                 <div className="flex items-center justify-between mb-6 gap-4">
                   <h3 className="text-2xl font-bold">
                     {messages.profile.materialsRecycled}
@@ -564,37 +510,18 @@ export default function ProfilePage() {
                 <div className="space-y-3">
                   {materials.length > 0 ? (
                     materials.map((item) => (
-                      <div
-                        key={item.key}
-                        className="flex items-center justify-between gap-4 rounded-2xl border px-4 py-3"
-                        style={{ borderColor: colors.border }}
-                      >
-                        <span className="font-medium break-words">
-                          {item.label}
-                        </span>
-                        <span
-                          className="text-xl font-bold"
-                          style={{ color: colors.primary }}
-                        >
-                          {item.quantity}
-                        </span>
+                      <div key={item.key} className="flex items-center justify-between gap-4 rounded-2xl border px-4 py-3">
+                        <span className="font-medium break-words">{item.label}</span>
+                        <span className="text-xl font-bold text-[var(--qaita-green)]">{item.quantity}</span>
                       </div>
                     ))
                   ) : (
-                    <p style={{ color: colors.textSecondary }}>
-                      {messages.profile.noRecentActivity}
-                    </p>
+                    <p className="app-muted">{messages.profile.noRecentActivity}</p>
                   )}
                 </div>
               </section>
 
-              <section
-                className="rounded-3xl p-6 md:p-8 border shadow-2xl"
-                style={{
-                  backgroundColor: colors.cardBg,
-                  borderColor: colors.border,
-                }}
-              >
+              <section className="rounded-3xl p-6 md:p-8 app-card">
                 <h3 className="text-2xl font-bold mb-6">
                   {messages.profile.recyclingDistribution}
                 </h3>
@@ -617,17 +544,8 @@ export default function ProfilePage() {
                               {percentage}%
                             </span>
                           </div>
-                          <div
-                            className="h-3 rounded-full overflow-hidden"
-                            style={{ backgroundColor: `${colors.text}12` }}
-                          >
-                            <div
-                              className="h-full rounded-full"
-                              style={{
-                                width: `${percentage}%`,
-                                background: `linear-gradient(to right, ${colors.primary}, ${colors.accent})`,
-                              }}
-                            />
+                          <div className="h-3 rounded-full overflow-hidden bg-[rgba(15,23,42,0.06)]">
+                            <div className="h-full rounded-full bg-[linear-gradient(to_right,#10b981,#34d399)]" style={{ width: `${percentage}%` }} />
                           </div>
                         </div>
                       );
@@ -641,13 +559,7 @@ export default function ProfilePage() {
               </section>
             </div>
 
-            <section
-              className="rounded-3xl p-6 md:p-8 border shadow-2xl"
-              style={{
-                backgroundColor: colors.cardBg,
-                borderColor: colors.border,
-              }}
-            >
+            <section className="rounded-3xl p-6 md:p-8 app-card">
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
                 <div>
                   <h3 className="text-2xl font-bold">
@@ -683,84 +595,74 @@ export default function ProfilePage() {
 
               <div className="space-y-4">
                 {recentActivity.length > 0 ? (
-                  visibleRecentActivity.map((activity, index) => (
-                    <div
-                      key={`${activity.id}-${activity.material}-${index}`}
-                      className="rounded-2xl border p-4 md:p-5"
-                      style={{ borderColor: colors.border }}
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-4">
-                        <div>
-                          <div
-                            className="text-xs uppercase tracking-wide"
-                            style={{ color: colors.textSecondary }}
-                          >
-                            {messages.profile.date}
+                  <>
+                    {visibleRecentActivity.map((activity, index) => (
+                      <div key={`${activity.id}-${activity.material}-${index}`} className="rounded-2xl border p-4 md:p-5">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-4">
+                          <div>
+                            <div
+                              className="text-xs uppercase tracking-wide"
+                              style={{ color: colors.textSecondary }}
+                            >
+                              {messages.profile.date}
+                            </div>
+                            <div className="font-semibold">
+                              {activity.formattedDate}
+                            </div>
                           </div>
-                          <div className="font-semibold">
-                            {activity.formattedDate}
+                          <div>
+                            <div
+                              className="text-xs uppercase tracking-wide"
+                              style={{ color: colors.textSecondary }}
+                            >
+                              {messages.profile.recyclingPoint}
+                            </div>
+                            <div className="font-semibold break-words">
+                              {activity.recycling_point_name}
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <div
-                            className="text-xs uppercase tracking-wide"
-                            style={{ color: colors.textSecondary }}
-                          >
-                            {messages.profile.recyclingPoint}
+                          <div>
+                            <div
+                              className="text-xs uppercase tracking-wide"
+                              style={{ color: colors.textSecondary }}
+                            >
+                              {messages.profile.material}
+                            </div>
+                            <div className="font-semibold break-words">
+                              {activity.materialLabel}
+                            </div>
                           </div>
-                          <div className="font-semibold break-words">
-                            {activity.recycling_point_name}
+                          <div>
+                            <div
+                              className="text-xs uppercase tracking-wide"
+                              style={{ color: colors.textSecondary }}
+                            >
+                              {messages.profile.quantity}
+                            </div>
+                            <div className="font-semibold">
+                              {activity.quantity}
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <div
-                            className="text-xs uppercase tracking-wide"
-                            style={{ color: colors.textSecondary }}
-                          >
-                            {messages.profile.material}
-                          </div>
-                          <div className="font-semibold break-words">
-                            {activity.materialLabel}
-                          </div>
-                        </div>
-                        <div>
-                          <div
-                            className="text-xs uppercase tracking-wide"
-                            style={{ color: colors.textSecondary }}
-                          >
-                            {messages.profile.quantity}
-                          </div>
-                          <div className="font-semibold">
-                            {activity.quantity}
-                          </div>
-                        </div>
-                        <div>
-                          <div
-                            className="text-xs uppercase tracking-wide"
-                            style={{ color: colors.textSecondary }}
-                          >
-                            {messages.profile.ecoPointsEarned}
-                          </div>
-                          <div
-                            className="font-semibold"
-                            style={{ color: colors.primary }}
-                          >
-                            +{activity.eco_points_awarded}
+                          <div>
+                            <div
+                              className="text-xs uppercase tracking-wide"
+                              style={{ color: colors.textSecondary }}
+                            >
+                              {messages.profile.ecoPointsEarned}
+                            </div>
+                            <div
+                              className="font-semibold"
+                              style={{ color: colors.primary }}
+                            >
+                              +{activity.eco_points_awarded}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </>
                 ) : (
-                  <div
-                    className="rounded-2xl border p-5"
-                    style={{
-                      borderColor: colors.border,
-                      color: colors.textSecondary,
-                    }}
-                  >
-                    {messages.profile.noRecentActivity}
-                  </div>
+                  <div className="rounded-2xl p-5 app-muted">{messages.profile.noRecentActivity}</div>
                 )}
               </div>
 

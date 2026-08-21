@@ -10,6 +10,12 @@ export interface Messages {
     start: string;
     aboutUs: string;
     aiEcology: string;
+    greeting: string;
+    ecoPointsLabel: string;
+    featuredRewardsTitle: string;
+    currentChallengeTitle: string;
+    currentChallengeDesc: string;
+    recentActivity: string;
     title: string;
     subtitle: string;
     description: string;

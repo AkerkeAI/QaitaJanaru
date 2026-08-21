@@ -1,12 +1,20 @@
 @import "tailwindcss";
 
 :root {
+  --qaita-green: #10b981;
+  --qaita-green-600: #059669;
+  --qaita-green-400: #34d399;
   --background: #ffffff;
-  --foreground: #171717;
+  --surface: #f7faf7; /* very pale green */
+  --muted: #6b7280; /* muted text */
+  --foreground: #0f172a; /* dark text */
+  --card-shadow: 0 6px 18px rgba(16, 185, 129, 0.06);
+  --card-radius: 14px;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -14,8 +22,10 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* allow users to keep dark if they prefer but default UI is white-first */
+    --background: #0b1220;
+    --surface: #0f1724;
+    --foreground: #e6eef6;
   }
 }
 
@@ -23,6 +33,25 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* App-level utilities for the mobile-first, card-based UI */
+.app-card {
+  background: var(--surface);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+}
+
+.app-btn-primary {
+  background: linear-gradient(90deg, var(--qaita-green), var(--qaita-green-400));
+  color: white;
+  border-radius: 999px;
+}
+
+.app-muted {
+  color: var(--muted);
 }
 
 @keyframes shimmer {

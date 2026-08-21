@@ -12,6 +12,12 @@ export const messages: Messages = {
     start: "Бастау",
     aboutUs: "Біз туралы",
     aiEcology: "ЖИ + Экология",
+    greeting: "Қайтып келгеніңізге қош келдіңіз",
+    ecoPointsLabel: "Эко-ұпайлар",
+    featuredRewardsTitle: "Ұсынылған сыйлықтар",
+    currentChallengeTitle: "Ағымдағы миссия",
+    currentChallengeDesc: "Апта ішінде 5 затты қайта өңдеңіз",
+    recentActivity: "Соңғы белсенділік",
     title: "Қайта өңдеуді",
     subtitle: "қарапайым және ақылды етіңіз",
     description:

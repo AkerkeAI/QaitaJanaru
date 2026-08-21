@@ -12,6 +12,12 @@ export const messages: Messages = {
     start: "Start",
     aboutUs: "About Us",
     aiEcology: "AI + Ecology",
+    greeting: "Welcome back",
+    ecoPointsLabel: "Eco-points",
+    featuredRewardsTitle: "Featured Rewards",
+    currentChallengeTitle: "Current Challenge",
+    currentChallengeDesc: "Recycle 5 items this week",
+    recentActivity: "Recent activity",
     title: "Make recycling",
     subtitle: "simpler and smarter",
     description:

@@ -12,6 +12,12 @@ export const messages: Messages = {
     start: "Начать",
     aboutUs: "О нас",
     aiEcology: "ИИ + Экология",
+    greeting: "С возвращением",
+    ecoPointsLabel: "Эко-баллы",
+    featuredRewardsTitle: "Рекомендуемые награды",
+    currentChallengeTitle: "Текущее задание",
+    currentChallengeDesc: "Переработайте 5 предметов на этой неделе",
+    recentActivity: "Последняя активность",
     title: "Сделай переработку",
     subtitle: "проще и умнее",
     description:
