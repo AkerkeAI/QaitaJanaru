@@ -75,7 +75,7 @@ export const messages: Messages = {
     materialsRecycled: "Қайта өңделген материалдар",
     recyclingDistribution: "Қайта өңдеу үлесі",
     recentActivity: "Соңғы белсенділік",
-    noRecentActivity: "Әзірге қайта өңдеу жіберілімдері жоқ",
+    noRecentActivity: "Қазірге қайта өңдеу жіберілімдері жоқ",
     recyclingPoint: "Қайта өңдеу нүктесі",
     material: "Материал",
     quantity: "Саны",
