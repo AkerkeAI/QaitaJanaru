@@ -21,6 +21,8 @@ This document lists all environment variables required for production deployment
 - `BREVO_FROM_EMAIL` - Sender email for password reset emails (default: `noreply@qaitajanaru.kz`)
 - `BREVO_FROM_NAME` - Sender name for password reset emails (default: `QaitaJanaru`)
 - `BREVO_TIMEOUT` - Email service timeout in seconds (default: `20`)
+- `JWT_SECRET_KEY` - Long random secret used to sign mobile bearer sessions
+- `JWT_EXPIRE_DAYS` - Optional mobile session lifetime in days (default: `30`)
 
 ## Google Cloud Console Configuration
 

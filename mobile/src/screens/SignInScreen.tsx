@@ -1,0 +1,29 @@
+import React, { useEffect, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { makeRedirectUri } from 'expo-auth-session';
+import { useIdTokenAuthRequest } from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { colors, radius, spacing } from '../theme';
+import { AuthStackParamList } from '../../App';
+
+WebBrowser.maybeCompleteAuthSession();
+type Props = NativeStackScreenProps<AuthStackParamList, 'SignIn'>;
+
+export default function SignInScreen({ navigation }: Props) {
+  const { signInWithEmail, signInWithGoogleToken, error, loading } = useAuth();
+  const { t } = useLanguage();
+  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [showPassword, setShowPassword] = useState(false); const [formError, setFormError] = useState('');
+  const [request, response, promptAsync] = useIdTokenAuthRequest({ webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID, redirectUri: makeRedirectUri({ scheme: 'qaitajanaru' }) });
+
+  useEffect(() => { if (response?.type === 'success') { const token = response.params?.id_token; if (token) void signInWithGoogleToken(token).catch(() => undefined); } }, [response, signInWithGoogleToken]);
+  const submit = async () => { setFormError(''); if (!email.trim() || !password) { setFormError(t('auth.required')); return; } try { await signInWithEmail(email.trim(), password); } catch { /* Error is shown below. */ } };
+  const message = formError || (error && error !== 'REQUEST_FAILED' ? t(`auth.${error === 'INCORRECT_PASSWORD' || error === 'USER_NOT_FOUND' ? 'signInError' : 'signInError'}`) : '');
+
+  return <View style={styles.container}><View style={styles.brand}><View style={styles.logo}><Ionicons name="leaf" size={26} color={colors.card} /></View><Text style={styles.brandName}>QaitaJanaru</Text><Text style={styles.welcome}>{t('auth.welcome')}</Text></View><TextInput autoCapitalize="none" autoCorrect={false} keyboardType="email-address" placeholder={t('auth.email')} placeholderTextColor={colors.muted} style={styles.input} value={email} onChangeText={setEmail} /><View style={styles.passwordWrap}><TextInput autoCapitalize="none" placeholder={t('auth.password')} placeholderTextColor={colors.muted} secureTextEntry={!showPassword} style={styles.passwordInput} value={password} onChangeText={setPassword} /><Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={8}><Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.muted} /></Pressable></View>{message ? <Text style={styles.error}>{message}</Text> : null}<Pressable onPress={submit} disabled={loading} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}><Text style={styles.primaryText}>{loading ? t('common.loading') : t('auth.signInAction')}</Text></Pressable><Pressable onPress={() => navigation.navigate('ForgotPassword')}><Text style={styles.link}>{t('auth.forgotPassword')}</Text></Pressable><View style={styles.divider}><View style={styles.line} /><Text style={styles.or}>{t('auth.or')}</Text><View style={styles.line} /></View><Pressable disabled={!request || loading} onPress={() => void promptAsync()} style={styles.googleButton}><Ionicons name="logo-google" size={18} color={colors.ink} /><Text style={styles.googleText}>{t('auth.continueGoogle')}</Text></Pressable><View style={styles.footer}><Text style={styles.footerText}>{t('auth.noAccount')}</Text><Pressable onPress={() => navigation.navigate('SignUp')}><Text style={styles.link}> {t('auth.signUp')}</Text></Pressable></View></View>;
+}
+
+const styles = StyleSheet.create({ container: { backgroundColor: colors.background, flex: 1, justifyContent: 'center', padding: spacing.xl }, brand: { alignItems: 'center', marginBottom: spacing.xl }, logo: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: 18, height: 58, justifyContent: 'center', width: 58 }, brandName: { color: colors.ink, fontSize: 25, fontWeight: '800', marginTop: spacing.md }, welcome: { color: colors.muted, fontSize: 14, marginTop: spacing.xs }, input: { backgroundColor: colors.card, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, color: colors.ink, fontSize: 15, marginTop: spacing.md, padding: 15 }, passwordWrap: { alignItems: 'center', backgroundColor: colors.card, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flexDirection: 'row', marginTop: spacing.md, paddingHorizontal: 15 }, passwordInput: { color: colors.ink, flex: 1, fontSize: 15, paddingVertical: 15 }, error: { color: '#B53C3C', fontSize: 13, marginTop: spacing.sm }, primaryButton: { alignItems: 'center', backgroundColor: colors.primary, borderRadius: radius.md, marginTop: spacing.lg, paddingVertical: 16 }, pressed: { opacity: 0.82 }, primaryText: { color: colors.card, fontSize: 16, fontWeight: '800' }, link: { color: colors.primaryDark, fontSize: 13, fontWeight: '700' }, divider: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm, marginVertical: spacing.lg }, line: { backgroundColor: colors.border, flex: 1, height: 1 }, or: { color: colors.muted, fontSize: 12 }, googleButton: { alignItems: 'center', backgroundColor: colors.card, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, flexDirection: 'row', gap: spacing.sm, justifyContent: 'center', paddingVertical: 15 }, googleText: { color: colors.ink, fontSize: 15, fontWeight: '700' }, footer: { alignItems: 'center', flexDirection: 'row', justifyContent: 'center', marginTop: spacing.xl }, footerText: { color: colors.muted, fontSize: 13 } });

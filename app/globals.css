@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
 :root {
+  --qaita-green: #10b981;
+  --qaita-green-600: #059669;
+  --qaita-green-400: #34d399;
   --background: #ffffff;
+  --surface: #f7faf7;
+  --muted: #6b7280;
   --foreground: #171717;
+  --card-shadow: 0 6px 18px rgba(16, 185, 129, 0.06);
+  --card-radius: 14px;
 }
 
 @theme inline {
@@ -15,6 +22,8 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
+    --surface: #0f1724;
+    --muted: #94a3b8;
     --foreground: #ededed;
   }
 }
@@ -23,6 +32,22 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.app-card {
+  background: var(--surface);
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+}
+
+.app-btn-primary {
+  background: linear-gradient(90deg, var(--qaita-green), var(--qaita-green-400));
+  color: white;
+  border-radius: 999px;
+}
+
+.app-muted {
+  color: var(--muted);
 }
 
 @keyframes shimmer {

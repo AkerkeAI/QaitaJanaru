@@ -7,6 +7,8 @@ Add these variables in Render for the backend service:
 - `DATABASE_URL`
 - `BREVO_API_KEY`
 - `GEMINI_API_KEY` (if your deployment uses Gemini features)
+- `JWT_SECRET_KEY` — long random secret used to sign mobile bearer sessions
+- `JWT_EXPIRE_DAYS` — optional session lifetime in days (default: `30`)
 
 ## Password reset email via Brevo Transactional Email API
 

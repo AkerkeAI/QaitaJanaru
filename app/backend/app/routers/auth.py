@@ -2,8 +2,16 @@ import logging
 import os
 
 from app.core.security import hash_password
+from app.core.auth import create_access_token, oauth2_scheme, resolve_current_user
 from app.db.session import SessionLocal
 from app.models.user import User
+from app.models.chat_message import ChatMessage
+from app.models.partner_qr_exchange import PartnerQrExchange
+from app.models.partner_qr_receipt import PartnerQrReceipt
+from app.models.password_reset_code import PasswordResetCode
+from app.models.qr_claim import QrClaim
+from app.models.recycling_submission import RecyclingSubmission
+from app.models.scan_history import ScanHistory
 from app.schemas.password_reset import (
     PasswordResetConfirmRequest,
     PasswordResetRequest,
@@ -35,6 +43,10 @@ def get_db():
         db.close()
 
 
+def current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+    return resolve_current_user(token, db)
+
+
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
 
@@ -54,7 +66,13 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
-    return {"message": "User registered successfully", "user_id": new_user.id}
+    return {
+        "message": "User registered successfully",
+        "user_id": new_user.id,
+        "full_name": new_user.full_name,
+        "access_token": create_access_token(new_user.id),
+        "token_type": "bearer",
+    }
 
 
 @router.post("/login")
@@ -82,6 +100,8 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         "full_name": db_user.full_name,
         "eco_points": db_user.eco_points,
         "streak": db_user.streak,
+        "access_token": create_access_token(db_user.id),
+        "token_type": "bearer",
     }
 
 
@@ -200,6 +220,8 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
                 "full_name": db_user.full_name,
                 "eco_points": db_user.eco_points,
                 "streak": db_user.streak,
+                "access_token": create_access_token(db_user.id),
+                "token_type": "bearer",
             }
         else:
             # New user - create account
@@ -227,6 +249,8 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
                 "user_id": new_user.id,
                 "eco_points": new_user.eco_points,
                 "streak": new_user.streak,
+                "access_token": create_access_token(new_user.id),
+                "token_type": "bearer",
             }
 
     except ValueError as e:
@@ -235,3 +259,35 @@ def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Google auth error: {e}")
         raise HTTPException(status_code=500, detail="Google authentication failed")
+
+
+@router.get("/me")
+def get_current_profile(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return {
+        "id": user.id,
+        "full_name": user.full_name,
+        "email": user.email,
+        "city": user.city,
+        "eco_points": user.eco_points,
+        "level": user.level,
+        "streak": user.streak,
+        "total_scans": user.total_scans,
+    }
+
+
+@router.delete("/account")
+def delete_current_account(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    user_id = user.id
+    for model in (
+        ChatMessage,
+        ScanHistory,
+        RecyclingSubmission,
+        QrClaim,
+        PartnerQrExchange,
+        PartnerQrReceipt,
+        PasswordResetCode,
+    ):
+        db.query(model).filter(model.user_id == user_id).delete(synchronize_session=False)
+    db.delete(user)
+    db.commit()
+    return {"message": "User deleted successfully"}

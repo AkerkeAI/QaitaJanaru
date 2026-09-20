@@ -78,7 +78,6 @@ export default function LoginPage() {
         email: email.trim(),
         password: password,
       });
-      const profile = await getProfile(response.user_id.toString());
 
       // Save user data to localStorage
       localStorage.setItem("qaitaJanaru_user_id", response.user_id.toString());
@@ -94,32 +93,13 @@ export default function LoginPage() {
 
       // Store additional profile data for Eco Assistant
       localStorage.setItem("qaitaJanaru_name", response.full_name || "Unknown");
-      localStorage.setItem("qaitaJanaru_city", profile.city || "Unknown");
+      localStorage.setItem("qaitaJanaru_city", "Unknown");
+      localStorage.setItem("qaitaJanaru_achievements_count", "0");
       localStorage.setItem(
-        "qaitaJanaru_achievements_count",
-        (profile.achievements?.length || 0).toString(),
+        "qaitaJanaru_level",
+        Math.max(1, Math.floor((response.eco_points || 0) / 100) + 1).toString(),
       );
-      // store computed level from profile.eco_points if available
-      try {
-        const computedLevel = Math.max(
-          1,
-          Math.floor((profile.eco_points || 0) / 100) + 1,
-        );
-        localStorage.setItem("qaitaJanaru_level", computedLevel.toString());
-      } catch (e) {
-        localStorage.setItem("qaitaJanaru_level", profile.level.toString());
-      }
-      localStorage.setItem(
-        "qaitaJanaru_total_scans",
-        profile.total_scans.toString(),
-      );
-
-      console.log("=== LOGIN PAGE LOCALSTORAGE DEBUG ===");
-      console.log("Stored profile data in localStorage after login:");
-      console.log("qaitaJanaru_name:", response.full_name);
-      console.log("qaitaJanaru_city:", profile.city);
-      console.log("qaitaJanaru_level:", profile.level);
-      console.log("=====================================");
+      localStorage.setItem("qaitaJanaru_total_scans", "0");
 
       // Show mini-game only for Expo QR logins
       if (isExpoQR) {

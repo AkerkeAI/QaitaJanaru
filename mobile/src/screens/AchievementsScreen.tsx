@@ -1,0 +1,24 @@
+import React, { useEffect, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, Text, View } from 'react-native';
+import { EmptyState } from '../components/EmptyState';
+import { ScreenContainer } from '../components/ScreenContainer';
+import { SectionHeader } from '../components/SectionHeader';
+import { mockApi } from '../services/mockApi';
+import { Achievement, Profile } from '../services/mockData';
+import { useLanguage } from '../contexts/LanguageContext';
+import { colors, radius, spacing } from '../theme';
+
+export default function AchievementsScreen() {
+  const { t } = useLanguage();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  useEffect(() => { void Promise.all([mockApi.getProfile(), mockApi.getAchievements()]).then(([profileData, achievementData]) => { setProfile(profileData); setAchievements(achievementData); }); }, []);
+  const unlocked = achievements.filter((achievement) => achievement.unlocked);
+  const levelProgress = profile ? Math.min(profile.ecoPoints / 1500, 1) : 0;
+  return <ScreenContainer><Text style={styles.title}>{t('achievements.title')}</Text><Text style={styles.subtitle}>{t('achievements.subtitle')}</Text><View style={styles.levelCard}><View style={styles.levelIcon}><Ionicons name="leaf" size={24} color={colors.primaryDark} /></View><View style={styles.levelCopy}><Text style={styles.overline}>{t('achievements.current')}</Text><Text style={styles.levelTitle}>{profile?.level ?? t('profile.level')}</Text><Text style={styles.levelMeta}>{profile?.ecoPoints ?? 0} / 1,500 {t('achievements.pointsToNext')}</Text><View style={styles.progressOuter}><View style={[styles.progressInner, { width: `${levelProgress * 100}%` }]} /></View></View></View><SectionHeader title={`${unlocked.length} ${t('achievements.unlocked')}`} /><View style={styles.grid}>{unlocked.map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} t={t} />)}</View><SectionHeader title={t('achievements.locked')} />{achievements.filter((achievement) => !achievement.unlocked).length ? <View style={styles.grid}>{achievements.filter((achievement) => !achievement.unlocked).map((achievement) => <AchievementCard key={achievement.id} achievement={achievement} t={t} />)}</View> : <EmptyState icon="lock-open-outline" message={t('profile.noAchievements')} />}</ScreenContainer>;
+}
+
+function AchievementCard({ achievement, t }: { achievement: Achievement; t: (key: string) => string }) { return <View style={[styles.achievementCard, !achievement.unlocked && styles.locked]}><View style={styles.badge}><Ionicons name={achievement.unlocked ? achievement.icon : 'lock-closed-outline'} size={22} color={achievement.unlocked ? colors.primaryDark : colors.muted} /></View><Text style={styles.achievementTitle}>{t(achievement.titleKey)}</Text><Text style={styles.achievementDescription}>{t(achievement.descriptionKey)}</Text>{achievement.progress ? <Text style={styles.achievementProgress}>{achievement.progress}</Text> : null}</View>; }
+
+const styles = StyleSheet.create({ title: { color: colors.ink, fontSize: 30, fontWeight: '800', marginTop: spacing.sm }, subtitle: { color: colors.muted, fontSize: 15, lineHeight: 22, marginTop: spacing.sm }, levelCard: { alignItems: 'center', backgroundColor: colors.softGreen, borderRadius: radius.md, flexDirection: 'row', marginTop: spacing.xl, padding: spacing.md }, levelIcon: { alignItems: 'center', backgroundColor: colors.card, borderRadius: 14, height: 48, justifyContent: 'center', width: 48 }, levelCopy: { flex: 1, marginLeft: spacing.md }, overline: { color: colors.primaryDark, fontSize: 10, fontWeight: '800', letterSpacing: 0.7 }, levelTitle: { color: colors.ink, fontSize: 18, fontWeight: '800', marginTop: 3 }, levelMeta: { color: colors.muted, fontSize: 11, marginTop: 4 }, progressOuter: { backgroundColor: '#D0E8DB', borderRadius: 6, height: 7, marginTop: spacing.sm, overflow: 'hidden' }, progressInner: { backgroundColor: colors.primary, borderRadius: 6, height: '100%' }, grid: { columnGap: spacing.md, flexDirection: 'row', flexWrap: 'wrap', rowGap: spacing.md }, achievementCard: { backgroundColor: colors.card, borderColor: colors.border, borderRadius: radius.md, borderWidth: 1, minHeight: 154, padding: spacing.md, width: '47.5%' }, locked: { backgroundColor: '#FBFCFC' }, badge: { alignItems: 'center', backgroundColor: colors.softGreen, borderRadius: 12, height: 42, justifyContent: 'center', width: 42 }, achievementTitle: { color: colors.ink, fontSize: 13, fontWeight: '800', marginTop: spacing.sm }, achievementDescription: { color: colors.muted, fontSize: 11, lineHeight: 15, marginTop: 4 }, achievementProgress: { color: colors.primaryDark, fontSize: 11, fontWeight: '800', marginTop: spacing.sm } });
