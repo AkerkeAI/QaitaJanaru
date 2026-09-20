@@ -10,7 +10,8 @@ from app.schemas.profile import ProfileResponse, UpdateProfileRequest
 from app.services.usage_limit_service import sync_usage_limits
 from app.services.user_service import sync_user_level, apply_inactivity_penalty
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy import func
+from sqlalchemy.orm import Session, joinedload
 
 router = APIRouter(prefix="/profile", tags=["Profile"])
 
@@ -36,30 +37,49 @@ def get_db():
 
 def _serialize_profile(user: User, db: Session) -> ProfileResponse:
     user = sync_user_level(db, user)
-    submissions = (
+
+    agg_cols = [
+        func.sum(getattr(RecyclingSubmission, field_name)).label(key)
+        for key, field_name in MATERIAL_FIELDS
+    ]
+    agg_cols.append(func.count(RecyclingSubmission.id).label("total_actions"))
+    agg_cols.append(
+        func.sum(RecyclingSubmission.total_points_awarded).label("total_points")
+    )
+
+    agg_row = (
+        db.query(*agg_cols)
+        .filter(RecyclingSubmission.user_id == user.id)
+        .first()
+    ) or {}
+
+    material_totals = {}
+    for key, _ in MATERIAL_FIELDS:
+        material_totals[key] = int(getattr(agg_row, key, 0) or 0)
+
+    total_recycling_actions = int(getattr(agg_row, "total_actions", 0) or 0)
+    total_eco_points_earned = int(getattr(agg_row, "total_points", 0) or 0)
+
+    recent_submissions = (
         db.query(RecyclingSubmission)
+        .options(joinedload(RecyclingSubmission.recycling_point_rel))
         .filter(RecyclingSubmission.user_id == user.id)
         .order_by(RecyclingSubmission.created_at.desc())
+        .limit(8)
         .all()
     )
 
-    material_totals = {key: 0 for key, _ in MATERIAL_FIELDS}
     recent_activity = []
-
-    for submission in submissions:
+    for submission in recent_submissions:
         submission_materials: list[tuple[str, int]] = []
         for key, field_name in MATERIAL_FIELDS:
             value = int(getattr(submission, field_name, 0) or 0)
-            material_totals[key] += value
             if value > 0:
                 submission_materials.append((key, value))
 
-        point = (
-            db.query(RecyclingPoint)
-            .filter(RecyclingPoint.id == submission.recycling_point_id)
-            .first()
-        )
-        point_name = point.name if point else "Unknown"
+        point_name = "Unknown"
+        if submission.recycling_point_rel is not None:
+            point_name = submission.recycling_point_rel.name
 
         for key, quantity in submission_materials:
             recent_activity.append(
@@ -72,6 +92,10 @@ def _serialize_profile(user: User, db: Session) -> ProfileResponse:
                     "eco_points_awarded": int(submission.total_points_awarded or 0),
                 }
             )
+            if len(recent_activity) >= 8:
+                break
+        if len(recent_activity) >= 8:
+            break
 
     materials = [
         {"key": key, "quantity": int(quantity)}
@@ -99,10 +123,10 @@ def _serialize_profile(user: User, db: Session) -> ProfileResponse:
             else None
         ),
         analytics={
-            "total_recycling_actions": len(submissions),
-            "total_eco_points_earned": int(user.eco_points or 0),
+            "total_recycling_actions": total_recycling_actions,
+            "total_eco_points_earned": total_eco_points_earned,
             "materials": materials,
-            "recent_activity": recent_activity[:8],
+            "recent_activity": recent_activity,
         },
     )
 

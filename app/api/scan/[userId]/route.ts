@@ -45,7 +45,7 @@ export async function POST(
       );
     }
 
-    const incomingFormData = await request.formData();
+    const incomingFormData = (await request.formData()) as unknown as FormData;
     const file = incomingFormData.get("file");
 
     if (!(file instanceof File)) {

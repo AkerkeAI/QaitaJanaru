@@ -112,6 +112,15 @@ const ERROR_CODE_MAP: Record<string, string> = {
   INVALID_OR_EXPIRED_RESET_CODE: "INVALID_OR_EXPIRED_RESET_CODE",
 };
 
+// ─── Profile Cache ─────────────────────────────────────────────────────────────
+
+interface ProfileCacheEntry {
+  data: Awaited<ReturnType<typeof getProfileImpl>>;
+  timestamp: number;
+}
+const PROFILE_CACHE_TTL_MS = 30_000;
+const profileCache = new Map<string, ProfileCacheEntry>();
+
 // ─── Register ──────────────────────────────────────────────────────────────────
 
 export async function registerUser(
@@ -226,7 +235,7 @@ export async function resetPassword(
   return response.json();
 }
 
-export async function getProfile(
+async function getProfileImpl(
   userId: string,
   localDate?: string,
 ): Promise<ProfileResponse> {
@@ -249,6 +258,28 @@ export async function getProfile(
   }
 
   return response.json();
+}
+
+export async function getProfile(
+  userId: string,
+  localDate?: string,
+): Promise<ProfileResponse> {
+  if (localDate !== undefined) {
+    return getProfileImpl(userId, localDate);
+  }
+
+  const cached = profileCache.get(userId);
+  if (cached !== undefined && Date.now() - cached.timestamp < PROFILE_CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  try {
+    const result = await getProfileImpl(userId, localDate);
+    profileCache.set(userId, { data: result, timestamp: Date.now() });
+    return result;
+  } catch (error) {
+    throw error;
+  }
 }
 
 export interface DailyUsageResponse {
@@ -333,5 +364,7 @@ export async function updateProfile(
     );
   }
 
-  return response.json();
+  const updatedProfile = await response.json();
+  profileCache.delete(userId);
+  return updatedProfile;
 }

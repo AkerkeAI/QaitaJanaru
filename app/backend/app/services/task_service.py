@@ -438,10 +438,15 @@ def auto_claim_completed_tasks(user: User, db: Session | None = None) -> Dict[st
 
         if task["type"] == "daily":
             daily_task_rewards += reward
-            add_experience_for_daily_task(user, task_id, db)
+            add_experience_for_daily_task(user, task_id)
         else:
             weekly_task_rewards += reward
-            add_experience_for_weekly_task(user, task_id, db)
+            add_experience_for_weekly_task(user, task_id)
+
+    if db is not None and claimed_task_ids:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
     return {
         "claimed_task_ids": claimed_task_ids,

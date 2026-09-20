@@ -2,6 +2,7 @@ from datetime import datetime
 
 from app.db.session import Base
 from sqlalchemy import Column, DateTime, ForeignKey, Integer
+from sqlalchemy.orm import relationship
 
 
 class RecyclingSubmission(Base):
@@ -22,3 +23,5 @@ class RecyclingSubmission(Base):
     other_recyclable = Column(Integer, nullable=False, default=0)
     total_points_awarded = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+
+    recycling_point_rel = relationship("RecyclingPoint", lazy="joined")

@@ -509,7 +509,14 @@ export default function ProfilePage() {
                 <div className="space-y-3">
                   {materials.length > 0 ? (
                     materials.map((item) => (
-                      <div key={item.key} className="flex items-center justify-between gap-4 rounded-2xl border px-4 py-3">
+                      <div
+                        key={item.key}
+                        className="flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 backdrop-blur-xl"
+                        style={{
+                          backgroundColor: colors.cardBg,
+                          borderColor: colors.border,
+                        }}
+                      >
                         <span className="font-medium break-words">{item.label}</span>
                         <span className="text-xl font-bold text-[var(--qaita-green)]">{item.quantity}</span>
                       </div>
@@ -596,7 +603,14 @@ export default function ProfilePage() {
                 {recentActivity.length > 0 ? (
                   <>
                     {visibleRecentActivity.map((activity, index) => (
-                      <div key={`${activity.id}-${activity.material}-${index}`} className="rounded-2xl border p-4 md:p-5">
+                      <div
+                        key={`${activity.id}-${activity.material}-${index}`}
+                        className="rounded-2xl border p-4 md:p-5 backdrop-blur-xl"
+                        style={{
+                          backgroundColor: colors.cardBg,
+                          borderColor: colors.border,
+                        }}
+                      >
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-4">
                           <div>
                             <div
@@ -661,7 +675,15 @@ export default function ProfilePage() {
                     ))}
                   </>
                 ) : (
-                  <div className="rounded-2xl p-5 app-muted">{messages.profile.noRecentActivity}</div>
+                  <div
+                    className="rounded-2xl p-5 app-muted border backdrop-blur-xl"
+                    style={{
+                      backgroundColor: colors.cardBg,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    {messages.profile.noRecentActivity}
+                  </div>
                 )}
               </div>
 

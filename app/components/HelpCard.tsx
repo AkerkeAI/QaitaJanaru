@@ -14,7 +14,7 @@ export function HelpCard({ title, body }: HelpCardProps) {
 
   return (
     <div
-      className="rounded-2xl border min-w-0 w-full"
+      className="rounded-2xl border min-w-0 w-full backdrop-blur-xl"
       style={{
         backgroundColor: colors.cardBg,
         borderColor: colors.border,

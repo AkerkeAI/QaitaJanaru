@@ -10,6 +10,10 @@
   --foreground: #171717;
   --card-shadow: 0 6px 18px rgba(16, 185, 129, 0.06);
   --card-radius: 14px;
+  --app-card-bg: rgba(255, 255, 255, 0.05);
+  --app-card-border: rgba(255, 255, 255, 0.1);
+  --app-card-shadow: 0 6px 18px rgba(16, 185, 129, 0.07);
+  --app-card-blur: blur(20px);
 }
 
 @theme inline {
@@ -35,9 +39,12 @@ body {
 }
 
 .app-card {
-  background: var(--surface);
+  background: var(--app-card-bg);
+  border: 1px solid var(--app-card-border);
   border-radius: var(--card-radius);
-  box-shadow: var(--card-shadow);
+  box-shadow: var(--app-card-shadow);
+  backdrop-filter: var(--app-card-blur);
+  -webkit-backdrop-filter: var(--app-card-blur);
 }
 
 .app-btn-primary {
